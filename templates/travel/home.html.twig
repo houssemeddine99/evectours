@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home | Travagir{% endblock %}
+
+{% block body %}
+    <section class="hero">
+        <div class="hero-content">
+            <p class="eyebrow">Travagir — Your trusted partner in travel</p>
+            <h1>Discover unforgettable journeys around the world</h1>
+            <p>We design personalized trips, group adventures, and premium packages with local activities and best-value offers.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="{{ path('travel_voyages') }}">Explore voyages</a>
+                <a class="btn btn-secondary" href="{{ path('travel_offers') }}">See active offers</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="voyages-section">
+        <div class="section-title-row">
+            <h2>Featured Voyages</h2>
+            <a href="{{ path('travel_voyages') }}">View all</a>
+        </div>
+        <div class="grid responsive-grid">
+            {% for voyage in featured_voyages %}
+                <article class="card">
+                    <img src="{{ voyage.image_url ?: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
+                    <div class="card-body">
+                        <div class="card-header">
+                            <p class="meta">{{ voyage.destination|default('Unknown destination') }}</p>
+                            <div class="card-badges">
+                                <span class="badge destination">🌍 {{ voyage.destination|split(', ')|first }}</span>
+                                {% if voyage.start_date %}
+                                <span class="badge dates">📅 {{ voyage.start_date|date('M j') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h3>{{ voyage.title|default('Untitled trip') }}</h3>
+                        <p>{{ voyage.description|default('')|slice(0, 100) ~ '...' }}</p>
+                        <div class="card-footer">
+                            <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
+                            <a href="{{ path('travel_voyage_detail', {id: voyage.id}) }}">View details</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

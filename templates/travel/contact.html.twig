@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contact | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>Contact Us</h1>
+        <p class="lead">Need a custom itinerary? Share your travel plans and our team will assist you quickly.</p>
+        <div class="contact-box">
+            <form class="contact-form">
+                <label>Full name<input type="text" placeholder="Your full name"></label>
+                <label>Email<input type="email" placeholder="you@example.com"></label>
+                <label>Destination<input type="text" placeholder="Where do you want to go?"></label>
+                <label>Message<textarea rows="5" placeholder="Tell us your preferred dates, budget, and requests"></textarea></label>
+                <button type="button" class="btn btn-primary">Send request</button>
+            </form>
+            <div class="contact-info">
+                <h3>Agency Information</h3>
+                <p><strong>Phone:</strong> +212 5 22 00 00 00</p>
+                <p><strong>Email:</strong> contact@travagir.com</p>
+                <p><strong>Address:</strong> 24 Avenue Voyage, Casablanca</p>
+                <p><strong>Hours:</strong> Mon - Sat, 9:00 AM to 7:00 PM</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

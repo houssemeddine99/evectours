@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Login | Travagir{% endblock %}
+
+{% block body %}
+    <section class="auth-section">
+        <h1>Login</h1>
+        <p class="lead">Sign in to continue with your travel planning.</p>
+
+        <div class="auth-container">
+            <form class="contact-form" method="post" action="{{ path('auth_login') }}">
+                {% if error %}
+                    <p class="error-message">{{ error }}</p>
+                {% endif %}
+
+                <label>Email
+                    <input type="email" name="email" value="{{ email }}" placeholder="you@example.com" required>
+                </label>
+
+                <label>Password
+                    <input type="password" name="password" placeholder="********" required>
+                </label>
+
+                <button type="submit" class="btn btn-primary">Login</button>
+                <p class="meta">Demo credentials: admin@travagir.com / admin123</p>
+            </form>
+        </div>
+    </section>
+{% endblock %}

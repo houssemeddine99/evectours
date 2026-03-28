@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Travagir{% endblock %}</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/styles/app.css">
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav-wrap">
+            <a href="{{ path('travel_home') }}" class="logo">Travagir</a>
+            <button class="mobile-nav-toggle" onclick="toggleMobileNav()">☰</button>
+            <nav id="mainNav">
+                <a class="{{ active_nav|default('') == 'home' ? 'active' : '' }}" href="{{ path('travel_home') }}">Home</a>
+                <a class="{{ active_nav|default('') == 'voyages' ? 'active' : '' }}" href="{{ path('travel_voyages') }}">Voyages</a>
+                <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
+                <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+                {% if app.session.get('auth_user') %}
+                    <div class="account-dropdown">
+                        <button class="account-btn">👤</button>
+                        <div class="account-menu">
+                            <div class="account-info">
+                                <strong>{{ app.session.get('auth_user').username }}</strong>
+                                <span>{{ app.session.get('auth_user').email }}</span>
+                            </div>
+                            <hr>
+                            <a href="{{ path('account_settings') }}" class="account-link">Account Settings</a>
+                            <a href="{{ path('account_bookings') }}" class="account-link">My Bookings</a>
+                            <a href="{{ path('account_favorites') }}" class="account-link">Favorites</a>
+                            <hr>
+                            <form method="post" action="{{ path('auth_logout') }}">
+                                <button type="submit" class="logout-btn">Logout</button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ path('auth_login') }}" class="btn btn-login">Login</a>
+                    <a href="{{ path('auth_register') }}" class="btn btn-register">Register</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block body %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2026 Travagir Travel Agency — Symfony 6.4 MVC + Doctrine + Twig</p>
+        </div>
+    </footer>
+
+<script>
+        // Mobile Navigation Toggle
+        function toggleMobileNav() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('active');
+        }
+
+        // Account Menu Toggle (for mobile touch devices)
+        function toggleAccountMenu() {
+            const dropdown = document.querySelector('.account-dropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const nav = document.getElementById('mainNav');
+            const toggle = document.querySelector('.mobile-nav-toggle');
+            const accountDropdown = document.querySelector('.account-dropdown');
+
+            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+                nav.classList.remove('active');
+            }
+
+            if (accountDropdown && !accountDropdown.contains(event.target)) {
+                accountDropdown.classList.remove('active');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const nav = document.getElementById('mainNav');
+            const accountDropdown = document.querySelector('.account-dropdown');
+
+            if (window.innerWidth > 768) {
+                nav.classList.remove('active');
+                if (accountDropdown) {
+                    accountDropdown.classList.remove('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

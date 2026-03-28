@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ voyage.title|default('Voyage details') }} | Travagir{% endblock %}
+
+{% block body %}
+    <section class="detail voyage-detail-card">
+        <img src="{{ voyage.image_url ?: fallback_image }}" alt="{{ voyage.title|default('Voyage image') }}" class="detail-image voyage-detail-image">
+        <div class="detail-content voyage-detail-content">
+            <div class="voyage-headline">
+                <div>
+                    <p class="meta">{{ voyage.destination|default('') }}</p>
+                    <h1>{{ voyage.title|default('') }}</h1>
+                </div>
+                <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
+            </div>
+
+            <p class="voyage-description">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
+            <p class="voyage-price"><strong>Starting from:</strong> {{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</p>
+
+            <h2>Activities</h2>
+            <ul class="activity-list">
+                {% for activity in voyage.activities|default([]) %}
+                    <li>
+                        <strong>{{ activity.name|default('Activity') }}</strong>
+                        — {{ activity.description|default('Description not available.') }}
+                        ({{ activity.duration_hours ?? 'N/A' }} hrs, {{ activity.price_per_person is not empty ? '$' ~ activity.price_per_person|number_format(2, '.', ',') : 'Price on request' }} / person)
+                    </li>
+                {% else %}
+                    <li>No activities listed yet for this voyage.</li>
+                {% endfor %}
+            </ul>
+
+            <div class="voyage-actions">
+                <a class="btn btn-primary" href="{{ path('travel_voyage_reserve', {id: voyage.id}) }}">Reserve Now</a>
+                <a class="btn btn-register" href="{{ path('travel_voyages') }}">Back to list</a>
+            </div>
+        </div>
+    </section>
+{% endblock %}

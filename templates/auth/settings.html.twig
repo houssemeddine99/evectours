@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Account Settings | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>Account Settings</h1>
+        <p class="lead">Update your profile information and password securely.</p>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        <form method="post" class="card settings-card">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ formData.username }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ formData.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tel">Phone</label>
+                <input type="tel" id="tel" name="tel" value="{{ formData.tel }}" placeholder="+1 555 555 5555">
+            </div>
+
+            <div class="form-group">
+                <label for="image_url">Profile Image URL</label>
+                <input type="url" id="image_url" name="image_url" value="{{ formData.image_url }}" placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label for="current_password">Current password</label>
+                <input type="password" id="current_password" name="current_password" placeholder="Leave blank unless changing password">
+            </div>
+
+            <div class="form-group">
+                <label for="new_password">New password</label>
+                <input type="password" id="new_password" name="new_password" placeholder="At least 6 characters">
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm new password</label>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-type new password">
+            </div>
+
+            <button type="submit" class="btn-register">Save changes</button>
+        </form>
+    </section>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offers | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>Active Offers</h1>
+        <p class="lead">Save more with our limited-time discounts and packages.</p>
+        <div class="offers-grid">
+            {% for offer in offers %}
+                {% set base_price = offer.price|default(0) %}
+                {% set discount = offer.discount_percentage|default(0) %}
+                {% set final_price = base_price - ((discount / 100) * base_price) %}
+                <article class="offer futuristic-offer">
+                    <div class="offer-banner" style="background-image: url('{{ offer.image_url|default('https://images.unsplash.com/photo-1523206489230-c0126d2b36fc?auto=format&fit=crop&w=1920&q=80') }}');">
+                        <span class="offer-tag">{{ offer.voyage_title|default('Voyage') }}</span>
+                    </div>
+                    <div class="offer-body">
+                        <h3>{{ offer.title|default('Special offer') }} <span>-{{ discount }}%</span></h3>
+                        <p class="offer-desc">{{ offer.description|default('Explore the unknown with future-forward comfort.') }}</p>
+                        <div class="offer-meta">
+                            <small>Destination: {{ offer.destination|default('Unknown') }}</small>
+                            <small>Valid: {{ offer.start_date ? offer.start_date|date('d M Y') : 'TBD' }} – {{ offer.end_date ? offer.end_date|date('d M Y') : 'TBD' }}</small>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price-block">
+                                <small>From</small>
+                                <p><del>${{ base_price|number_format(2, '.', ',') }}</del> <strong>${{ final_price|number_format(2, '.', ',') }}</strong></p>
+                            </div>
+                            <a class="btn-primary" href="{{ path('travel_voyage_detail', {id: offer.voyage_id}) }}">Fly now</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

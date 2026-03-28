@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reserve Voyage | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>Reserve: {{ voyage.title }}</h1>
+        <p class="lead">Submit your reservation; it will be pending until admin approval.</p>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        <div class="card settings-card">
+            <p><strong>Destination</strong>: {{ voyage.destination }}</p>
+            <p><strong>Dates</strong>: {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} - {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
+            <p><strong>Base price per person</strong>: ${{ voyage.price|number_format(2, '.', ',') }}</p>
+            {% if offer %}
+                <p><strong>Offer</strong>: {{ offer.title }} ({{ offer.discount_percentage }}% off)</p>
+            {% endif %}
+
+            <form method="post">
+                <div class="form-group">
+                    <label for="number_of_people">Number of people</label>
+                    <input type="number" id="number_of_people" name="number_of_people" value="1" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="special_requests">Special requests</label>
+                    <textarea id="special_requests" name="special_requests" rows="3" placeholder="Dietary, arrival details, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn-register">Confirm reservation (pending)</button>
+            </form>
+        </div>
+    </section>
+{% endblock %}

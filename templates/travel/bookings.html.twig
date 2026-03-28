@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Bookings | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>My Bookings</h1>
+        <p class="lead">Review and manage your current trip reservations.</p>
+
+        {% if bookings is empty %}
+            <p>No bookings yet. Explore voyages and book your next adventure.</p>
+        {% else %}
+            <div class="grid">
+                {% for reservation in bookings %}
+                    <article class="reservation-card">
+                        <div class="reservation-header">
+                            <div>
+                                <h3>{{ reservation.voyage_title }}</h3>
+                                <p class="meta">Reservation #{{ reservation.id }} · {{ reservation.reservation_date|date('d M Y H:i') }}</p>
+                            </div>
+                            <span class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</span>
+                        </div>
+
+                        <div class="reservation-info-grid">
+                            <div><strong>Destination</strong><br>{{ reservation.destination }}</div>
+                            <div><strong>Dates</strong><br>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }} → {{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div>
+                            <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
+                            <div><strong>Total</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
+                        </div>
+
+                        <div class="card-footer">
+                            <a href="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="btn btn-primary">Details</a>
+                            {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
+                                <form method="post" action="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="inline-form">
+                                    <button type="submit" name="action_cancel" class="btn btn-danger">Cancel</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
