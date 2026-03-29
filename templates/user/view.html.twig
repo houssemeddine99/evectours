@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}User Details | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>User Details</h1>
+
+        <div class="card user-card">
+            <div class="card-body">
+                <p><strong>ID:</strong> {{ user.id }}</p>
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Phone:</strong> {{ user.tel ?: '—' }}</p>
+                <p><strong>Created At:</strong> {{ user.created_at ?: '—' }}</p>
+                {% if user.image_url %}
+                    <p><strong>Profile Image:</strong></p>
+                    <img src="{{ user.image_url }}" alt="{{ user.username }}" class="user-avatar"/>
+                {% endif %}
+            </div>
+            <div class="card-actions">
+                <a class="btn btn-small" href="{{ path('account_users_edit', {'id': user.id}) }}">Edit</a>
+                <a class="btn btn-small" href="{{ path('account_users') }}">Back</a>
+            </div>
+        </div>
+    </section>
+{% endblock %}

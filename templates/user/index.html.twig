@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage Users | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <div class="page-header">
+            <h1>User Management</h1>
+            <a href="{{ path('account_users_new') }}" class="btn btn-register">New User</a>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-error">{{ message }}</div>
+        {% endfor %}
+
+        {% if users is empty %}
+            <p>No users found.</p>
+        {% else %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.tel ?: '-' }}</td>
+                            <td>{{ user.created_at ?: '-' }}</td>
+                            <td>
+                                <a class="btn btn-small" href="{{ path('account_users_view', {'id': user.id}) }}">View</a>
+                                <a class="btn btn-small" href="{{ path('account_users_edit', {'id': user.id}) }}">Edit</a>
+                                <form method="post" action="{{ path('account_users_delete', {'id': user.id}) }}" style="display:inline-block;" onsubmit="return confirm('Delete this user?');">
+                                    <button class="btn btn-danger btn-small" type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+{% endblock %}

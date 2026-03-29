@@ -30,6 +30,9 @@
                             <a href="{{ path('account_settings') }}" class="account-link">Account Settings</a>
                             <a href="{{ path('account_bookings') }}" class="account-link">My Bookings</a>
                             <a href="{{ path('account_favorites') }}" class="account-link">Favorites</a>
+                            {% if app.session.get('auth_user').is_admin is defined and app.session.get('auth_user').is_admin %}
+                                <a href="{{ path('account_users') }}" class="account-link">Manage Users</a>
+                            {% endif %}
                             <hr>
                             <form method="post" action="{{ path('auth_logout') }}">
                                 <button type="submit" class="logout-btn">Logout</button>

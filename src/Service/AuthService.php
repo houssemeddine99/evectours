@@ -57,6 +57,7 @@ class AuthService
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
+                'is_admin' => $this->isAdmin($user->getId()),
             ];
         }
 
@@ -150,6 +151,7 @@ class AuthService
                 ]);
                 
                 unset($user['password']);
+                $user['is_admin'] = ($email === 'admin@travagir.com');
 
                 return $user;
             }
@@ -211,7 +213,20 @@ class AuthService
             'email' => $user->getEmail(),
             'tel' => $user->getTel(),
             'image_url' => $user->getImageUrl(),
+            'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'is_admin' => $this->isAdmin($user->getId()),
         ];
+    }
+
+    public function isAdmin(int $userId): bool
+    {
+        try {
+            $connection = $this->userRepository->getEntityManager()->getConnection();
+            $result = $connection->fetchOne('SELECT access_level FROM admins WHERE user_id = ?', [$userId]);
+            return $result !== false;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function checkPasswordForUser(int $userId, string $plainPassword): bool
@@ -275,6 +290,40 @@ class AuthService
         } catch (\Throwable $e) {
             $this->logger->error('Failed to update profile', ['user_id' => $userId, 'error' => $e->getMessage()]);
             return null;
+        }
+    }
+
+    public function listUsers(): array
+    {
+        $users = $this->userRepository->findAll();
+
+        return array_map(function ($user) {
+            return [
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'email' => $user->getEmail(),
+                'tel' => $user->getTel(),
+                'image_url' => $user->getImageUrl(),
+                'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+            ];
+        }, $users);
+    }
+
+    public function deleteUser(int $userId): bool
+    {
+        $user = $this->userRepository->find($userId);
+        if (!$user) {
+            return false;
+        }
+
+        try {
+            $entityManager = $this->userRepository->getEntityManager();
+            $entityManager->remove($user);
+            $entityManager->flush();
+            return true;
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to delete user', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            return false;
         }
     }
 }

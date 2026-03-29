@@ -54,6 +54,7 @@ class AuthController extends AbstractController
                         'email' => $email,
                         'user_id' => $user['id'],
                         'username' => $user['username'],
+                        'is_admin' => $user['is_admin'] ?? false,
                         'ip' => $request->getClientIp()
                     ]);
                     
@@ -149,6 +150,7 @@ class AuthController extends AbstractController
                     $error = 'Unable to save changes. Email may be in use, or validation failed.';
                 } else {
                     $success = 'Account settings updated successfully.';
+                    $updated['is_admin'] = $this->authService->isAdmin($authUser['id']);
                     $session->set('auth_user', $updated);
                 }
             }

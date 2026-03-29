@@ -13,7 +13,7 @@
             <div class="grid">
                 {% for voyage in favorites %}
                     <article class="card">
-                        <img src="{{ voyage.image_url ?: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title }}" class="card-image">
+                        <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title }}" class="card-image">
                         <div class="card-body">
                             <p class="meta">{{ voyage.destination }} • {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
                             <h3>{{ voyage.title }}</h3>

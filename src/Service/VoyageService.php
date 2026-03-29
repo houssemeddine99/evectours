@@ -104,63 +104,63 @@ class VoyageService
         return null;
     }
 
-    private function mapVoyage(object $voyage): array
-    {
-        return [
-            'id' => $voyage->getId(),
-            'title' => $voyage->getTitle(),
-            'description' => $voyage->getDescription(),
-            'destination' => $voyage->getDestination(),
-            'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
-            'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
-            'price' => $voyage->getPrice(),
-            'image_url' => $voyage->getImageUrl()[0] ?? null,
-        ];
-    }
+private function mapVoyage(object $voyage): array
+{
+    return [
+        'id' => $voyage->getId(),
+        'title' => $voyage->getTitle(),
+        'description' => $voyage->getDescription(),
+        'destination' => $voyage->getDestination(),
+        'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
+        'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
+        'price' => $voyage->getPrice(),
+        'image_url' => $voyage->getImageUrl(),
+    ];
+}
 
-    private function fallbackVoyages(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'title' => 'Magical Marrakech',
-                'description' => 'Explore souks, palaces, and desert evenings in a 5-day curated trip.',
-                'destination' => 'Marrakech, Morocco',
-                'start_date' => '2026-04-10',
-                'end_date' => '2026-04-15',
-                'price' => 950,
-                'image_url' => 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&w=1200&q=80',
-            ],
-            [
-                'id' => 2,
-                'title' => 'Santorini Sunsets',
-                'description' => 'A romantic 6-day escape with sea-view stays and guided island tours.',
-                'destination' => 'Santorini, Greece',
-                'start_date' => '2026-06-05',
-                'end_date' => '2026-06-11',
-                'price' => 1400,
-                'image_url' => 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80',
-            ],
-            [
-                'id' => 3,
-                'title' => 'Istanbul Heritage Tour',
-                'description' => 'Experience Ottoman architecture, Bosphorus cruises, and rich street food.',
-                'destination' => 'Istanbul, Turkey',
-                'start_date' => '2026-05-12',
-                'end_date' => '2026-05-18',
-                'price' => 1100,
-                'image_url' => 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1200&q=80',
-            ],
-            [
-                'id' => 4,
-                'title' => 'Dubai Adventure',
-                'description' => 'Luxury city experience with desert safari and premium activities.',
-                'destination' => 'Dubai, UAE',
-                'start_date' => '2026-09-03',
-                'end_date' => '2026-09-08',
-                'price' => 1700,
-                'image_url' => 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
-            ],
-        ];
-    }
+private function fallbackVoyages(): array
+{
+    return [
+        [
+            'id' => 1,
+            'title' => 'Magical Marrakech',
+            'description' => 'Explore souks, palaces, and desert evenings in a 5-day curated trip.',
+            'destination' => 'Marrakech, Morocco',
+            'start_date' => '2026-04-10',
+            'end_date' => '2026-04-15',
+            'price' => 950,
+            'image_url' => ['https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&w=1200&q=80'],
+        ],
+        [
+            'id' => 2,
+            'title' => 'Santorini Sunsets',
+            'description' => 'A romantic 6-day escape with sea-view stays and guided island tours.',
+            'destination' => 'Santorini, Greece',
+            'start_date' => '2026-06-05',
+            'end_date' => '2026-06-11',
+            'price' => 1400,
+            'image_url' => ['https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1200&q=80'],
+        ],
+        [
+            'id' => 3,
+            'title' => 'Istanbul Heritage Tour',
+            'description' => 'Experience Ottoman architecture, Bosphorus cruises, and rich street food.',
+            'destination' => 'Istanbul, Turkey',
+            'start_date' => '2026-05-12',
+            'end_date' => '2026-05-18',
+            'price' => 1100,
+            'image_url' => ['https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1200&q=80'],
+        ],
+        [
+            'id' => 4,
+            'title' => 'Dubai Adventure',
+            'description' => 'Luxury city experience with desert safari and premium activities.',
+            'destination' => 'Dubai, UAE',
+            'start_date' => '2026-09-03',
+            'end_date' => '2026-09-08',
+            'price' => 1700,
+            'image_url' => ['https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80'],
+        ],
+    ];
+}
 }

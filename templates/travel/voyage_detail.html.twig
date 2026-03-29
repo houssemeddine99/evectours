@@ -3,37 +3,185 @@
 {% block title %}{{ voyage.title|default('Voyage details') }} | Travagir{% endblock %}
 
 {% block body %}
-    <section class="detail voyage-detail-card">
-        <img src="{{ voyage.image_url ?: fallback_image }}" alt="{{ voyage.title|default('Voyage image') }}" class="detail-image voyage-detail-image">
-        <div class="detail-content voyage-detail-content">
-            <div class="voyage-headline">
-                <div>
-                    <p class="meta">{{ voyage.destination|default('') }}</p>
-                    <h1>{{ voyage.title|default('') }}</h1>
-                </div>
-                <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
-            </div>
-
-            <p class="voyage-description">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
-            <p class="voyage-price"><strong>Starting from:</strong> {{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</p>
-
-            <h2>Activities</h2>
-            <ul class="activity-list">
-                {% for activity in voyage.activities|default([]) %}
-                    <li>
-                        <strong>{{ activity.name|default('Activity') }}</strong>
-                        — {{ activity.description|default('Description not available.') }}
-                        ({{ activity.duration_hours ?? 'N/A' }} hrs, {{ activity.price_per_person is not empty ? '$' ~ activity.price_per_person|number_format(2, '.', ',') : 'Price on request' }} / person)
-                    </li>
+    <section class="voyage-hero">
+        <div class="hero-overlay"></div>
+        <div class="voyage-gallery-section">
+            <div class="image-gallery">
+                {% set images = voyage.image_url|default([]) %}
+                {% if images is iterable and images|length > 0 %}
+                    <div class="gallery-container">
+                        <div class="gallery-main" style="background: linear-gradient(135deg, #0a0f1c 0%, #1a2f4a 100%);">
+                            <img src="{{ images[0] }}" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image" id="mainImage">
+                            <div class="gallery-gradient-overlay"></div>
+                            {% if images|length > 1 %}
+                                <button class="gallery-nav gallery-prev" onclick="changeImage(-1)" aria-label="Previous image">❮</button>
+                                <button class="gallery-nav gallery-next" onclick="changeImage(1)" aria-label="Next image">❯</button>
+                                <div class="image-counter" id="imageCounter">1 / {{ images|length }}</div>
+                            {% endif %}
+                        </div>
+                        {% if images|length > 1 %}
+                            <div class="gallery-thumbnails">
+                                {% for image in images %}
+                                    <img src="{{ image }}" alt="Thumbnail {{ loop.index }}" class="thumbnail {% if loop.first %}active{% endif %}" onclick="selectImage({{ loop.index0 }})">
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 {% else %}
-                    <li>No activities listed yet for this voyage.</li>
-                {% endfor %}
-            </ul>
+                    <div class="gallery-container">
+                        <div class="gallery-main" style="background: linear-gradient(135deg, #0a0f1c 0%, #1a2f4a 100%);">
+                            <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image">
+                            <div class="gallery-gradient-overlay"></div>
+                        </div>
+                    </div>
+                {% endif %}
+        </div>
+    </section>
 
-            <div class="voyage-actions">
-                <a class="btn btn-primary" href="{{ path('travel_voyage_reserve', {id: voyage.id}) }}">Reserve Now</a>
-                <a class="btn btn-register" href="{{ path('travel_voyages') }}">Back to list</a>
+    <section class="voyage-detail-container">
+        <div class="voyage-detail-wrapper">
+            <!-- Main Content Card -->
+            <div class="voyage-main-card">
+                <div class="voyage-header-section">
+                    <div class="voyage-headline-enhanced">
+                        <div class="headline-content">
+                            <p class="meta-location">🌍 {{ voyage.destination|default('') }}</p>
+                            <h1 class="voyage-title-premium">{{ voyage.title|default('') }}</h1>
+                            <p class="voyage-tagline">Discover unforgettable experiences in your next adventure</p>
+                        </div>
+                        <div class="voyage-date-badge">
+                            <span class="badge-icon">📅</span>
+                            <span class="badge-text">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Info Cards -->
+                    <div class="voyage-quick-info">
+                        <div class="info-card">
+                            <span class="info-icon">💰</span>
+                            <div class="info-content">
+                                <p class="info-label">Starting Price</p>
+                                <p class="info-value">{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Contact us' }}</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-icon">⏱️</span>
+                            <div class="info-content">
+                                <p class="info-label">Duration</p>
+                                <p class="info-value">5-7 days</p>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <span class="info-icon">✈️</span>
+                            <div class="info-content">
+                                <p class="info-label">Voyage Type</p>
+                                <p class="info-value">Premium</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="voyage-separator"></div>
+
+                <!-- Description Section -->
+                <div class="voyage-description-section">
+                    <h2 class="section-title">About This Journey</h2>
+                    <p class="voyage-description">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
+                </div>
+
+                <!-- Activities Section -->
+                {% if voyage.activities|default([]) is not empty %}
+                <div class="voyage-activities-section">
+                    <h2 class="section-title">✨ Included Activities</h2>
+                    <div class="activities-grid">
+                        {% for activity in voyage.activities %}
+                            <div class="activity-card">
+                                <div class="activity-header">
+                                    <h3>{{ activity.name|default('Activity') }}</h3>
+                                    <span class="activity-duration">⏱ {{ activity.duration_hours ?? 'N/A' }}h</span>
+                                </div>
+                                <p class="activity-description">{{ activity.description|default('Description not available.') }}</p>
+                                <div class="activity-footer">
+                                    <span class="activity-price">{{ activity.price_per_person is not empty ? '$' ~ activity.price_per_person|number_format(2, '.', ',') : 'Included' }}</span>
+                                    <span class="activity-label">per person</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="voyage-actions">
+                    <a class="btn btn-primary btn-reserve" href="{{ path('travel_voyage_reserve', {id: voyage.id}) }}">
+                        <span class="btn-text">Reserve Your Spot</span>
+                        <span class="btn-arrow">→</span>
+                    </a>
+                    <a class="btn btn-secondary btn-back" href="{{ path('travel_voyages') }}">
+                        <span class="btn-text">Back to voyages</span>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
+
+    <script>
+        // Store images array globally
+        const images = {{ voyage.image_url is iterable ? voyage.image_url|json_encode|raw : '[]' }};
+        let currentImageIndex = 0;
+
+        function changeImage(direction) {
+            if (images.length <= 1) return;
+            
+            currentImageIndex += direction;
+            
+            // Wrap around
+            if (currentImageIndex < 0) {
+                currentImageIndex = images.length - 1;
+            } else if (currentImageIndex >= images.length) {
+                currentImageIndex = 0;
+            }
+            
+            updateImage();
+        }
+
+        function selectImage(index) {
+            currentImageIndex = index;
+            updateImage();
+        }
+
+        function updateImage() {
+            const mainImage = document.getElementById('mainImage');
+            const imageCounter = document.getElementById('imageCounter');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            
+            if (mainImage) {
+                mainImage.src = images[currentImageIndex];
+            }
+            
+            if (imageCounter) {
+                imageCounter.textContent = (currentImageIndex + 1) + ' / ' + images.length;
+            }
+            
+            // Update active thumbnail
+            thumbnails.forEach((thumb, index) => {
+                if (index === currentImageIndex) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        }
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (images.length <= 1) return;
+            
+            if (e.key === 'ArrowLeft') {
+                changeImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeImage(1);
+            }
+        });
+    </script>
 {% endblock %}

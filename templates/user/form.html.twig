@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ is_edit ? 'Edit User' : 'Create User' }} | Travagir{% endblock %}
+
+{% block body %}
+    <section>
+        <h1>{{ is_edit ? 'Modify User' : 'New User' }}</h1>
+
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="card settings-card">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ formData.username }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ formData.email }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tel">Phone</label>
+                <input type="tel" id="tel" name="tel" value="{{ formData.tel }}" placeholder="+1 555 555 5555">
+            </div>
+
+            <div class="form-group">
+                <label for="image_url">Profile Image URL</label>
+                <input type="url" id="image_url" name="image_url" value="{{ formData.image_url }}" placeholder="https://...">
+            </div>
+
+            {% if not is_edit %}
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+            {% else %}
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" value="{{ formData.current_password }}" placeholder="Needed to change password">
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password" value="{{ formData.new_password }}" placeholder="Leave blank to keep current password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" value="{{ formData.confirm_password }}" placeholder="Re-type new password">
+                </div>
+            {% endif %}
+
+            <button type="submit" class="btn-register">{{ is_edit ? 'Save changes' : 'Create user' }}</button>
+            <a class="btn btn-small" href="{{ path('account_users') }}">Cancel</a>
+        </form>
+    </section>
+{% endblock %}
