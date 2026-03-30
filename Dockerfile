@@ -19,6 +19,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 
 # 2. Copy the rest of the application
 COPY . .
+COPY .env.example .env
 
 # 3. Directory setup (no cache:warmup here)
 RUN mkdir -p var/cache var/log
