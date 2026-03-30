@@ -21,6 +21,17 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 COPY . .
 COPY .env.example .env
 
+# 2b. Ensure .htaccess exists in public folder for Apache routing
+RUN if [ ! -f public/.htaccess ]; then echo '<IfModule mod_rewrite.c>\n\
+    RewriteEngine On\n\
+    RewriteBase /\n\
+    RewriteCond %{HTTP:Authorization} ^(.*)\n\
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]\n\
+    RewriteCond %{REQUEST_FILENAME} !-f\n\
+    RewriteCond %{REQUEST_FILENAME} !-d\n\
+    RewriteRule ^(.*)$ index.php [QSA,L]\n\
+</IfModule>' > public/.htaccess; fi
+
 # 3. Directory setup (no cache:warmup here)
 RUN mkdir -p var/cache var/log
 
@@ -41,8 +52,24 @@ RUN echo '<VirtualHost *:80>\n\
 
 EXPOSE 80
 
-# 6. Startup script - cache:warmup runs at runtime with env vars available
-CMD php bin/console cache:clear --env=prod && \
-    php bin/console cache:warmup --env=prod && \
-    php bin/console doctrine:migrations:migrate --no-interaction && \
-    apache2-foreground
+# 6. Create startup script - cache operations run at runtime with env vars available
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "========================================"\n\
+echo "Starting Symfony Application"\n\
+echo "========================================"\n\
+echo ""\n\
+echo "[1/4] Clearing cache..."\n\
+php bin/console cache:clear --env=prod\n\
+echo ""\n\
+echo "[2/4] Warming up cache..."\n\
+php bin/console cache:warmup --env=prod\n\
+echo ""\n\
+echo "[3/4] Running migrations..."\n\
+php bin/console doctrine:migrations:migrate --no-interaction\n\
+echo ""\n\
+echo "[4/4] Starting Apache..."\n\
+apache2-foreground' > /startup.sh && chmod +x /startup.sh
+
+# Start the application using the startup script
+CMD ["/startup.sh"]
