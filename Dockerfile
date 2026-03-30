@@ -66,3 +66,5 @@ RUN echo '<VirtualHost *:80>\n\
 # Expose port 80 and start Apache
 EXPOSE 80
 CMD ["apache2-foreground"]
+# Run migrations then start Apache
+CMD php bin/console doctrine:migrations:migrate --no-interaction && apache2-foreground
