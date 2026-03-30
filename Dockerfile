@@ -1,7 +1,7 @@
-# Use PHP 8.4 with Apache
+# Use PHP 8.4 with Apache to match your local environment
 FROM php:8.4-apache
 
-# Install system dependencies
+# Install system dependencies for Symfony, PostgreSQL, and Intl
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -25,36 +25,34 @@ WORKDIR /var/www/html
 # Allow Composer to run as root for Render
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copy composer files first
+# 1. Copy composer files first to cache dependencies
 COPY composer.json composer.lock ./
 
-# Install dependencies (without scripts)
+# 2. Install dependencies (without running scripts yet)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Copy application code
+# 3. Copy the rest of your application code
 COPY . .
 
-# ============================================================
-# THE FIX: Generate the compiled env file for production.
-# This makes Symfony stop looking for the .env file and 
-# use the variables you provided in the Render dashboard.
-# ============================================================
-RUN composer dump-env prod
+# 4. THE FIX: Create a temporary .env so composer can "dump" it for production
+# This uses the environment variables you set in the Render dashboard
+RUN echo "APP_ENV=prod" > .env && composer dump-env prod
 
-# Ensure var directory exists
+# 5. Ensure the var directory exists for Symfony cache and logs
 RUN mkdir -p var/cache var/log
 
-# Set permissions
+# 6. Set correct permissions for the Apache user
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/var
 
-# Enable Apache mod_rewrite
+# 7. Enable Apache mod_rewrite for Symfony routing
 RUN a2enmod rewrite
 
-# Configure Apache
+# 8. Set ServerName to avoid Apache warnings
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
+# 9. Configure Apache VirtualHost to point to the /public directory
 RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
@@ -65,6 +63,6 @@ RUN echo '<VirtualHost *:80>\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Expose and Start
+# Expose port 80 and start Apache
 EXPOSE 80
 CMD ["apache2-foreground"]
