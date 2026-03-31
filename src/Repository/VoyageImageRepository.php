@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\VoyageImage;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<VoyageImage>
+ */
+class VoyageImageRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, VoyageImage::class);
+    }
+
+    /**
+     * Find all images for a specific voyage
+     *
+     * @return VoyageImage[]
+     */
+   public function findByVoyageId(int $voyageId): array
+    {
+        $images = $this->findBy(['voyageId' => $voyageId]);
+        
+        if (empty($images)) {
+            return $this->getDefaultImages();
+        }
+        
+        return $images;
+    }
+
+    /**
+     * Get default images when no voyage images are found
+     */
+    private function getDefaultImages(): array
+    {
+        return [
+            [
+                'id' => null,
+                'voyageId' => null,
+                'imageUrl' => 'https://cratertravelagencies.com/assets/img/crater5.jpg',
+                'cloudinaryPublicId' => 'default',
+                'createdAt' => new \DateTime(),
+                'updatedAt' => new \DateTime(),
+            ],
+        
+        ];
+    }
+}
