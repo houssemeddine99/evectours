@@ -6,6 +6,7 @@ use App\Entity\Activity;
 use App\Repository\ActivityRepository;
 use App\Repository\VoyageRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class ActivityService
 {
@@ -13,9 +14,10 @@ class ActivityService
         private readonly ActivityRepository $activityRepository,
         private readonly VoyageRepository $voyageRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
-    
+
     /**
      * Create a new activity
      */
@@ -25,20 +27,20 @@ class ActivityService
         if (!$voyage) {
             return null;
         }
-        
+
         $activity = new Activity();
         $activity->setVoyage($voyage);
         $activity->setName($data['name'] ?? '');
         $activity->setDescription($data['description'] ?? null);
         $activity->setDurationHours($data['duration_hours'] ?? null);
         $activity->setPricePerPerson($data['price_per_person'] ?? '0.00');
-        
+
         $this->entityManager->persist($activity);
         $this->entityManager->flush();
-        
+
         return $activity;
     }
-    
+
     /**
      * Update an existing activity
      */
@@ -48,7 +50,7 @@ class ActivityService
         if (!$activity) {
             return null;
         }
-        
+
         if (isset($data['voyage_id'])) {
             $voyage = $this->voyageRepository->find($data['voyage_id']);
             if ($voyage) {
@@ -67,12 +69,12 @@ class ActivityService
         if (isset($data['price_per_person'])) {
             $activity->setPricePerPerson($data['price_per_person']);
         }
-        
+
         $this->entityManager->flush();
-        
+
         return $activity;
     }
-    
+
     /**
      * Delete an activity
      */
@@ -82,94 +84,101 @@ class ActivityService
         if (!$activity) {
             return false;
         }
-        
+
         $this->entityManager->remove($activity);
         $this->entityManager->flush();
-        
+
         return true;
     }
-    
+
     /**
      * Get all activities for admin
      */
     public function getAllActivitiesForAdmin(): array
     {
-        try {
-            $activities = $this->activityRepository->findAll();
-        } catch (\Throwable) {
-            $activities = [];
-        }
-        
-        $normalized = [];
-        foreach ($activities as $activity) {
-            $voyage = $activity->getVoyage();
-            if ($voyage === null) {
-                continue;
-            }
-            $normalized[] = [
-                'id' => $activity->getId(),
-                'name' => $activity->getName(),
-                'description' => $activity->getDescription(),
-                'duration_hours' => $activity->getDurationHours(),
-                'price_per_person' => (float) $activity->getPricePerPerson(),
-                'voyage_id' => $voyage->getId(),
-                'voyage_title' => $voyage->getTitle(),
-                'destination' => $voyage->getDestination(),
-            ];
-        }
-        return $normalized;
+        $activities = $this->safeExecute(fn () => $this->activityRepository->findAll(), []);
+
+        return $this->normalizeActivities($activities, true);
     }
-    
+
     /**
      * Get activity by ID for admin
      */
     public function getActivityByIdForAdmin(int $id): ?array
     {
-        try {
-            $activity = $this->activityRepository->find($id);
-        } catch (\Throwable) {
-            $activity = null;
-        }
-        
+        $activity = $this->safeExecute(fn () => $this->activityRepository->find($id));
+
         if ($activity === null) {
             return null;
         }
-        
-        $voyage = $activity->getVoyage();
-        
-        return [
-            'id' => $activity->getId(),
-            'name' => $activity->getName(),
-            'description' => $activity->getDescription(),
-            'duration_hours' => $activity->getDurationHours(),
-            'price_per_person' => (float) $activity->getPricePerPerson(),
-            'voyage_id' => $voyage?->getId(),
-            'voyage_title' => $voyage?->getTitle(),
-            'destination' => $voyage?->getDestination(),
-        ];
+
+        return $this->normalizeActivity($activity, true);
     }
-    
+
     /**
      * Get activities by voyage ID
      */
     public function getActivitiesByVoyageId(int $voyageId): array
     {
-        try {
-            $activities = $this->activityRepository->findBy(['voyage' => $voyageId]);
-        } catch (\Throwable) {
-            $activities = [];
-        }
-        
+        $activities = $this->safeExecute(
+            fn () => $this->activityRepository->findBy(['voyage' => $voyageId]),
+            []
+        );
+
+        return $this->normalizeActivities($activities, false);
+    }
+
+    /**
+     * Normalize activities for output
+     * @param Activity[] $activities
+     * @return array
+     */
+    private function normalizeActivities(array $activities, bool $includeVoyageInfo): array
+    {
         $normalized = [];
         foreach ($activities as $activity) {
-            $normalized[] = [
-                'id' => $activity->getId(),
-                'name' => $activity->getName(),
-                'description' => $activity->getDescription(),
-                'duration_hours' => $activity->getDurationHours(),
-                'price_per_person' => (float) $activity->getPricePerPerson(),
-            ];
+            $normalized[] = $this->normalizeActivity($activity, $includeVoyageInfo);
         }
         return $normalized;
+    }
+
+    /**
+     * Normalize a single activity for output
+     */
+    private function normalizeActivity(Activity $activity, bool $includeVoyageInfo): array
+    {
+        $data = [
+            'id' => $activity->getId(),
+            'name' => $activity->getName(),
+            'description' => $activity->getDescription(),
+            'duration_hours' => $activity->getDurationHours(),
+            'price_per_person' => (float) $activity->getPricePerPerson(),
+        ];
+
+        if ($includeVoyageInfo) {
+            $voyage = $activity->getVoyage();
+            $data['voyage_id'] = $voyage?->getId();
+            $data['voyage_title'] = $voyage?->getTitle();
+            $data['destination'] = $voyage?->getDestination();
+        }
+
+        return $data;
+    }
+
+    /**
+     * Safely execute a callback with error handling
+     * @template T
+     * @param callable(): T $callback
+     * @param T $default
+     * @return T
+     */
+    private function safeExecute(callable $callback, mixed $default = []): mixed
+    {
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            $this->logger?->error('ActivityService error', ['error' => $e->getMessage()]);
+            return $default;
+        }
     }
 }

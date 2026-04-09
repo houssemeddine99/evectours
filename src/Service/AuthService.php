@@ -3,12 +3,14 @@
 namespace App\Service;
 
 use App\Repository\UserRepository;
+use App\Repository\AdminRepository;
 use Psr\Log\LoggerInterface;
 
 class AuthService
 {
     public function __construct(
         private readonly UserRepository $userRepository,
+         private readonly AdminRepository $adminRepository, 
         private readonly LoggerInterface $logger
     ) {
     }
@@ -129,11 +131,11 @@ class AuthService
                 return null; // Email already exists
             }
 
-            $user = new \App\Entity\User();
-            $user->setUsername($username);
-            $user->setEmail($email);
-            $user->setPassword(password_hash($plainPassword, PASSWORD_DEFAULT));
-            $user->setCreatedAt(new \DateTime());
+        $user = new \App\Entity\User();
+        $user->setUsername($username);
+        $user->setEmail($email);
+        $user->setPassword($plainPassword); // setPassword() now hashes automatically
+        $user->setCreatedAt(new \DateTime());
 
             $entityManager = $this->userRepository->getEntityManager();
             $entityManager->persist($user);
@@ -167,16 +169,11 @@ class AuthService
         ];
     }
 
-    public function isAdmin(int $userId): bool
-    {
-        try {
-            $connection = $this->userRepository->getEntityManager()->getConnection();
-            $result = $connection->fetchOne('SELECT access_level FROM admins WHERE user_id = ?', [$userId]);
-            return $result !== false;
-        } catch (\Throwable $e) {
-            return false;
-        }
-    }
+ public function isAdmin(int $userId): bool
+{
+    $admin = $this->adminRepository->findByUserId($userId);
+    return $admin !== null;
+}
 
     public function checkPasswordForUser(int $userId, string $plainPassword): bool
     {
@@ -221,9 +218,9 @@ class AuthService
         $user->setTel($tel);
         $user->setImageUrl($imageUrl);
 
-        if ($newPassword !== null && $newPassword !== '') {
-            $user->setPassword(password_hash($newPassword, PASSWORD_DEFAULT));
-        }
+    if ($newPassword !== null && $newPassword !== '') {
+        $user->setPassword($newPassword); // setPassword() now hashes automatically
+    }
 
         try {
             $entityManager = $this->userRepository->getEntityManager();

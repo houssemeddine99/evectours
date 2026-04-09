@@ -33,7 +33,7 @@
                             {% set authUser = app.session.get('auth_user') %}
                             {% if authUser is defined and authUser is not empty and authUser.is_admin|default(false) %}
                                 <a href="{{ path('admin_dashboard') }}" class="account-link">Admin Dashboard</a>
-                                <a href="{{ path('account_users') }}" class="account-link">Manage Users</a>
+                                <a href="{{ path('admin_users') }}" class="account-link">Manage Users</a>
                                 <a href="{{ path('admin_reservations') }}" class="account-link">Manage Reservations</a>
                             {% endif %}
                             <hr>

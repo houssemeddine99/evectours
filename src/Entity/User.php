@@ -69,7 +69,8 @@ class User
 
     public function setPassword(string $password): self
     {
-        $this->password = $password;
+        // Hash the password automatically using bcrypt (default algorithm)
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
 
         return $this;
     }

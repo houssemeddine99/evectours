@@ -15,4 +15,11 @@ class ContactController extends AbstractController
             'active_nav' => 'contact',
         ]);
     }
+
+      #[Route('/favicon.ico', name: 'travel_favicon', methods: ['GET'])]
+    public function favicon(): Response
+    {
+        return new Response('', Response::HTTP_NO_CONTENT);
+    }
+
 }
