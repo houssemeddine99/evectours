@@ -3,11 +3,56 @@
 {% block title %}Voyages | Travagir{% endblock %}
 
 {% block body %}
-    <section>
-        <h1>Available Voyages</h1>
-        <p class="lead">Choose your next destination from our curated travel collection.</p>
-        <div class="grid">
-            {% for voyage in voyages %}
+<section>
+<h1>Available Voyages</h1>
+<p class="lead">Choose your next destination from our curated travel collection.</p>
+
+{# Filter Section #}
+<div class="filter-bar">
+    <form method="get" action="{{ path('travel_voyages') }}" class="filter-form">
+        <div class="filter-row">
+            <div class="filter-field">
+                <label for="search">Search</label>
+                <input type="text" id="search" name="search" value="{{ app.request.query.get('search', '') }}" placeholder="Search destinations...">
+            </div>
+            
+            <div class="filter-field">
+                <label for="min_price">Min Price</label>
+                <input type="number" id="min_price" name="min_price" value="{{ app.request.query.get('min_price', '') }}" placeholder="Min" min="0" step="0.01">
+            </div>
+            
+            <div class="filter-field">
+                <label for="max_price">Max Price</label>
+                <input type="number" id="max_price" name="max_price" value="{{ app.request.query.get('max_price', '') }}" placeholder="Max" min="0" step="0.01">
+            </div>
+            
+            <div class="filter-field">
+                <label for="sort_by">Sort By</label>
+                <select id="sort_by" name="sort_by">
+                    <option value="startDate" {{ app.request.query.get('sort_by', 'startDate') == 'startDate' ? 'selected' : '' }}>Date</option>
+                    <option value="price" {{ app.request.query.get('sort_by') == 'price' ? 'selected' : '' }}>Price</option>
+                    <option value="title" {{ app.request.query.get('sort_by') == 'title' ? 'selected' : '' }}>Name</option>
+                </select>
+            </div>
+            
+            <div class="filter-field">
+                <label for="sort_order">Order</label>
+                <select id="sort_order" name="sort_order">
+                    <option value="ASC" {{ app.request.query.get('sort_order', 'ASC') == 'ASC' ? 'selected' : '' }}>Ascending</option>
+                    <option value="DESC" {{ app.request.query.get('sort_order') == 'DESC' ? 'selected' : '' }}>Descending</option>
+                </select>
+            </div>
+            
+            <div class="filter-buttons">
+                <button type="submit" class="btn-filter">Apply</button>
+                <a href="{{ path('travel_voyages') }}" class="btn-filter btn-filter-clear">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="grid">
+{% for voyage in voyages %}
                 <article class="card voyage-card">
                     <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
                     <div class="card-body">

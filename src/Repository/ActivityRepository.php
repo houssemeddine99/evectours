@@ -15,4 +15,12 @@ class ActivityRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Activity::class);
     }
+    public function findByVoyageId(int $voyageId): array
+{
+    return $this->createQueryBuilder('a')
+        ->andWhere('a.voyage = :voyage')
+        ->setParameter('voyage', $voyageId) // Doctrine handles ID to entity
+        ->getQuery()
+        ->getResult();
+}
 }

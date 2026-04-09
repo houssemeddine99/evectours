@@ -10,7 +10,7 @@
             <p class="lead">Welcome back! Here's an overview of your travel agency.</p>
         </div>
         <div class="header-actions">
-            <a href="{{ path('account_users_new') }}" class="btn btn-primary">
+            <a href="{{ path('admin_users_new') }}" class="btn btn-primary">
                 <span>➕</span> Add New User
             </a>
         </div>
@@ -24,7 +24,7 @@
                 <span class="stat-value">{{ stats.total_users }}</span>
                 <span class="stat-label">Total Users</span>
             </div>
-            <a href="{{ path('account_users') }}" class="stat-link">View All →</a>
+            <a href="{{ path('admin_users') }}" class="stat-link">View All →</a>
         </div>
 
         <div class="stat-card stat-reservations">
@@ -75,7 +75,7 @@
     <section class="quick-actions">
         <h2>Quick Actions</h2>
         <div class="actions-grid">
-            <a href="{{ path('account_users') }}" class="action-card">
+            <a href="{{ path('admin_users') }}" class="action-card">
                 <span class="action-icon">👤</span>
                 <span class="action-title">Manage Users</span>
                 <span class="action-desc">View, edit, and delete user accounts</span>
@@ -140,7 +140,7 @@
         <section class="recent-section">
             <div class="section-header">
                 <h2>Recent Users</h2>
-                <a href="{{ path('account_users') }}" class="view-all">View All →</a>
+                <a href="{{ path('admin_users') }}" class="view-all">View All →</a>
             </div>
             {% if recent_users|length > 0 %}
             <div class="recent-list">

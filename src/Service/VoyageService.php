@@ -17,7 +17,7 @@ class VoyageService
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
-    
+
     /**
      * Create a new voyage
      */
@@ -30,15 +30,15 @@ class VoyageService
         $voyage->setStartDate(isset($data['start_date']) ? new \DateTime($data['start_date']) : null);
         $voyage->setEndDate(isset($data['end_date']) ? new \DateTime($data['end_date']) : null);
         $voyage->setPrice($data['price'] ?? null);
-        $voyage->setImageUrl($data['image_url'] ?? []);
+       // $voyage->setImageUrl($data['image_url'] ?? []);
         $voyage->setCreatedAt(new \DateTime());
-        
+
         $this->entityManager->persist($voyage);
         $this->entityManager->flush();
-        
+
         return $voyage;
     }
-    
+
     /**
      * Update an existing voyage
      */
@@ -48,7 +48,7 @@ class VoyageService
         if (!$voyage) {
             return null;
         }
-        
+
         if (isset($data['title'])) {
             $voyage->setTitle($data['title']);
         }
@@ -67,15 +67,13 @@ class VoyageService
         if (isset($data['price'])) {
             $voyage->setPrice($data['price']);
         }
-        if (isset($data['image_url'])) {
-            $voyage->setImageUrl($data['image_url']);
-        }
-        
+     
+
         $this->entityManager->flush();
-        
+
         return $voyage;
     }
-    
+
     /**
      * Delete a voyage
      */
@@ -85,55 +83,41 @@ class VoyageService
         if (!$voyage) {
             return false;
         }
-        
+
         $this->entityManager->remove($voyage);
         $this->entityManager->flush();
-        
+
         return true;
     }
-    
+
     /**
      * Get all voyages for admin
      */
     public function getAllVoyagesForAdmin(): array
     {
-        try {
-            $voyages = $this->voyageRepository->findAllOrdered();
-        } catch (\Throwable) {
-            $voyages = [];
-        }
-        
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllOrdered());
+
         return array_map(fn ($voyage) => $this->mapVoyageForAdmin($voyage), $voyages);
     }
-    
+
     /**
      * Get voyage by ID for admin
      */
     public function getVoyageByIdForAdmin(int $id): ?array
     {
-        try {
-            $voyage = $this->voyageRepository->find($id);
-        } catch (\Throwable) {
-            $voyage = null;
-        }
-        
+        $voyage = $this->safeExecute(fn () => $this->voyageRepository->find($id));
+
         if ($voyage !== null) {
             return $this->mapVoyageForAdmin($voyage);
         }
-        
+
         return null;
     }
-    
+
     private function mapVoyageForAdmin(object $voyage): array
     {
-        $images = $this->voyageImageRepository->findByVoyageId($voyage->getId());
-        $imageUrls = array_map(function ($image) {
-            if (is_array($image)) {
-                return $image['imageUrl'] ?? '';
-            }
-            return $image->getImageUrl();
-        }, $images);
-        
+        $imageUrls = $this->extractImageUrls($voyage->getId());
+
         return [
             'id' => $voyage->getId(),
             'title' => $voyage->getTitle(),
@@ -151,54 +135,33 @@ class VoyageService
 
     public function getFeaturedVoyages(int $limit = 3): array
     {
-        try {
-            $voyages = $this->voyageRepository->findFeatured($limit);
-        } catch (\Throwable) {
-            $voyages = [];
-        }
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findFeatured($limit));
 
         return array_map(fn ($voyage) => $this->mapVoyage($voyage), $voyages);
     }
 
     public function getAllVoyages(): array
     {
-        try {
-            $voyages = $this->voyageRepository->findAllOrdered();
-        } catch (\Throwable) {
-            $voyages = [];
-        }
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllOrdered());
 
         return array_map(fn ($voyage) => $this->mapVoyage($voyage), $voyages);
     }
 
     public function getVoyages(int $page = 1, int $limit = 12): array
     {
-        try {
-            $offset = ($page - 1) * $limit;
-            $voyages = $this->voyageRepository->findBy([], ['createdAt' => 'DESC'], $limit, $offset);
-        } catch (\Throwable) {
-            $voyages = [];
-        }
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit));
 
         return array_map(fn ($voyage) => $this->mapVoyage($voyage), $voyages);
     }
 
     public function getTotalVoyages(): int
     {
-        try {
-            return $this->voyageRepository->count([]);
-        } catch (\Throwable) {
-            return 0;
-        }
+        return $this->safeExecute(fn () => $this->voyageRepository->count([]), 0);
     }
 
     public function getVoyageById(int $id): ?array
     {
-        try {
-            $voyage = $this->voyageRepository->find($id);
-        } catch (\Throwable) {
-            $voyage = null;
-        }
+        $voyage = $this->safeExecute(fn () => $this->voyageRepository->find($id));
 
         if ($voyage !== null) {
             $mapped = $this->mapVoyage($voyage);
@@ -219,56 +182,71 @@ class VoyageService
         return null;
     }
 
-private function mapVoyage(object $voyage): array
-{
-    // Fetch images from voyage_images table
-    $images = $this->voyageImageRepository->findByVoyageId($voyage->getId());
+    private function mapVoyage(object $voyage): array
+    {
+     
 
-    $imageUrls = array_map(function ($image) {
-        // Handle both VoyageImage objects and plain arrays (from getDefaultImages)
-        if (is_array($image)) {
-            return $image['imageUrl'] ?? '';
+        return [
+            'id' => $voyage->getId(),
+            'title' => $voyage->getTitle(),
+            'description' => $voyage->getDescription(),
+            'destination' => $voyage->getDestination(),
+            'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
+            'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
+            'price' => $voyage->getPrice(),
+            'image_url'  => $this->extractImageUrls($voyage->getId())
+        ];
+    }
+
+    /**
+     * Extract image URLs from voyage images repository
+     * @return string[]
+     */
+    public function extractImageUrls(int $voyageId): array
+    {
+        $images = $this->safeExecute(fn () => $this->voyageImageRepository->findByVoyageId($voyageId), []);
+
+        return array_map(function ($image) {
+            if (is_array($image)) {
+                return $image['imageUrl'] ?? '';
+            }
+            return $image->getImageUrl();
+        }, $images);
+    }
+
+    /**
+     * Safely execute a callback with error handling
+     * @template T
+     * @param callable(): T $callback
+     * @param T $default
+     * @return T
+     */
+    private function safeExecute(callable $callback, mixed $default = []): mixed
+    {
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            $this->logger?->error('Service error', ['error' => $e->getMessage()]);
+            return $default;
         }
-        return $image->getImageUrl();
-    }, $images);
+    }
 
-    return [
-        'id' => $voyage->getId(),
-        'title' => $voyage->getTitle(),
-        'description' => $voyage->getDescription(),
-        'destination' => $voyage->getDestination(),
-        'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
-        'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
-        'price' => $voyage->getPrice(),
-        'image_url' => $imageUrls,
-    ];
-}
-
-/**
- * Search voyages with filters
- */
-public function searchVoyages(array $filters): array
-{
-    try {
+    /**
+     * Search voyages with filters
+     */
+    public function searchVoyages(array $filters): array
+    {
         $this->logger?->info('Searching voyages with filters', $filters);
-        $voyages = $this->voyageRepository->search($filters);
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage), $voyages);
-    } catch (\Throwable $e) {
-        $this->logger?->error('Error searching voyages', ['error' => $e->getMessage()]);
-        return [];
-    }
-}
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->search($filters));
 
-/**
- * Count search results
- */
-public function countSearchResults(array $filters): int
-{
-    try {
-        return $this->voyageRepository->countSearch($filters);
-    } catch (\Throwable $e) {
-        $this->logger?->error('Error counting search results', ['error' => $e->getMessage()]);
-        return 0;
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage), $voyages);
     }
-}
+
+    /**
+     * Count search results
+     */
+    public function countSearchResults(array $filters): int
+    {
+        return $this->safeExecute(fn () => $this->voyageRepository->countSearch($filters), 0);
+    }
 }

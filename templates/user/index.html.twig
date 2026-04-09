@@ -9,7 +9,7 @@
             <h1>User Management</h1>
             <p class="lead">Manage and organize all registered users.</p>
         </div>
-        <a href="{{ path('account_users_new') }}" class="btn btn-register">
+        <a href="{{ path('admin_users_new') }}" class="btn btn-register">
             <span>+</span> New User
         </a>
     </div>
@@ -29,12 +29,88 @@
     </div>
     {% endfor %}
 
-    {% if users is empty %}
+{# Filter Section #}
+<div class="filters-wrapper">
+    <button class="filters-toggle" type="button" onclick="toggleFilters()">
+        <span class="filter-icon">⚙</span>
+        <span class="filter-text">Filters</span>
+        <span class="filter-arrow">▼</span>
+    </button>
+    
+    <div class="filters-panel" id="filtersPanel">
+        <form method="get" action="{{ path('account_users') }}" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-card search-card">
+                    <div class="filter-icon-wrap">🔍</div>
+                    <div class="filter-content">
+                        <label for="search">Search</label>
+                        <input type="text" id="search" name="search" value="{{ app.request.query.get('search', '') }}" placeholder="Search users...">
+                    </div>
+                </div>
+                
+                <div class="filter-card role-card">
+                    <div class="filter-icon-wrap">👤</div>
+                    <div class="filter-content">
+                        <label for="role">Role</label>
+                        <select id="role" name="role">
+                            <option value="">All Roles</option>
+                            <option value="admin" {{ app.request.query.get('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="user" {{ app.request.query.get('role') == 'user' ? 'selected' : '' }}>User</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-card sort-card">
+                    <div class="filter-icon-wrap">↕</div>
+                    <div class="filter-content">
+                        <label for="sort_by">Sort By</label>
+                        <select id="sort_by" name="sort_by">
+                            <option value="created_at" {{ app.request.query.get('sort_by', 'created_at') == 'created_at' ? 'selected' : '' }}>Joined Date</option>
+                            <option value="username" {{ app.request.query.get('sort_by') == 'username' ? 'selected' : '' }}>Name</option>
+                            <option value="email" {{ app.request.query.get('sort_by') == 'email' ? 'selected' : '' }}>Email</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-card order-card">
+                    <div class="filter-icon-wrap">📅</div>
+                    <div class="filter-content">
+                        <label for="sort_order">Order</label>
+                        <select id="sort_order" name="sort_order">
+                            <option value="DESC" {{ app.request.query.get('sort_order', 'DESC') == 'DESC' ? 'selected' : '' }}>Newest First</option>
+                            <option value="ASC" {{ app.request.query.get('sort_order') == 'ASC' ? 'selected' : '' }}>Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-filter-apply">
+                        <span>✓</span> Apply
+                    </button>
+                    <a href="{{ path('account_users') }}" class="btn btn-filter-clear">
+                        <span>✕</span> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleFilters() {
+    const panel = document.getElementById('filtersPanel');
+    const toggle = document.querySelector('.filters-toggle');
+    panel.classList.toggle('active');
+    toggle.classList.toggle('active');
+}
+</script>
+
+{% if users is empty %}
     <div class="empty-state">
         <span class="empty-icon">👥</span>
         <h3>No users found</h3>
         <p>There are no registered users yet.</p>
-        <a href="{{ path('account_users_new') }}" class="btn btn-primary">Create First User</a>
+        <a href="{{ path('admin_users_new') }}" class="btn btn-primary">Create First User</a>
     </div>
     {% else %}
     <!-- Stats Bar -->
@@ -399,11 +475,47 @@
     margin-bottom: 20px;
 }
 
-.alert-icon {
-    font-size: 1.1rem;
-}
+    .alert-icon {
+        font-size: 1.1rem;
+    }
 
-/* Responsive */
+    /* ========== FILTERS ========== */
+    .filters-wrapper { margin-bottom: 24px; }
+    .filters-toggle { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: linear-gradient(135deg, rgba(27, 38, 56, 0.95), rgba(19, 26, 34, 0.95)); border: 1px solid rgba(68, 121, 207, 0.5); border-radius: 12px; color: #f1f5f9; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); }
+    .filters-toggle:hover { border-color: var(--amazon-orange); }
+    .filters-toggle.active { border-color: var(--amazon-orange); background: linear-gradient(135deg, rgba(255, 153, 0, 0.15), rgba(19, 26, 34, 0.95)); }
+    .filter-arrow { margin-left: auto; transition: transform 0.3s ease; font-size: 0.75rem; }
+    .filters-toggle.active .filter-arrow { transform: rotate(180deg); }
+    .filters-panel { display: none; margin-top: 16px; background: linear-gradient(145deg, rgba(27, 38, 56, 0.98), rgba(15, 23, 34, 0.98)); border: 1px solid rgba(68, 121, 207, 0.4); border-radius: 16px; padding: 24px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4); animation: filterSlideDown 0.3s ease; }
+    .filters-panel.active { display: block; }
+    @keyframes filterSlideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .filters-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .filter-card { flex: 1; min-width: 180px; max-width: 250px; display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: rgba(15, 23, 34, 0.6); border: 1px solid rgba(68, 121, 207, 0.25); border-radius: 12px; transition: all 0.3s ease; }
+    .filter-card:hover { border-color: rgba(255, 153, 0, 0.4); }
+    .filter-card.search-card { flex: 2; min-width: 250px; max-width: 400px; }
+    .filter-icon-wrap { font-size: 1.3rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255, 153, 0, 0.15), rgba(68, 121, 207, 0.15)); border-radius: 8px; flex-shrink: 0; }
+    .filter-content { flex: 1; min-width: 0; }
+    .filter-content label { display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .filter-content input, .filter-content select { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(27, 38, 56, 0.8); color: #f1f5f9; font-size: 0.9rem; outline: none; transition: all 0.2s ease; box-sizing: border-box; }
+    .filter-content input:focus, .filter-content select:focus { border-color: var(--amazon-orange); box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15); }
+    .filter-content input::placeholder { color: rgba(255, 255, 255, 0.35); }
+    .filter-content select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffa500' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+    .filter-actions { flex: 0 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+    .btn-filter-apply, .btn-filter-clear { padding: 10px 20px; font-size: 0.85rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.3s ease; cursor: pointer; border: none; white-space: nowrap; }
+    .btn-filter-apply { background: linear-gradient(135deg, var(--amazon-orange), #ffb347); color: #0a0f1c; box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3); }
+    .btn-filter-apply:hover { transform: translateY(-2px); }
+    .btn-filter-clear { background: transparent; color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.25); }
+    .btn-filter-clear:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
+    @media (max-width: 768px) {
+        .filters-toggle { width: 100%; justify-content: center; }
+        .filters-panel { padding: 16px; }
+        .filters-grid { flex-direction: column; }
+        .filter-card, .filter-card.search-card { flex: none; width: 100%; max-width: 100%; }
+        .filter-actions { width: 100%; }
+        .btn-filter-apply, .btn-filter-clear { flex: 1; justify-content: center; }
+    }
+
+    /* Responsive */
 @media (max-width: 768px) {
     .page-header {
         flex-direction: column;

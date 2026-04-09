@@ -3,8 +3,9 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
-use App\Service\ReservationService;
 use App\Service\VoyageService;
+use App\Service\ValidationService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,8 +15,9 @@ class UserController extends AbstractController
 {
     public function __construct(
         private readonly AuthService $authService,
-        private readonly ReservationService $reservationService,
-        private readonly VoyageService $voyageService
+        private readonly VoyageService $voyageService,
+        private readonly ValidationService $validationService,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -29,23 +31,238 @@ class UserController extends AbstractController
         return null;
     }
 
-    private function ensureAdmin(Request $request): ?Response
+    // ==================== GET PROFILE/SETTINGS ====================
+
+    #[Route('/account/settings', name: 'account_settings', methods: ['GET'])]
+    public function getSettings(Request $request): Response
     {
-        $notAuth = $this->ensureAuthenticated($request);
-        if ($notAuth !== null) {
-            return $notAuth;
+        $session = $request->getSession();
+        $authUser = $session->get('auth_user');
+
+        if (!$authUser || !isset($authUser['id'])) {
+            return $this->redirectToRoute('auth_login');
         }
 
-        $authUser = $request->getSession()->get('auth_user');
-        $isAdmin = $authUser['is_admin'] ?? false;
+        $formData = [
+            'username' => $authUser['username'] ?? '',
+            'email' => $authUser['email'] ?? '',
+            'tel' => $authUser['tel'] ?? '',
+            'image_url' => $authUser['image_url'] ?? '',
+        ];
 
-        if (!$isAdmin && !$this->authService->isAdmin((int) ($authUser['id'] ?? 0))) {
-            $this->addFlash('error', 'Admin access required.');
+        return $this->render('auth/settings.html.twig', [
+            'active_nav' => 'account',
+            'formData' => $formData,
+            'error' => null,
+            'success' => null,
+        ]);
+    }
+
+    // ==================== UPDATE PROFILE/SETTINGS ====================
+
+    #[Route('/account/settings', name: 'account_settings_update', methods: ['POST'])]
+    public function updateSettings(Request $request): Response
+    {
+        $session = $request->getSession();
+        $authUser = $session->get('auth_user');
+
+        if (!$authUser || !isset($authUser['id'])) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $error = null;
+        $success = null;
+        $formData = [
+            'username' => $authUser['username'] ?? '',
+            'email' => $authUser['email'] ?? '',
+            'tel' => $authUser['tel'] ?? '',
+            'image_url' => $authUser['image_url'] ?? '',
+        ];
+
+        $formData['username'] = (string) $request->request->get('username', '');
+        $formData['email'] = (string) $request->request->get('email', '');
+        $formData['tel'] = (string) $request->request->get('tel', '');
+        $formData['image_url'] = (string) $request->request->get('image_url', '');
+        $currentPassword = (string) $request->request->get('current_password', '');
+        $newPassword = (string) $request->request->get('new_password', '');
+        $confirmPassword = (string) $request->request->get('confirm_password', '');
+
+        // Use ValidationService for validation
+        $this->validationService->clearErrors();
+        $this->validationService->validateRequired($formData, ['username', 'email']);
+        $this->validationService->validateEmail($formData['email']);
+        $this->validationService->validateString($formData['username'], 'username', 3, 50);
+        $this->validationService->validateAlphaNum($formData['username'], 'username');
+
+        // Phone validation (optional field)
+        if (!empty($formData['tel'])) {
+            $this->validationService->validatePhone($formData['tel']);
+        }
+
+        // Password validation (optional - only if new password is provided)
+        if ($newPassword !== '') {
+            $this->validationService->validateString($newPassword, 'new_password', 6);
+            if ($newPassword !== $confirmPassword) {
+                $this->validationService->getErrors()['confirm_password'][] = 'New password confirmation does not match.';
+            }
+            if ($currentPassword === '') {
+                $this->validationService->getErrors()['current_password'][] = 'You must enter your current password to change password.';
+            }
+        }
+
+        if (!$this->validationService->isValid()) {
+            $errors = $this->validationService->getErrors();
+            $error = implode(' ', array_map(fn($e) => implode(', ', $e), $errors));
+        } elseif ($currentPassword !== '' && !$this->authService->checkPasswordForUser($authUser['id'], $currentPassword)) {
+            $error = 'Current password is incorrect.';
+        } else {
+            $updated = $this->authService->updateProfile(
+                $authUser['id'],
+                $formData['username'],
+                $formData['email'],
+                $formData['tel'],
+                $formData['image_url'],
+                $newPassword !== '' ? $newPassword : null,
+                $currentPassword !== '' ? $currentPassword : null
+            );
+
+            if ($updated === null) {
+                $error = 'Unable to save changes. Email may be in use, or validation failed.';
+            } else {
+                $success = 'Account settings updated successfully.';
+                $updated['is_admin'] = $this->authService->isAdmin($authUser['id']);
+                $session->set('auth_user', $updated);
+            }
+        }
+
+        return $this->render('auth/settings.html.twig', [
+            'active_nav' => 'account',
+            'formData' => $formData,
+            'error' => $error,
+            'success' => $success,
+        ]);
+    }
+
+    // ==================== DELETE ACCOUNT ====================
+
+    #[Route('/account/delete', name: 'account_delete', methods: ['POST'])]
+    public function deleteAccount(Request $request): Response
+    {
+        $session = $request->getSession();
+        $authUser = $session->get('auth_user');
+
+        if (!$authUser || !isset($authUser['id'])) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $userId = $authUser['id'];
+
+        // Delete the user account
+        $deleted = $this->authService->deleteUser($userId);
+
+        if ($deleted) {
+            $this->logger->info('User account deleted', ['user_id' => $userId]);
+            // Clear session and redirect to home
+            $session->clear();
+            $this->addFlash('success', 'Your account has been deleted.');
+        } else {
+            $this->logger->warning('Failed to delete user account', ['user_id' => $userId]);
+            $this->addFlash('error', 'Unable to delete account. Please try again.');
+            return $this->redirectToRoute('account_settings');
+        }
+
+        return $this->redirectToRoute('travel_home');
+    }
+
+    // ==================== REGISTER ====================
+
+    #[Route('/register', name: 'auth_register', methods: ['GET', 'POST'])]
+    public function register(Request $request): Response
+    {
+        if ($request->getSession()->has('auth_user')) {
+            $this->logger->info('Already authenticated user accessing register page, redirecting to home');
             return $this->redirectToRoute('travel_home');
         }
 
-        return null;
+        $error = null;
+        $username = '';
+        $email = '';
+
+        if ($request->isMethod('POST')) {
+            $username = (string) $request->request->get('username', '');
+            $email = (string) $request->request->get('email', '');
+            $password = (string) $request->request->get('password', '');
+            $confirmPassword = (string) $request->request->get('confirm_password', '');
+
+            $this->logger->info('Registration form submitted', [
+                'username' => $username,
+                'email' => $email,
+                'ip' => $request->getClientIp()
+            ]);
+
+            // Use ValidationService for validation
+            $this->validationService->validateUserRegistration([
+                'username' => $username,
+                'email' => $email,
+                'password' => $password,
+                'tel' => ''
+            ]);
+
+            // Check password match
+            if ($password !== $confirmPassword) {
+                $this->validationService->getErrors()['confirm_password'][] = 'Passwords do not match.';
+            }
+
+            if (!$this->validationService->isValid()) {
+                $errors = $this->validationService->getErrors();
+                $error = implode(' ', array_map(fn($e) => implode(', ', $e), $errors));
+                $this->logger->warning('Registration failed - validation error', [
+                    'username' => $username,
+                    'email' => $email,
+                    'errors' => $errors,
+                    'ip' => $request->getClientIp()
+                ]);
+            } else {
+                try {
+                    $user = $this->authService->register($username, $email, $password);
+                    if ($user !== null) {
+                        $this->logger->info('User registered successfully', [
+                            'user_id' => $user['id'],
+                            'username' => $user['username'],
+                            'email' => $user['email'],
+                            'ip' => $request->getClientIp()
+                        ]);
+                        $request->getSession()->set('auth_user', $user);
+                        return $this->redirectToRoute('travel_home');
+                    }
+                    $this->logger->warning('Registration failed - email already exists', [
+                        'username' => $username,
+                        'email' => $email,
+                        'ip' => $request->getClientIp()
+                    ]);
+                    $error = 'Email already exists.';
+                } catch (\Throwable $e) {
+                    $this->logger->error('Registration failed - exception occurred', [
+                        'username' => $username,
+                        'email' => $email,
+                        'error' => $e->getMessage(),
+                        'exception' => get_class($e),
+                        'ip' => $request->getClientIp()
+                    ]);
+                    $error = 'Registration failed. Please try again.';
+                }
+            }
+        }
+
+        return $this->render('auth/register.html.twig', [
+            'active_nav' => '',
+            'username' => $username,
+            'email' => $email,
+            'error' => $error,
+        ]);
     }
+
+    // ==================== FAVORITES ====================
 
     #[Route('/account/favorites', name: 'account_favorites', methods: ['GET'])]
     public function accountFavorites(Request $request): Response
@@ -60,219 +277,5 @@ class UserController extends AbstractController
             'active_nav' => 'account',
             'favorites' => $voyages,
         ]);
-    }
-
-    #[Route('/admin', name: 'admin_dashboard', methods: ['GET'])]
-    public function dashboard(Request $request): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        // Get statistics for dashboard
-        $users = $this->authService->listUsers();
-        $reservations = $this->reservationService->listAllReservations();
-        $voyages = $this->voyageService->getAllVoyages();
-        
-        // Calculate statistics
-        $totalUsers = count($users);
-        $totalReservations = count($reservations);
-        $pendingReservations = count(array_filter($reservations, fn($r) => $r['status'] === 'PENDING'));
-        $confirmedReservations = count(array_filter($reservations, fn($r) => $r['status'] === 'CONFIRMED'));
-        $cancelledReservations = count(array_filter($reservations, fn($r) => $r['status'] === 'CANCELLED'));
-        $totalRevenue = array_sum(array_map(fn($r) => (float) ($r['total_price'] ?? 0), $reservations));
-        $totalVoyages = count($voyages);
-        
-        // Get recent reservations (last 5)
-        $recentReservations = array_slice($reservations, 0, 5);
-        
-        // Get recent users (last 5)
-        $recentUsers = array_slice($users, 0, 5);
-
-        return $this->render('admin/dashboard.html.twig', [
-            'active_nav' => 'account',
-            'stats' => [
-                'total_users' => $totalUsers,
-                'total_reservations' => $totalReservations,
-                'pending_reservations' => $pendingReservations,
-                'confirmed_reservations' => $confirmedReservations,
-                'cancelled_reservations' => $cancelledReservations,
-                'total_revenue' => $totalRevenue,
-                'total_voyages' => $totalVoyages,
-            ],
-            'recent_reservations' => $recentReservations,
-            'recent_users' => $recentUsers,
-        ]);
-    }
-
-    #[Route('/account/users', name: 'account_users', methods: ['GET'])]
-    public function index(Request $request): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        $users = $this->authService->listUsers();
-
-        return $this->render('user/index.html.twig', [
-            'active_nav' => 'account',
-            'users' => $users,
-        ]);
-    }
-
-    #[Route('/account/users/new', name: 'account_users_new', methods: ['GET', 'POST'])]
-    public function create(Request $request): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        $error = null;
-        $formData = [
-            'username' => '',
-            'email' => '',
-            'tel' => '',
-            'image_url' => '',
-            'password' => '',
-            'confirm_password' => '',
-        ];
-
-        if ($request->isMethod('POST')) {
-            $formData['username'] = (string) $request->request->get('username', '');
-            $formData['email'] = (string) $request->request->get('email', '');
-            $formData['tel'] = (string) $request->request->get('tel', '');
-            $formData['image_url'] = (string) $request->request->get('image_url', '');
-            $formData['password'] = (string) $request->request->get('password', '');
-            $formData['confirm_password'] = (string) $request->request->get('confirm_password', '');
-
-            if (trim($formData['username']) === '' || trim($formData['email']) === '' || trim($formData['password']) === '') {
-                $error = 'Username, email and password are required.';
-            } elseif ($formData['password'] !== $formData['confirm_password']) {
-                $error = 'Passwords do not match.';
-            } elseif (strlen($formData['password']) < 6) {
-                $error = 'Password must be at least 6 characters.';
-            } else {
-                $created = $this->authService->register(
-                    $formData['username'],
-                    $formData['email'],
-                    $formData['password']
-                );
-
-                if ($created === null) {
-                    $error = 'Unable to create user. Email may already exist.';
-                } else {
-                    return $this->redirectToRoute('account_users');
-                }
-            }
-        }
-
-        return $this->render('user/form.html.twig', [
-            'active_nav' => 'account',
-            'is_edit' => false,
-            'error' => $error,
-            'formData' => $formData,
-        ]);
-    }
-
-    #[Route('/account/users/{id}', name: 'account_users_view', methods: ['GET'])]
-    public function view(Request $request, int $id): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        $user = $this->authService->getUserById($id);
-        if ($user === null) {
-            throw $this->createNotFoundException('User not found.');
-        }
-
-        return $this->render('user/view.html.twig', [
-            'active_nav' => 'account',
-            'user' => $user,
-        ]);
-    }
-
-    #[Route('/account/users/{id}/edit', name: 'account_users_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, int $id): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        $currentUser = $this->authService->getUserById($id);
-        if ($currentUser === null) {
-            throw $this->createNotFoundException('User not found.');
-        }
-
-        $error = null;
-        $formData = [
-            'username' => $currentUser['username'] ?? '',
-            'email' => $currentUser['email'] ?? '',
-            'tel' => $currentUser['tel'] ?? '',
-            'image_url' => $currentUser['image_url'] ?? '',
-            'current_password' => '',
-            'new_password' => '',
-            'confirm_password' => '',
-        ];
-
-        if ($request->isMethod('POST')) {
-            $formData['username'] = (string) $request->request->get('username', '');
-            $formData['email'] = (string) $request->request->get('email', '');
-            $formData['tel'] = (string) $request->request->get('tel', '');
-            $formData['image_url'] = (string) $request->request->get('image_url', '');
-            $formData['current_password'] = (string) $request->request->get('current_password', '');
-            $formData['new_password'] = (string) $request->request->get('new_password', '');
-            $formData['confirm_password'] = (string) $request->request->get('confirm_password', '');
-
-            if (trim($formData['username']) === '' || trim($formData['email']) === '') {
-                $error = 'Username and email are required.';
-            } elseif ($formData['new_password'] !== '' && $formData['new_password'] !== $formData['confirm_password']) {
-                $error = 'New password confirmation does not match.';
-            } elseif ($formData['new_password'] !== '' && strlen($formData['new_password']) < 6) {
-                $error = 'New password must be at least 6 characters.';
-            } elseif ($formData['new_password'] !== '' && $formData['current_password'] === '') {
-                $error = 'Current password is required to set a new password.';
-            } else {
-                $updated = $this->authService->updateProfile(
-                    $id,
-                    $formData['username'],
-                    $formData['email'],
-                    $formData['tel'],
-                    $formData['image_url'],
-                    $formData['new_password'] !== '' ? $formData['new_password'] : null,
-                    $formData['current_password'] !== '' ? $formData['current_password'] : null
-                );
-
-                if ($updated === null) {
-                    $error = 'Unable to update user. Email may already be used or credentials are invalid.';
-                } else {
-                    return $this->redirectToRoute('account_users_view', ['id' => $id]);
-                }
-            }
-        }
-
-        return $this->render('user/form.html.twig', [
-            'active_nav' => 'account',
-            'is_edit' => true,
-            'error' => $error,
-            'formData' => $formData,
-            'userId' => $id,
-        ]);
-    }
-
-    #[Route('/account/users/{id}/delete', name: 'account_users_delete', methods: ['POST'])]
-    public function delete(Request $request, int $id): Response
-    {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
-        }
-
-        if (!$this->authService->deleteUser($id)) {
-            $this->addFlash('error', 'Unable to delete user.');
-        } else {
-            $this->addFlash('success', 'User deleted successfully.');
-        }
-
-        return $this->redirectToRoute('account_users');
     }
 }

@@ -2,13 +2,20 @@
 
 namespace App\Service;
 
-use Doctrine\DBAL\Connection;
+use App\Entity\Reservation;
+use App\Repository\ReservationRepository;
+use App\Service\RefundRequestService;
+use App\Repository\VoyageRepository;
+use App\Repository\UserRepository;
 use Psr\Log\LoggerInterface;
 
 class ReservationService
 {
     public function __construct(
-        private readonly Connection $connection,
+        private readonly ReservationRepository $reservationRepository,
+        private readonly VoyageRepository $voyageRepository,
+        private readonly UserRepository $userRepository,
+        private readonly RefundRequestService $refundRequestService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -20,93 +27,112 @@ class ReservationService
         }
 
         try {
+            // Check if user exists
+            $user = $this->userRepository->find($userId);
+            if (!$user) {
+                $this->logger->warning('User not found for reservation', ['user_id' => $userId]);
+                return null;
+            }
+
+            // Check if voyage exists
+            $voyage = $this->voyageRepository->find($voyageId);
+            if (!$voyage) {
+                $this->logger->warning('Voyage not found for reservation', ['voyage_id' => $voyageId]);
+                return null;
+            }
+
             // Keep unique constraint stable: if a pending/cancelled reservation already exists, return it instead of failing.
             $existing = $this->getReservationByUserAndVoyage($userId, $voyageId);
             if ($existing) {
-                $this->logger->info('Existing reservation found for user/voyage; returning existing', ['user_id' => $userId, 'voyage_id' => $voyageId, 'status' => $existing['status']] ) ;
+                $this->logger->info('Existing reservation found for user/voyage; returning existing', ['user_id' => $userId, 'voyage_id' => $voyageId, 'status' => $existing['status']]);
                 return $existing;
             }
 
-            $this->connection->insert('reservations', [
-                'user_id' => $userId,
-                'voyage_id' => $voyageId,
-                'offer_id' => $offerId,
-                'number_of_people' => $numberOfPeople,
-                'total_price' => $totalPrice,
-                'status' => 'PENDING',
-                'payment_status' => 'PENDING',
-                'reservation_date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                'updated_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-            ]);
+            // Create new reservation using Entity
+            $reservation = new Reservation();
+            $reservation->setUserId($userId);
+            $reservation->setVoyageId($voyageId);
+            $reservation->setOfferId($offerId);
+            $reservation->setNumberOfPeople($numberOfPeople);
+            $reservation->setTotalPrice((string)$totalPrice);
+            $reservation->setStatus('PENDING');
+            $reservation->setPaymentStatus('PENDING');
+            $reservation->setReservationDate(new \DateTime());
+            $reservation->setUpdatedAt(new \DateTime());
 
-            $id = (int) $this->connection->lastInsertId();
-            return $this->getReservationById($id, $userId);
+            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager->persist($reservation);
+            $entityManager->flush();
+
+            return $this->getReservationById($reservation->getId(), $userId);
         } catch (\Throwable $e) {
-          
             $this->logger->error('Failed to create reservation', ['error' => $e->getMessage(), 'user_id' => $userId]);
             return null;
         }
     }
 
-    public function getReservationsForUser(int $userId): array
-    {
-        $sql = <<<'SQL'
-SELECT r.*, v.title AS voyage_title, v.destination, v.start_date AS voyage_start, v.end_date AS voyage_end
-FROM reservations r
-JOIN voyages v ON v.id = r.voyage_id
-WHERE r.user_id = :user_id
-ORDER BY r.reservation_date DESC
-SQL;
-
-        return $this->connection->fetchAllAssociative($sql, ['user_id' => $userId]);
+ public function getReservationsForUser(int $userId): array
+{
+    try {
+        $reservations = $this->reservationRepository->findByUserId($userId);
+        return array_map(function ($reservation) {
+            return $this->reservationToArrayWithVoyage($reservation);  // ← Changed!
+        }, $reservations);
+    } catch (\Throwable $e) {
+        $this->logger->error('Failed to get reservations for user', ['error' => $e->getMessage(), 'user_id' => $userId]);
+        return [];
     }
-
+}
     public function getReservationById(int $reservationId, int $userId): ?array
     {
-        $sql = <<<'SQL'
-SELECT r.*, v.title AS voyage_title, v.description AS voyage_description, v.destination, v.start_date AS voyage_start, v.end_date AS voyage_end, v.price AS voyage_price
-FROM reservations r
-JOIN voyages v ON v.id = r.voyage_id
-WHERE r.id = :id AND r.user_id = :user_id
-SQL;
+        try {
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation || $reservation->getUserId() !== $userId) {
+                return null;
+            }
 
-        $reservation = $this->connection->fetchAssociative($sql, ['id' => $reservationId, 'user_id' => $userId]);
-
-        if (!$reservation) {
+            return $this->reservationToArrayWithVoyage($reservation);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to get reservation by id', ['error' => $e->getMessage(), 'reservation_id' => $reservationId, 'user_id' => $userId]);
             return null;
         }
-
-        return $reservation;
     }
 
     public function getReservationByUserAndVoyage(int $userId, int $voyageId): ?array
     {
-        $sql = <<<'SQL'
-SELECT r.*, v.title AS voyage_title, v.description AS voyage_description, v.destination, v.start_date AS voyage_start, v.end_date AS voyage_end, v.price AS voyage_price
-FROM reservations r
-JOIN voyages v ON v.id = r.voyage_id
-WHERE r.user_id = :user_id AND r.voyage_id = :voyage_id
-SQL;
+        try {
+            $reservation = $this->reservationRepository->findUserVoyageReservation($userId, $voyageId);
+            if (!$reservation) {
+                return null;
+            }
 
-        $reservation = $this->connection->fetchAssociative($sql, ['user_id' => $userId, 'voyage_id' => $voyageId]);
-
-        return $reservation ?: null;
+            return $this->reservationToArrayWithVoyage($reservation);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to get reservation by user and voyage', ['error' => $e->getMessage(), 'user_id' => $userId, 'voyage_id' => $voyageId]);
+            return null;
+        }
     }
 
     public function cancelReservation(int $reservationId, int $userId): bool
     {
         try {
-            $updated = $this->connection->executeStatement(
-                'UPDATE reservations SET status = :cancelled, updated_at = :now WHERE id = :id AND user_id = :user_id AND status IN (\'PENDING\', \'CONFIRMED\')',
-                [
-                    'cancelled' => 'CANCELLED',
-                    'now' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'id' => $reservationId,
-                    'user_id' => $userId,
-                ]
-            );
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation || $reservation->getUserId() !== $userId) {
+                return false;
+            }
 
-            return $updated > 0;
+            $currentStatus = $reservation->getStatus();
+            if (!in_array($currentStatus, ['PENDING', 'CONFIRMED'], true)) {
+                return false;
+            }
+
+            $reservation->setStatus('CANCELLED');
+            $reservation->setUpdatedAt(new \DateTime());
+
+            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager->flush();
+
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to cancel reservation', ['error' => $e->getMessage(), 'reservation_id' => $reservationId, 'user_id' => $userId]);
             return false;
@@ -116,19 +142,20 @@ SQL;
     public function confirmReservationAsAdmin(int $reservationId): bool
     {
         try {
-            $updated = $this->connection->executeStatement(
-                'UPDATE reservations SET status = :confirmed, payment_status = :paid, payment_date = :paid_date, updated_at = :now WHERE id = :id AND status = :pending',
-                [
-                    'confirmed' => 'CONFIRMED',
-                    'paid' => 'PAID',
-                    'paid_date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'now' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'id' => $reservationId,
-                    'pending' => 'PENDING',
-                ]
-            );
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation || $reservation->getStatus() !== 'PENDING') {
+                return false;
+            }
 
-            return $updated > 0;
+            $reservation->setStatus('CONFIRMED');
+            $reservation->setPaymentStatus('PAID');
+            $reservation->setPaymentDate(new \DateTime());
+            $reservation->setUpdatedAt(new \DateTime());
+
+            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager->flush();
+
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to confirm reservation as admin', ['error' => $e->getMessage(), 'reservation_id' => $reservationId]);
             return false;
@@ -138,16 +165,23 @@ SQL;
     public function cancelReservationAsAdmin(int $reservationId): bool
     {
         try {
-            $updated = $this->connection->executeStatement(
-                'UPDATE reservations SET status = :cancelled, updated_at = :now WHERE id = :id AND status IN (\'PENDING\', \'CONFIRMED\')',
-                [
-                    'cancelled' => 'CANCELLED',
-                    'now' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'id' => $reservationId,
-                ]
-            );
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation) {
+                return false;
+            }
 
-            return $updated > 0;
+            $currentStatus = $reservation->getStatus();
+            if (!in_array($currentStatus, ['PENDING', 'CONFIRMED'], true)) {
+                return false;
+            }
+
+            $reservation->setStatus('CANCELLED');
+            $reservation->setUpdatedAt(new \DateTime());
+
+            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager->flush();
+
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to cancel reservation as admin', ['error' => $e->getMessage(), 'reservation_id' => $reservationId]);
             return false;
@@ -156,39 +190,34 @@ SQL;
 
     public function listAllReservations(): array
     {
-        $sql = <<<'SQL'
-SELECT r.*, u.username AS user_name, u.email AS user_email, v.title AS voyage_title, v.destination, v.start_date AS voyage_start, v.end_date AS voyage_end
-FROM reservations r
-JOIN users u ON u.id = r.user_id
-JOIN voyages v ON v.id = r.voyage_id
-ORDER BY r.reservation_date DESC
-SQL;
-
-        return $this->connection->fetchAllAssociative($sql);
+        try {
+            $reservations = $this->reservationRepository->findAll();
+            return array_map(function ($reservation) {
+                return $this->reservationToArrayWithUserAndVoyage($reservation);
+            }, $reservations);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to list all reservations', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     public function confirmReservation(int $reservationId, int $userId): bool
     {
-        $reservation = $this->getReservationById($reservationId, $userId);
-        if (!$reservation || $reservation['status'] !== 'PENDING') {
-            return false;
-        }
-
         try {
-            $updated = $this->connection->executeStatement(
-                'UPDATE reservations SET status = :confirmed, payment_status = :paid, payment_date = :paid_date, updated_at = :now WHERE id = :id AND user_id = :user_id AND status = :pending',
-                [
-                    'confirmed' => 'CONFIRMED',
-                    'paid' => 'PAID',
-                    'paid_date' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'now' => (new \DateTime())->format('Y-m-d H:i:s'),
-                    'id' => $reservationId,
-                    'user_id' => $userId,
-                    'pending' => 'PENDING',
-                ]
-            );
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation || $reservation->getUserId() !== $userId || $reservation->getStatus() !== 'PENDING') {
+                return false;
+            }
 
-            return $updated > 0;
+            $reservation->setStatus('CONFIRMED');
+            $reservation->setPaymentStatus('PAID');
+            $reservation->setPaymentDate(new \DateTime());
+            $reservation->setUpdatedAt(new \DateTime());
+
+            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager->flush();
+
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to confirm reservation', ['error' => $e->getMessage(), 'reservation_id' => $reservationId, 'user_id' => $userId]);
             return false;
@@ -197,45 +226,111 @@ SQL;
 
     public function getReservationByIdAdmin(int $reservationId): ?array
     {
-        $sql = <<<'SQL'
-        SELECT r.*, v.title AS voyage_title, v.description AS voyage_description,
-               v.destination, v.start_date AS voyage_start, v.end_date AS voyage_end,
-               v.price AS voyage_price, u.username AS user_name, u.email AS user_email
-        FROM reservations r
-        JOIN voyages v ON v.id = r.voyage_id
-        JOIN users u ON u.id = r.user_id
-        WHERE r.id = :id
-        SQL;
-        $reservation = $this->connection->fetchAssociative($sql, ['id' => $reservationId]);
-        return $reservation ?: null;
+        try {
+            $reservation = $this->reservationRepository->find($reservationId);
+            if (!$reservation) {
+                return null;
+            }
+
+            return $this->reservationToArrayWithUserAndVoyage($reservation);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to get reservation by id admin', ['error' => $e->getMessage(), 'reservation_id' => $reservationId]);
+            return null;
+        }
     }
 
     public function requestRefund(int $reservationId, int $userId, string $reason): bool
     {
         // Only allow if reservation belongs to user and is not PENDING or CANCELLED -> maybe only CONFIRMED or COMPLETED
-        $reservation = $this->getReservationById($reservationId, $userId);
-        if (!$reservation) {
+        $reservation = $this->reservationRepository->find($reservationId);
+        if (!$reservation || $reservation->getUserId() !== $userId) {
             return false;
         }
 
-        if (!in_array($reservation['status'], ['CONFIRMED', 'CANCELLED', 'COMPLETED'], true)) {
+        $currentStatus = $reservation->getStatus();
+        if (!in_array($currentStatus, ['CONFIRMED', 'CANCELLED', 'COMPLETED'], true)) {
             return false;
         }
 
         try {
-            $this->connection->insert('refund_requests', [
-                'reclamation_id' => null,
-                'requester_id' => $userId,
-                'amount' => $reservation['total_price'],
-                'reason' => trim($reason),
-                'status' => 'PENDING',
-                'created_at' => (new \DateTime())->format('Y-m-d H:i:s'),
-            ]);
+             $refundRequest = $this->refundRequestService->createRefundRequest([
+        'reclamation_id' => null,
+        'requester_id' => $userId,
+        'amount' => $reservation->getTotalPrice(),
+        'reason' => $reason,
+    ]);
+            if (!$refundRequest) {
+                $this->logger->error('Failed to create refund request', ['reservation_id' => $reservationId, 'user_id' => $userId]);
+                return false;
+            }
 
-            return true;
+              return $refundRequest !== null;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to request refund', ['error' => $e->getMessage(), 'reservation_id' => $reservationId, 'user_id' => $userId]);
             return false;
         }
+    }
+
+    /**
+     * Convert Reservation entity to array with basic fields
+     */
+    private function reservationToArray(Reservation $reservation): array
+    {
+        return [
+            'id' => $reservation->getId(),
+            'user_id' => $reservation->getUserId(),
+            'voyage_id' => $reservation->getVoyageId(),
+            'offer_id' => $reservation->getOfferId(),
+            'number_of_people' => $reservation->getNumberOfPeople(),
+            'total_price' => $reservation->getTotalPrice(),
+            'status' => $reservation->getStatus(),
+            'payment_status' => $reservation->getPaymentStatus(),
+            'reservation_date' => $reservation->getReservationDate()?->format('Y-m-d H:i:s'),
+            'updated_at' => $reservation->getUpdatedAt()?->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * Convert Reservation entity to array with voyage details
+     */
+    private function reservationToArrayWithVoyage(Reservation $reservation): array
+    {
+        $result = $this->reservationToArray($reservation);
+
+        try {
+            $voyage = $this->voyageRepository->find($reservation->getVoyageId());
+            if ($voyage) {
+                $result['voyage_title'] = $voyage->getTitle();
+                $result['voyage_description'] = $voyage->getDescription();
+                $result['destination'] = $voyage->getDestination();
+                $result['voyage_start'] = $voyage->getStartDate()?->format('Y-m-d');
+                $result['voyage_end'] = $voyage->getEndDate()?->format('Y-m-d');
+                $result['voyage_price'] = $voyage->getPrice();
+            }
+        } catch (\Throwable $e) {
+            $this->logger->warning('Failed to load voyage details', ['error' => $e->getMessage()]);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert Reservation entity to array with user and voyage details
+     */
+    private function reservationToArrayWithUserAndVoyage(Reservation $reservation): array
+    {
+        $result = $this->reservationToArrayWithVoyage($reservation);
+
+        try {
+            $user = $this->userRepository->find($reservation->getUserId());
+            if ($user) {
+                $result['user_name'] = $user->getUsername();
+                $result['user_email'] = $user->getEmail();
+            }
+        } catch (\Throwable $e) {
+            $this->logger->warning('Failed to load user details', ['error' => $e->getMessage()]);
+        }
+
+        return $result;
     }
 }

@@ -52,7 +52,7 @@
 
             <div class="form-group">
                 <label for="image_url">Image URLs (one per line)</label>
-                <textarea id="image_url" name="image_url" rows="4" class="form-control" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg">{% if voyage.image_url %}{{ voyage.image_url|join('\n') }}{% endif %}</textarea>
+                <textarea id="image_url" name="image_url" rows="4" class="form-control" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg">{% if voyage and voyage.image_url %}{{ voyage.image_url|join('\n') }}{% endif %}</textarea>
                 <small class="form-hint">Enter each image URL on a new line</small>
             </div>
 

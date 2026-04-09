@@ -35,18 +35,15 @@ class VoyageImageRepository extends ServiceEntityRepository
     /**
      * Get default images when no voyage images are found
      */
-    private function getDefaultImages(): array
-    {
-        return [
-            [
-                'id' => null,
-                'voyageId' => null,
-                'imageUrl' => 'https://cratertravelagencies.com/assets/img/crater5.jpg',
-                'cloudinaryPublicId' => 'default',
-                'createdAt' => new \DateTime(),
-                'updatedAt' => new \DateTime(),
-            ],
-        
-        ];
-    }
+private function getDefaultImages(): array
+{
+    $defaultImage = new VoyageImage();
+    $defaultImage->setVoyageId(0); // or null if your entity allows
+    $defaultImage->setImageUrl('https://cratertravelagencies.com/assets/img/crater5.jpg');
+    $defaultImage->setCloudinaryPublicId('default');
+    $defaultImage->setCreatedAt(new \DateTime());
+    $defaultImage->setUpdatedAt(new \DateTime());
+    
+    return [$defaultImage];
+}
 }

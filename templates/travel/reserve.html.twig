@@ -3,7 +3,7 @@
 {% block title %}Reserve Voyage | Travagir{% endblock %}
 
 {% block body %}
-
+<section>
         <h1>Reserve: {{ voyage.title }}</h1>
         <p class="lead">Submit your reservation; it will be pending until admin approval.</p>
 
@@ -33,10 +33,7 @@
                     <input type="number" id="number_of_people" name="number_of_people" value="1" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="special_requests">Special requests</label>
-                    <textarea id="special_requests" name="special_requests" rows="3" placeholder="Dietary, arrival details, etc."></textarea>
-                </div>
+            
                 <button type="submit">Reserve</button>
             </form>
     </section>
