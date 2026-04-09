@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Refunds{% endblock %}
+
+{% block body %}
+    <h1>All Refund Requests (Admin)</h1>
+    {% if refunds|length > 0 %}
+        <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Requester ID</th>
+                <th>Amount</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Created At</th>
+            </tr>
+            </thead>
+        <tbody>
+                {% for r in refunds %}
+                <tr>
+                    <td><a href="{{ path('admin_refund_detail', {'id': r.id}) }}">{{ r.id }}</a></td>
+                    <td>{{ r.requesterId|default('') }}</td>
+                    <td>{{ r.amount|default('') }}</td>
+                    <td>{{ r.reason|default('') }}</td>
+                    <td>{{ r.status }}</td>
+                    <td>{{ r.createdAt ? r.createdAt|date('Y-m-d H:i') : '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+        <p>No refund requests found.</p>
+    {% endif %}
+{% endblock %}

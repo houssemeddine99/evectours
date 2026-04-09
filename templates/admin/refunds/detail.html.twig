@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Refund Detail{% endblock %}
+
+{% block body %}
+    <h1>Refund Detail</h1>
+    {% if refund %}
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <tbody>
+                    <tr><th>ID</th><td>{{ refund.id }}</td></tr>
+                    <tr><th>Requester ID</th><td>{{ refund.requesterId|default('') }}</td></tr>
+                    <tr><th>Amount</th><td>{{ refund.amount|default('') }}</td></tr>
+                    <tr><th>Reason</th><td>{{ refund.reason|default('') }}</td></tr>
+                    <tr><th>Status</th><td>{{ refund.status }}</td></tr>
+                    <tr><th>Created At</th><td>{{ refund.createdAt ? refund.createdAt|date('Y-m-d H:i') : '' }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h2>Update Refund Status</h2>
+        <form method="post" action="{{ path('admin_refund_detail', {'id': refund.id}) }}">
+            <div class="form-group">
+                <label for="status">Status</label>
+                <input type="text" id="status" name="status" class="form-control" value="{{ refund.status }}" />
+            </div>
+            <button type="submit" class="btn btn-success">Save Changes</button>
+        </form>
+        <p><a href="{{ path('admin_refunds') }}" class="btn btn-primary">Back to Refunds</a></p>
+    {% else %}
+        <p>Refund not found.</p>
+    {% endif %}
+{% endblock %}
