@@ -43,6 +43,14 @@ class SearchHistoryService
     }
 
     /**
+     * Get all search history records (admin view)
+     */
+    public function getAllSearchHistory(): array
+    {
+        return $this->safeExecute(fn () => $this->searchHistoryRepository->findAll(), []);
+    }
+
+    /**
      * Get recent searches for a user
      */
     public function getRecentSearches(int $userId, int $limit = 10): array

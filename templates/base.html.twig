@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Travagir{% endblock %}</title>
     <link rel="icon" href="/favicon.ico">
+    {# Cache-busting query parameter to ensure updated CSS is loaded after changes #}
     <link rel="stylesheet" href="/styles/app.css">
     {% block stylesheets %}{% endblock %}
 </head>

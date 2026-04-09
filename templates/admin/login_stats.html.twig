@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Login Statistics{% endblock %}
+
+{% block body %}
+    <h1>Login Statistics</h1>
+    {% if stats is empty %}
+        <p>No login records available.</p>
+    {% else %}
+        <div class="admin-table-container" style="padding:24px; overflow:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Login Time</th>
+                    <th>Method</th>
+                    <th>IP Address</th>
+                    <th>User Agent</th>
+                </tr>
+            </thead>
+            <tbody>
+                {# Each entry contains detailed login information. #}
+                {% for entry in stats %}
+                    <tr>
+                        <td>{{ entry.userId }}</td>
+                        <td>{{ entry.loginTime|date('Y-m-d H:i') }}</td>
+                        <td>{{ entry.loginMethod|default('')|title }}</td>
+                        <td>{{ entry.ipAddress|default('-') }}</td>
+                        <td>{{ entry.userAgent|default('-')|slice(0, 30) }}{% if entry.userAgent|length > 30 %}…{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% endif %}
+{% endblock %}

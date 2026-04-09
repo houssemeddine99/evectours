@@ -7,6 +7,7 @@ use App\Service\OfferService;
 use App\Service\ActivityService;
 use App\Service\VoyageImageService;
 use App\Service\ValidationService;
+use App\Service\SearchHistoryService;
 use App\Repository\VoyageRepository;
 
 use Psr\Log\LoggerInterface;
@@ -24,6 +25,7 @@ class VoyageController extends AbstractController
         private readonly VoyageImageService $voyageImageService,
         private readonly VoyageRepository $voyageRepository,
         private readonly ValidationService $validationService,
+        private readonly SearchHistoryService $searchHistoryService,
 
         private readonly AdminController $adminController,
         private readonly ?LoggerInterface $logger = null,
@@ -80,6 +82,14 @@ class VoyageController extends AbstractController
         } else {
             $voyages = $this->voyageService->getVoyages($page, $limit);
             $totalVoyages = $this->voyageService->getTotalVoyages();
+        }
+
+        // Record search history for public searches (only when a search term is provided)
+        if (!empty($search)) {
+            $sessionUser = $request->getSession()->get('auth_user');
+            $userId = $sessionUser['id'] ?? 0;
+            $resultsFound = is_array($voyages) ? count($voyages) : 0;
+            $this->searchHistoryService->recordSearch($userId, $search, 'voyage', $resultsFound);
         }
 
         $totalPages = ceil($totalVoyages / $limit) ?: 1;

@@ -1,22 +1,11 @@
 -- -- =====================================================
-SELECT * from voyage_images ;
--- INSERT INTO voyage_images (voyage_id, image_url, cloudinary_public_id, created_at, updated_at) VALUES
--- (5, 'https://activetravel.com.tn/public/images/image/voyage-alacarte-bali_0.34075400-1670336947.jpg', 'voyages/marrakech_desert_1', '2024-01-20 10:05:00', '2024-01-20 10:05:00'),
--- (5, 'https://image.urlaubspiraten.de/4x3/image/upload/v1650989387/mediavault_images/AdobeStock_315088533_dhq3mv.jpg', 'voyages/marrakech_desert_2', '2024-01-20 10:06:00', '2024-01-20 10:06:00'),
--- (5, 'https://www.voyagetunisie.tn/images/voyages-tunisie.png', 'voyages/marrakech_desert_3', '2024-01-20 10:07:00', '2024-01-20 10:07:00'),
--- (6, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSZrm9BDjRa-qgqTCSPMs9sw_juRRd9Gonw&s', 'voyages/marrakech_cultural_1', '2024-02-10 11:35:00', '2024-02-10 11:35:00'),
--- (6, 'https://activetravel.com.tn/public/images/image/voyage-alacarte-bali_0.34075400-1670336947.jpg', 'voyages/marrakech_cultural_2', '2024-02-10 11:36:00', '2024-02-10 11:36:00'),
--- (7, 'https://image.urlaubspiraten.de/4x3/image/upload/v1650989387/mediavault_images/AdobeStock_315088533_dhq3mv.jpg', 'voyages/atlas_trekking_1', '2024-03-05 09:50:00', '2024-03-05 09:50:00'),
--- (7, 'https://www.voyagetunisie.tn/images/voyages-tunisie.png', 'voyages/atlas_trekking_2', '2024-03-05 09:51:00', '2024-03-05 09:51:00'),
--- (7, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSZrm9BDjRa-qgqTCSPMs9sw_juRRd9Gonw&s', 'voyages/atlas_trekking_3', '2024-03-05 09:52:00', '2024-03-05 09:52:00'),
--- (8, 'https://activetravel.com.tn/public/images/image/voyage-alacarte-bali_0.34075400-1670336947.jpg', 'voyages/essaouira_coastal_1', '2024-04-15 14:25:00', '2024-04-15 14:25:00'),
--- (8, 'https://image.urlaubspiraten.de/4x3/image/upload/v1650989387/mediavault_images/AdobeStock_315088533_dhq3mv.jpg', 'voyages/essaouira_coastal_2', '2024-04-15 14:26:00', '2024-04-15 14:26:00'),
--- (8, 'https://www.voyagetunisie.tn/images/voyages-tunisie.png', 'voyages/fes_historical_1', '2024-05-20 10:20:00', '2024-05-20 10:20:00'),
--- (8, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSZrm9BDjRa-qgqTCSPMs9sw_juRRd9Gonw&s', 'voyages/fes_historical_2', '2024-05-20 10:21:00', '2024-05-20 10:21:00'),
--- (6, 'https://activetravel.com.tn/public/images/image/voyage-alacarte-bali_0.34075400-1670336947.jpg', 'voyages/agadir_beach_1', '2024-06-10 16:05:00', '2024-06-10 16:05:00'),
--- (6, 'https://image.urlaubspiraten.de/4x3/image/upload/v1650989387/mediavault_images/AdobeStock_315088533_dhq3mv.jpg', 'voyages/agadir_beach_2', '2024-06-10 16:06:00', '2024-06-10 16:06:00'),
--- (6, 'https://www.voyagetunisie.tn/images/voyages-tunisie.png', 'voyages/agadir_beach_3', '2024-06-10 16:07:00', '2024-06-10 16:07:00'),
--- (7, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQSZrm9BDjRa-qgqTCSPMs9sw_juRRd9Gonw&s', 'voyages/chefchaouen_blue_1', '2024-07-05 12:35:00', '2024-07-05 12:35:00'),
--- (7, 'https://activetravel.com.tn/public/images/image/voyage-alacarte-bali_0.34075400-1670336947.jpg', 'voyages/chefchaouen_blue_2', '2024-07-05 12:36:00', '2024-07-05 12:36:00'),
--- (8, 'https://image.urlaubspiraten.de/4x3/image/upload/v1650989387/mediavault_images/AdobeStock_315088533_dhq3mv.jpg', 'voyages/ouarzazate_cinema_1', '2024-08-12 15:50:00', '2024-08-12 15:50:00'),
--- (8, 'https://www.voyagetunisie.tn/images/voyages-tunisie.png', 'voyages/ouarzazate_cinema_2', '2024-08-12 15:51:00', '2024-08-12 15:51:00');
+INSERT INTO user_logins
+(user_id, login_time, login_method, ip_address, user_agent)
+VALUES
+(1, NOW(), 'email', '192.168.1.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'),
+(2, NOW(), 'google', '41.225.10.5', 'Chrome/120.0 Mobile'),
+(3, NOW(), 'facebook', '102.15.8.22', 'Safari/605.1.15'),
+(1, NOW(), 'email', NULL, NULL);
+
+SELECT * from user_logins ;
+
