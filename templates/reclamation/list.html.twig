@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Reclamations{% endblock %}
+
+{% block body %}
+    <h1>My Reclamations</h1>
+ 
+    {% if reclamations|length > 0 %}
+        <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Reservation ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Admin Response</th>
+                    <th>Response Date</th>
+                    <th>Resolution Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in reclamations %}
+                    <tr>
+                        <td>{{ rec.id }}</td>
+                        <td>{{ rec.reservationId }}</td>
+                        <td><a href="{{ path('user_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
+                        <td>{{ rec.description }}</td>
+                        <td>{{ rec.status }}</td>
+                        <td>{{ rec.priority }}</td>
+                        <td>{{ rec.createdAt ? rec.createdAt|date('Y-m-d H:i') : '' }}</td>
+                        <td>{{ rec.updatedAt ? rec.updatedAt|date('Y-m-d H:i') : '' }}</td>
+                        <td>{{ rec.adminResponse|default('') }}</td>
+                        <td>{{ rec.responseDate ? rec.responseDate|date('Y-m-d H:i') : '' }}</td>
+                        <td>{{ rec.resolutionDate ? rec.resolutionDate|date('Y-m-d H:i') : '' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+        <p>No reclamations found.</p>
+    {% endif %}
+{% endblock %}
+{% block stylesheets %}
+    <style>
+        /* Ensure the admin table styling is applied on the user side */
+     .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    background: var(--amazon-white);
+
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-dark);
+    text-align: left;
+    color: var(--text-muted);
+}
+/* Header style for admin tables – dark navy background with primary text for better contrast */
+.admin-table th {
+    background: var(--amazon-navy);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.admin-table tr:hover {
+    background: rgba(255, 153, 0, 0.08);
+}
+
+/* Ensure tables have a reasonable minimum width and consistent spacing */
+.admin-table {
+    min-width: 800px;
+}
+
+/* Enhance the container that wraps admin tables – similar to the reservations page container */
+/* Enhanced container for admin tables – provides a distinct card‑like appearance */
+/* Container for admin tables – mirrors the styling of the reservations page table container */
+.admin-table-container {
+    margin-top: 24px;
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 8px 25px rgba(255, 153, 0, 0.2);
+    padding: 24px; /* provides consistent inner spacing */
+}
+    </style>
+{% endblock %}

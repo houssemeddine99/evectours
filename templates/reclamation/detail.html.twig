@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reclamation Detail{% endblock %}
+
+{% block body %}
+    <h1>Reclamation Detail</h1>
+    {% if reclamation %}
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <tbody>
+                    <tr><th>ID</th><td>{{ reclamation.id }}</td></tr>
+                    <tr><th>Reservation ID</th><td>{{ reclamation.reservationId }}</td></tr>
+                    <tr><th>User ID</th><td>{{ reclamation.userId }}</td></tr>
+                    <tr><th>Title</th><td>{{ reclamation.title }}</td></tr>
+                    <tr><th>Description</th><td>{{ reclamation.description }}</td></tr>
+                    <tr><th>Status</th><td>{{ reclamation.status }}</td></tr>
+                    <tr><th>Priority</th><td>{{ reclamation.priority }}</td></tr>
+                    <tr><th>Created At</th><td>{{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : '' }}</td></tr>
+                    <tr><th>Updated At</th><td>{{ reclamation.updatedAt ? reclamation.updatedAt|date('Y-m-d H:i') : '' }}</td></tr>
+                    <tr><th>Admin Response</th><td>{{ reclamation.adminResponse|default('') }}</td></tr>
+                    <tr><th>Response Date</th><td>{{ reclamation.responseDate ? reclamation.responseDate|date('Y-m-d H:i') : '' }}</td></tr>
+                    <tr><th>Resolution Date</th><td>{{ reclamation.resolutionDate ? reclamation.resolutionDate|date('Y-m-d H:i') : '' }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>Reclamation not found.</p>
+    {% endif %}
+    <p><a href="{{ path('user_reclamations') }}" class="btn btn-primary">Back to My Reclamations</a></p>
+{% endblock %}

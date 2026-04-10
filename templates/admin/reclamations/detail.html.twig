@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Reclamation Detail{% endblock %}
+
+{% block body %}
+    <h1>Reclamation: {{ reclamation.title }}</h1>
+    <p>Status: {{ reclamation.status }}</p>
+    <p>Priority: {{ reclamation.priority }}</p>
+    <p>Description: {{ reclamation.description }}</p>
+    <p>Created at: {{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : 'N/A' }}</p>
+
+    <h2>Admin Response</h2>
+    {% if reclamation.adminResponse %}
+        <p>{{ reclamation.adminResponse }}</p>
+    {% else %}
+        <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}">
+            <textarea name="response" class="form-control" required></textarea>
+            <button type="submit" class="btn btn-primary mt-2">Add Response</button>
+        </form>
+    {% endif %}
+
+    <h2>Update Status</h2>
+    <form method="post" action="{{ path('admin_reclamation_status', {'id': reclamation.id}) }}">
+        <select name="status" class="form-control">
+            <option value="OPEN" {% if reclamation.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+            <option value="IN_PROGRESS" {% if reclamation.status == 'IN_PROGRESS' %}selected{% endif %}>IN_PROGRESS</option>
+            <option value="RESOLVED" {% if reclamation.status == 'RESOLVED' %}selected{% endif %}>RESOLVED</option>
+            <option value="CLOSED" {% if reclamation.status == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+        </select>
+        <button type="submit" class="btn btn-success mt-2">Update Status</button>
+    </form>
+
+    <form method="post" action="{{ path('admin_reclamation_delete', {'id': reclamation.id}) }}" onsubmit="return confirm('Delete this reclamation?');" class="mt-3">
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+{% endblock %}

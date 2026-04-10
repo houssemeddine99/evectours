@@ -59,6 +59,14 @@ class UserLoginService
     }
 
     /**
+     * Get all login records (admin view)
+     */
+    public function getAllLogins(): array
+    {
+        return $this->safeExecute(fn () => $this->userLoginRepository->findAll(), []);
+    }
+
+    /**
      * Safely execute a callback with error handling
      */
     private function safeExecute(callable $callback, mixed $default = []): mixed

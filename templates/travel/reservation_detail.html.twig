@@ -37,29 +37,34 @@
         <div><strong>Total Price</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
     </div>
 
-            <div class="reservation-actions">
-                {% if reservation.status == 'PENDING' %}
-                    <form method="post" class="inline-form">
-                        <button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
-                    </form>
-                {% endif %}
+        <div class="reservation-actions">
+            {% if reservation.status == 'PENDING' %}
+                <form method="post" class="inline-form">
+                    <button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
+                </form>
+            {% endif %}
 
-                {% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
-                    <form method="post" class="inline-form">
-                        <button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
-                    </form>
-                {% endif %}
+            {% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
+                <form method="post" class="inline-form">
+                    <button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
+                </form>
+            {% endif %}
 
-                {% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
-                    <form method="post" class="refund-form">
-                        <div class="form-group">
-                            <label for="refund_reason">Refund reason</label>
-                            <textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
-                        </div>
-                        <button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
-                    </form>
-                {% endif %}
-            </div>
+            {% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
+                <form method="post" class="refund-form">
+                    <div class="form-group">
+                        <label for="refund_reason">Refund reason</label>
+                        <textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
+                    </div>
+                    <button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
+                </form>
+            {% endif %}
+
+            {# Add link for users to create a reclamation related to this reservation #}
+            {% if not is_admin_view %}
+                <a href="{{ path('user_reclamation_new') }}?reservation_id={{ reservation.id }}" class="btn btn-primary mt-2">Add Reclamation</a>
+            {% endif %}
+        </div>
 
     <p class="back-link">
         {% if is_admin_view %}

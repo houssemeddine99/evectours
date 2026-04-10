@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Service\AuthService;
 use App\Service\ValidationService;
+use App\Service\UserLoginService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -16,6 +17,7 @@ class AuthController extends AbstractController
     public function __construct(
         private readonly AuthService $authService,
         private readonly ValidationService $validationService,
+        private readonly UserLoginService $userLoginService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -67,8 +69,18 @@ class AuthController extends AbstractController
             'ip' => $request->getClientIp()
         ]);
         
-        $request->getSession()->set('auth_user', $user);
-        return $this->redirectToRoute('travel_home');
+                // Record successful login
+                $ipAddress = $request->getClientIp();
+                $userAgent = $request->headers->get('User-Agent');
+                $this->userLoginService->recordLogin(
+                    $user['id'],
+                    'email',
+                    $ipAddress,
+                    $userAgent
+                );
+
+                $request->getSession()->set('auth_user', $user);
+                return $this->redirectToRoute('travel_home');
     }
 
     $this->logger->warning('Login failed - incorrect password', [

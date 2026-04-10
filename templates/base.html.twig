@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Travagir{% endblock %}</title>
     <link rel="icon" href="/favicon.ico">
+    {# Cache-busting query parameter to ensure updated CSS is loaded after changes #}
     <link rel="stylesheet" href="/styles/app.css">
+    <!-- Include component styles for admin tables and other shared components -->
+    <link rel="stylesheet" href="/styles/components.css">
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
@@ -28,8 +31,9 @@
                             </div>
                             <hr>
                             <a href="{{ path('account_settings') }}" class="account-link">Account Settings</a>
-                            <a href="{{ path('account_bookings') }}" class="account-link">My Bookings</a>
-                            <a href="{{ path('account_favorites') }}" class="account-link">Favorites</a>
+                             <a href="{{ path('account_bookings') }}" class="account-link">My Bookings</a>
+                             <a href="{{ path('user_reclamations') }}" class="account-link">My Reclamations</a>
+                             <a href="{{ path('account_favorites') }}" class="account-link">Favorites</a>
                             {% set authUser = app.session.get('auth_user') %}
                             {% if authUser is defined and authUser is not empty and authUser.is_admin|default(false) %}
                                 <a href="{{ path('admin_dashboard') }}" class="account-link">Admin Dashboard</a>

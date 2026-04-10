@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Search History{% endblock %}
+
+{% block body %}
+    <h1>Search History</h1>
+    {% if histories is empty %}
+        <p>No search history records found.</p>
+    {% else %}
+        <div class="admin-table-container" style="padding:24px; overflow:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Query</th>
+                    <th>Type</th>
+                    <th>Results</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in histories %}
+                    <tr>
+                        <td>{{ entry.userId }}</td>
+                        <td>{{ entry.query }}</td>
+                        <td>{{ entry.type }}</td>
+                        <td>{{ entry.resultsFound|default(0) }}</td>
+                        <td>{{ entry.createdAt|date('Y-m-d H:i') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Create Reclamation{% endblock %}
+
+{% block body %}
+    <h1>Create Reclamation</h1>
+    {% if errors %}
+        <div class="alert alert-danger">
+            {% for field, msgs in errors %}
+                {{ field }}: {{ msgs|join(', ') }}<br>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form method="post" action="{{ path('user_reclamation_new') }}">
+        <div class="form-group">
+            {% if data.reservation_id is defined %}
+                <input type="hidden" name="reservation_id" value="{{ data.reservation_id }}">
+            {% else %}
+                <label for="reservation_id">Reservation ID</label>
+                <input type="number" name="reservation_id" id="reservation_id" class="form-control" value="{{ data.reservation_id|default('') }}" required>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" name="title" id="title" class="form-control" value="{{ data.title|default('') }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" class="form-control" required>{{ data.description|default('') }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+{% endblock %}
