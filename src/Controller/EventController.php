@@ -46,9 +46,9 @@ class EventController extends AbstractController
 
             // Use ValidationService for validation
             $this->validationService->clearErrors();
-            $this->validationService->validateRequired($data, ['voyage_id', 'title', 'date', 'price_per_person']);
+            $this->validationService->validateRequired($data, ['voyage_id', 'name', 'duration_hours', 'price_per_person']);
             $this->validationService->validateNumber($data['voyage_id'] ?? '', 'voyage_id', 1);
-            $this->validationService->validateString($data['title'] ?? '', 'title', 3, 200);
+            $this->validationService->validateString($data['name'] ?? '', 'name', 3, 200);
             $this->validationService->validateNumber($data['duration_hours'] ?? '', 'duration_hours', 1, 48);
             $this->validationService->validatePrice($data['price_per_person'] ?? '', 'price_per_person');
 
