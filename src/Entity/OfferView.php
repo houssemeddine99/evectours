@@ -12,7 +12,7 @@ class OfferView
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id = null;// @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'user_id')]
     private int $userId = 0;

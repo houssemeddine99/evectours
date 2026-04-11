@@ -197,6 +197,7 @@ class UserController extends AbstractController
             $this->logger->info('Registration form submitted', [
                 'username' => $username,
                 'email' => $email,
+                
                 'ip' => $request->getClientIp()
             ]);
 
@@ -205,7 +206,7 @@ class UserController extends AbstractController
                 'username' => $username,
                 'email' => $email,
                 'password' => $password,
-                'tel' => ''
+              
             ]);
 
             // Check password match
