@@ -29,7 +29,10 @@ class VoyageRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-
+public function findById(int $id): ?Voyage
+{
+    return $this->find($id);
+}
     /** @return Voyage[] */
     public function findAllOrdered(): array
     {
