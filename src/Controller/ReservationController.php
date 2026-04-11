@@ -37,7 +37,7 @@ class ReservationController extends AbstractController
         $offers = array_filter($this->offerService->getActiveOffers(), fn($o) => (int) $o['voyage_id'] === $id);
         $activeOffer = $offers ? array_values($offers)[0] : null;
 
-   
+
 
         if ($request->isMethod('POST')) {
             $numberOfPeople = (int) $request->request->get('number_of_people', 1);
@@ -85,8 +85,8 @@ class ReservationController extends AbstractController
             'active_nav' => 'voyages',
             'voyage' => $voyage,
             'offer' => $activeOffer,
-              'error' => null,  // Add this
-    'success' => null, // Add this
+            'error' => null,  // Add this
+            'success' => null, // Add this
         ]);
     }
 
@@ -112,11 +112,11 @@ class ReservationController extends AbstractController
         if ($this->adminController->ensureIsAdmin($request) !== null) {
             return $this->adminController->ensureIsAdmin($request);
         }
-$status = $request->query->get('status');
+        $status = $request->query->get('status');
         $reservations = $this->reservationService->listAllReservations();
-if ($status) {
-    $reservations = array_filter($reservations, fn($r) => $r['status'] === $status);
-}
+        if ($status) {
+            $reservations = array_filter($reservations, fn($r) => $r['status'] === $status);
+        }
         return $this->render('travel/admin_reservations.html.twig', [
             'active_nav' => 'account',
             'reservations' => $reservations,
@@ -162,6 +162,7 @@ if ($status) {
         if (!$user) {
             return $this->redirectToRoute('auth_login');
         }
+         
 
         // Admin can view any reservation, regular users can only view their own
         $isAdmin = $user['is_admin'] ?? false;
@@ -169,6 +170,12 @@ if ($status) {
             $reservation = $this->reservationService->getReservationByIdAdmin($id);
         } else {
             $reservation = $this->reservationService->getReservationById($id, $user['id']);
+            $voyage = $this->voyageService->getVoyageById($reservation['voyage_id']);
+            $reservation['voyage_title'] = $voyage ? $voyage['title'] : 'Unknown Voyage';
+            $reservation['destination'] = $voyage ? $voyage['destination'] : 'Unknown Destination';
+            $reservation['voyage_start'] = $voyage ? $voyage['start_date'] : null;
+            $reservation['voyage_end'] = $voyage ? $voyage['end_date'] : null;
+
         }
 
         if (!$reservation) {
@@ -179,6 +186,9 @@ if ($status) {
         $success = null;
 
         if ($request->isMethod('POST')) {
+                if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
             if ($request->request->has('action_confirm')) {
                 if ($this->reservationService->confirmReservation($id, $user['id'])) {
                     $this->addFlash('success', 'Reservation confirmed successfully. Enjoy your trip!');

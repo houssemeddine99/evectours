@@ -15,15 +15,15 @@
                     <article class="reservation-card">
                         <div class="reservation-header">
                             <div>
-                                <h3>{{ reservation.voyage_title }}</h3>
+                                <h3>{{ reservation.voyage_id }}</h3>
                                 <p class="meta">Reservation #{{ reservation.id }} · {{ reservation.reservation_date|date('d M Y H:i') }}</p>
                             </div>
                             <span class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</span>
                         </div>
 
                         <div class="reservation-info-grid">
-                            <div><strong>Destination</strong><br>{{ reservation.destination }}</div>
-                            <div><strong>Dates</strong><br>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }} → {{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div>
+                      
+
                             <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
                             <div><strong>Total</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
                         </div>

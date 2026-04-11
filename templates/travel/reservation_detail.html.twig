@@ -1,78 +1,94 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Reservation Detail | Travagir{% endblock %}
+{% block title %}Reservation Detail | Travagir
+{% endblock %}
 
 {% block body %}
-    <section>
-        <h1>Reservation Details</h1>
+	<section>
+		<h1>Reservation Details</h1>
 
-        {% if error %}
-            <div class="alert alert-error">{{ error }}</div>
-        {% endif %}
+		{% if error %}
+			<div class="alert alert-error">{{ error }}</div>
+		{% endif %}
 
-        {% if success %}
-            <div class="alert alert-success">{{ success }}</div>
-        {% endif %}
+		{% if success %}
+			<div class="alert alert-success">{{ success }}</div>
+		{% endif %}
 
-        <div class="reservation-card">
-            <div class="reservation-header">
-                <div>
-                    <h2>#{{ reservation.id }}</h2>
-                    <p class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</p>
-                </div>
-                <div class="reservation-meta">
-                    <p><strong>Reserved On:</strong> {{ reservation.reservation_date ? reservation.reservation_date|date('d M Y H:i') : 'Unknown' }}</p>
-                    <p><strong>Updated:</strong> {{ reservation.updated_at ? reservation.updated_at|date('d M Y H:i') : 'Unknown' }}</p>
-                </div>
-            </div>
+		<div class="reservation-card">
+			<div class="reservation-header">
+				<div>
+					<h2>Number of reservations: #{{ reservation.id }}</h2>
+					<p class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</p>
+				</div>
+				<div class="reservation-meta">
+					<p>
+						<strong>Reserved On:</strong>
+						{{ reservation.reservation_date ? reservation.reservation_date|date('d M Y H:i') : 'Unknown' }}</p>
+					<p>
+						<strong>Updated:</strong>
+						{{ reservation.updated_at ? reservation.updated_at|date('d M Y H:i') : 'Unknown' }}</p>
+				</div>
+			</div>
 
-    <div class="reservation-info-grid">
-        {% if is_admin_view %}
-        <div><strong>User</strong><br>{{ reservation.user_name }}<br><small>{{ reservation.user_email }}</small></div>
-        {% endif %}
-        <div><strong>Voyage</strong><br>{{ reservation.voyage_title }}</div>
-        <div><strong>Destination</strong><br>{{ reservation.destination }}</div>
-        <div><strong>Dates</strong><br>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }} → {{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div>
-        <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
-        <div><strong>Total Price</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
-    </div>
+			<div class="reservation-info-grid">
+				{% if is_admin_view %}
+					<div>
+						<strong>User</strong><br>{{ reservation.user_name }}<br><small>{{ reservation.user_email }}</small>
+					</div>
+				{% endif %}
+				<div>
+					<strong>Voyage</strong><br>{{ reservation.voyage_title}}</div>
+				 <div>
+					<strong>Destination</strong><br>{{ reservation.destination }}</div> 
+				<div>
+					<strong>Dates</strong><br>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}
+					→
+					{{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div> 
+				<div>
+					<strong>People</strong><br>{{ reservation.number_of_people }}</div>
+				<div>
+					<strong>Total Price</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
+			</div>
 
-        <div class="reservation-actions">
-            {% if reservation.status == 'PENDING' %}
-                <form method="post" class="inline-form">
-                    <button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
-                </form>
-            {% endif %}
+			<div class="reservation-actions">
+				{% if is_admin_view %}
+					{% if reservation.status == 'PENDING' %}
+						<form method="post" class="inline-form">
+							<button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
+						</form>
+					{% endif %}
 
-            {% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
-                <form method="post" class="inline-form">
-                    <button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
-                </form>
-            {% endif %}
+					{% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
+						<form method="post" class="inline-form">
+							<button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
+						</form>
+					{% endif %}
 
-            {% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
-                <form method="post" class="refund-form">
-                    <div class="form-group">
-                        <label for="refund_reason">Refund reason</label>
-                        <textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
-                    </div>
-                    <button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
-                </form>
-            {% endif %}
 
-            {# Add link for users to create a reclamation related to this reservation #}
-            {% if not is_admin_view %}
-                <a href="{{ path('user_reclamation_new') }}?reservation_id={{ reservation.id }}" class="btn btn-primary mt-2">Add Reclamation</a>
-            {% endif %}
-        </div>
+					{% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
+						<form method="post" class="refund-form">
+							<div class="form-group">
+								<label for="refund_reason">Refund reason</label>
+								<textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
+							</div>
+							<button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
+						</form>
+					{% endif %}
+				{% endif %}
+				{# Add link for users to create a reclamation related to this reservation #}
+				{% if not is_admin_view %}
+					<a href="{{ path('user_reclamation_new') }}?reservation_id={{ reservation.id }}" class="btn btn-primary mt-2">Add Reclamation</a>
+				{% endif %}
+			</div>
 
-    <p class="back-link">
-        {% if is_admin_view %}
-        <a href="{{ path('admin_reservations') }}">← Back to All Reservations</a>
-        {% else %}
-        <a href="{{ path('account_bookings') }}">← Back to My Bookings</a>
-        {% endif %}
-    </p>
-        </div>
-    </section>
+			<p class="back-link">
+				{% if is_admin_view %}
+					<a href="{{ path('admin_reservations') }}">← Back to All Reservations</a>
+				{% else %}
+					<a href="{{ path('account_bookings') }}">← Back to My Bookings</a>
+				{% endif %}
+			</p>
+		</div>
+	</section>
 {% endblock %}

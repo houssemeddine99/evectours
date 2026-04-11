@@ -10,8 +10,8 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Reservation ID</th>
+              
+                    <th>Reservation Number</th>
                     <th>Title</th>
                     <th>Description</th>
                     <th>Status</th>
@@ -26,7 +26,7 @@
             <tbody>
                 {% for rec in reclamations %}
                     <tr>
-                        <td>{{ rec.id }}</td>
+                        
                         <td>{{ rec.reservationId }}</td>
                         <td><a href="{{ path('user_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
                         <td>{{ rec.description }}</td>
