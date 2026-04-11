@@ -270,7 +270,7 @@ class ValidationService
         $this->clearErrors();
 
         // Required fields
-        $this->validateRequired($data, ['username', 'email', 'password', 'tel']);
+        $this->validateRequired($data, ['username', 'email', 'password']);
 
         // Email validation
         if (isset($data['email'])) {
@@ -287,10 +287,7 @@ class ValidationService
             $this->validateString($data['password'], 'password', 6);
         }
 
-        // Phone validation
-        if (isset($data['tel'])) {
-            $this->validatePhone($data['tel']);
-        }
+     
 
         return $this;
     }
