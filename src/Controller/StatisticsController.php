@@ -53,22 +53,6 @@ class StatisticsController extends AbstractController
         return null;
     }
 
-    #[Route('/admin/activities', name: 'admin_activities', methods: ['GET'])]
-    public function activities(Request $request): Response
-    {
-        if ($response = $this->ensureAdmin($request)) {
-            return $response;
-        }
-
-        // No input parameters for this view, but we still run validation to keep a consistent pattern.
-        $this->validationService->clearErrors();
-        // No validation rules needed – just a placeholder for future extensions.
-
-        $activities = $this->activityService->getAllActivitiesForAdmin();
-        return $this->render('admin/activities.html.twig', [
-            'activities' => $activities,
-        ]);
-    }
 
     #[Route('/admin/search-history', name: 'admin_search_history', methods: ['GET'])]
     public function searchHistory(Request $request): Response
