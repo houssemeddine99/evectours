@@ -25,4 +25,8 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+    public function findById(int $id): ?User
+{
+    return $this->find($id);
+}
 }

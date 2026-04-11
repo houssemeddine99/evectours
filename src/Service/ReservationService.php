@@ -188,18 +188,42 @@ class ReservationService
         }
     }
 
-    public function listAllReservations(): array
-    {
-        try {
-            $reservations = $this->reservationRepository->findAll();
-            return array_map(function ($reservation) {
-                return $this->reservationToArrayWithUserAndVoyage($reservation);
-            }, $reservations);
-        } catch (\Throwable $e) {
-            $this->logger->error('Failed to list all reservations', ['error' => $e->getMessage()]);
-            return [];
+public function listAllReservations(): array
+{
+    try {
+        $reservations = $this->reservationRepository->findAll();
+        $result = [];
+
+        foreach ($reservations as $reservation) {
+            $user = $this->userRepository->findById($reservation->getUserId());
+            $voyage = $this->voyageRepository->findById($reservation->getVoyageId());
+
+            $result[] = [
+                'id' => $reservation->getId(),
+                'user_id' => $reservation->getUserId(),
+                'user_name' => $user ? $user->getUsername() : null,
+                'voyage_id' => $reservation->getVoyageId(),
+                'voyage_title' => $voyage ? $voyage->getTitle() : null,
+                'offer_id' => $reservation->getOfferId(),
+                'reservation_date' => $reservation->getReservationDate(),
+                'number_of_people' => $reservation->getNumberOfPeople(),
+                'total_price' => $reservation->getTotalPrice(),
+                'status' => $reservation->getStatus(),
+                'special_requests' => $reservation->getSpecialRequests(),
+                'payment_status' => $reservation->getPaymentStatus(),
+                'payment_date' => $reservation->getPaymentDate(),
+                'updated_at' => $reservation->getUpdatedAt(),
+                'user_email' => $user ? $user->getEmail() : null,
+                'destination' => $voyage ? $voyage->getDestination() : null,
+            ];
         }
+
+        return $result;
+    } catch (\Throwable $e) {
+        $this->logger->error('Failed to list all reservations', ['error' => $e->getMessage()]);
+        return [];
     }
+}
 
     public function confirmReservation(int $reservationId, int $userId): bool
     {
