@@ -98,8 +98,15 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
     return new RedirectResponse($this->router->generate('travel_home'));
 }
 
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
-    {
-        return new Response("Erreur d'authentification : " . $exception->getMessage(), 403);
+ public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
+{
+    // Si la session 'auth_user' existe déjà, c'est que authenticate() a réussi 
+    // avant que l'erreur ne survienne. On ignore l'erreur et on redirige.
+    if ($request->getSession()->has('auth_user')) {
+        return new RedirectResponse($this->router->generate('travel_home'));
     }
+
+    // Sinon, on affiche l'erreur normalement
+    return new Response("Erreur d'authentification : " . $exception->getMessage(), 403);
+}
 }
