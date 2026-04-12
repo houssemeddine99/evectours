@@ -128,7 +128,27 @@ class UserLoginRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+// src/Repository/UserLoginRepository.php
 
+public function findPaginatedLogins(int $page, int $limit): array
+{
+    $offset = ($page - 1) * $limit;
+
+    return $this->createQueryBuilder('ul')
+        ->orderBy('ul.loginTime', 'DESC')
+        ->setFirstResult($offset)
+        ->setMaxResults($limit)
+        ->getQuery()
+        ->getResult();
+}
+
+public function countAllLogins(): int
+{
+    return $this->createQueryBuilder('ul')
+        ->select('count(ul.id)')
+        ->getQuery()
+        ->getSingleScalarResult();
+}
     /**
      * Find suspicious logins (different IPs in short time)
      * @return UserLogin[]

@@ -7,6 +7,37 @@
     {% if stats is empty %}
         <p>No login records available.</p>
     {% else %}
+  
+
+    <div style="width: 80%; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <canvas id="loginChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const ctx = document.getElementById('loginChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line', // You can change this to 'bar'
+            data: {
+                labels: {{ chartLabels|json_encode|raw }}, // PHP dates -> JS Array
+                datasets: [{
+                    label: 'Logins per Day',
+                    data: {{ chartData|json_encode|raw }}, // PHP counts -> JS Array
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    </script>
         <div class="admin-table-container" style="padding:24px; overflow:auto;">
         <table class="admin-table">
             <thead>

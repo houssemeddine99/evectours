@@ -214,7 +214,7 @@ public function listAllReservations(): array
                 'payment_date' => $reservation->getPaymentDate(),
                 'updated_at' => $reservation->getUpdatedAt(),
                 'user_email' => $user ? $user->getEmail() : null,
-                'destination' => $voyage ? $voyage->getDestination() : null,
+                'destination' => $voyage ? $voyage->getDestination() : null, 
             ];
         }
 

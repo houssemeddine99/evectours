@@ -5,6 +5,13 @@
 {% block body %}
     <h1>All Reclamations (Admin)</h1>
     {% if reclamations|length > 0 %}
+    <form method="get" action="{{ path('admin_reclamations') }}" style="margin-bottom: 20px;">
+    <input type="email" name="email" value="{{ currentEmail }}" placeholder="Filter by User Email...">
+    <button type="submit">Search</button>
+    {% if currentEmail %}
+        <a href="{{ path('admin_reclamations') }}">Clear</a>
+    {% endif %}
+</form>
         <div class="admin-table-container">
         <table class="admin-table">
             <thead>
@@ -43,6 +50,18 @@
             </tbody>
         </table>
         </div>
+        {# 2. Pagination Controls #}
+<div class="pagination">
+    {% if currentPage > 1 %}
+        <a href="{{ path('admin_reclamations', {page: currentPage - 1, email: currentEmail, limit: limit}) }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ currentPage }} of {{ totalPages }}</span>
+
+    {% if currentPage < totalPages %}
+        <a href="{{ path('admin_reclamations', {page: currentPage + 1, email: currentEmail, limit: limit}) }}">Next</a>
+    {% endif %}
+</div>
     {% else %}
         <p>No reclamations found.</p>
     {% endif %}

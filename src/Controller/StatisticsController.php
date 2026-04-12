@@ -30,8 +30,7 @@ class StatisticsController extends AbstractController
         private readonly UserLoginService $userLoginService,
         private readonly ValidationService $validationService,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * Helper to ensure the current session user is an admin.
@@ -54,31 +53,20 @@ class StatisticsController extends AbstractController
     }
 
 
+
     #[Route('/admin/search-history', name: 'admin_search_history', methods: ['GET'])]
     public function searchHistory(Request $request): Response
     {
         if ($response = $this->ensureAdmin($request)) {
             return $response;
         }
+  $page = $request->query->getInt('page', 1);
+$limit = $request->query->getInt('limit', 50);
 
-        // Optional pagination parameters
-        $page = (int) $request->query->get('page', '1');
-        $limit = (int) $request->query->get('limit', '20');
+// Get the specific slice of data from the service
+$paginationData = $this->searchHistoryService->getPaginatedSearchHistory($page, $limit);
 
-        // Validate pagination values (positive integers)
-        $this->validationService->clearErrors()
-            ->validateNumber($page, 'page', 1)
-            ->validateNumber($limit, 'limit', 1);
-
-        if (!$this->validationService->isValid()) {
-            $this->logger->warning('Invalid pagination parameters for admin search history');
-            // Fallback to defaults
-            $page = 1;
-            $limit = 20;
-        }
-
-        // Fetch all search history records for admin view and map to expected array structure
-        $rawHistories = $this->searchHistoryService->getAllSearchHistory();
+        // Map the 'data' portion of the results
         $histories = array_map(function ($h) {
             return [
                 'userId' => $h->getUserId(),
@@ -87,12 +75,22 @@ class StatisticsController extends AbstractController
                 'resultsFound' => $h->getResultsFound(),
                 'createdAt' => $h->getSearchTime(),
             ];
-        }, $rawHistories);
+        }, $paginationData['data']);
+        $typeCounts = [];
+        foreach ($histories as $h) {
+            $type = $h['type'] ?: 'Unknown';
+            $typeCounts[$type] = ($typeCounts[$type] ?? 0) + 1;
+        }
 
         return $this->render('admin/search_history.html.twig', [
             'histories' => $histories,
-            'page' => $page,
+            'currentPage' => $paginationData['currentPage'],
+            'totalPages' => $paginationData['totalPages'],
+            'totalItems' => $paginationData['totalItems'],
             'limit' => $limit,
+            // Add these for the graph
+            'chartLabels' => array_keys($typeCounts),
+            'chartData' => array_values($typeCounts),
         ]);
     }
 
@@ -103,9 +101,12 @@ class StatisticsController extends AbstractController
             return $response;
         }
 
-        // Fetch all login records for detailed admin view
-        $logins = $this->userLoginService->getAllLogins();
-        // Map entities to array for Twig rendering
+        $page = $request->query->getInt('page', 1);
+        $limit = 100; // The "Average" recommended rows
+
+        // You should update your service to support findPaginated or similar
+        $logins = $this->userLoginService->getPaginatedLogins($page, $limit);
+
         $stats = array_map(function ($l) {
             return [
                 'userId' => $l->getUserId(),
@@ -114,9 +115,23 @@ class StatisticsController extends AbstractController
                 'ipAddress' => $l->getIpAddress(),
                 'userAgent' => $l->getUserAgent(),
             ];
-        }, $logins);
+        }, $logins['data']);
+
+        $chartRaw = [];
+        foreach ($stats as $entry) {
+            $date = $entry['loginTime']->format('Y-m-d');
+            $chartRaw[$date] = ($chartRaw[$date] ?? 0) + 1;
+        }
+
+        // 2. Sort dates so the graph flows left-to-right
+        ksort($chartRaw);
+
         return $this->render('admin/login_stats.html.twig', [
             'stats' => $stats,
+            'currentPage' => $page,
+            // Pass these to Twig
+            'chartLabels' => array_keys($chartRaw),
+            'chartData' => array_values($chartRaw),
         ]);
     }
 }

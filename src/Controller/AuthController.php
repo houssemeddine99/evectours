@@ -19,8 +19,7 @@ class AuthController extends AbstractController
         private readonly ValidationService $validationService,
         private readonly UserLoginService $userLoginService,
         private readonly LoggerInterface $logger
-    ) {
-    }
+    ) {}
 
     #[Route('/login', name: 'auth_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response
@@ -51,44 +50,44 @@ class AuthController extends AbstractController
             } else {
                 // Check if email exists first
                 $emailExists = $this->authService->emailExists($email);
-            
-            if (!$emailExists) {
-                $this->logger->warning('Login failed - email not found', [
-                    'email' => $email,
-                    'ip' => $request->getClientIp()
-                ]);
-                $error = 'Email not found.';
-            } else {
-    $user = $this->authService->authenticate($email, $password);
-    if ($user !== null) {
-        $this->logger->info('Creating user session after successful login', [
-            'email' => $email,
-            'user_id' => $user['id'],
-            'username' => $user['username'],
-            'is_admin' => $user['is_admin'] ?? false,
-            'ip' => $request->getClientIp()
-        ]);
-        
-                // Record successful login
-                $ipAddress = $request->getClientIp();
-                $userAgent = $request->headers->get('User-Agent');
-                $this->userLoginService->recordLogin(
-                    $user['id'],
-                    'email',
-                    $ipAddress,
-                    $userAgent
-                );
 
-                $request->getSession()->set('auth_user', $user);
-                return $this->redirectToRoute('travel_home');
-    }
+                if (!$emailExists) {
+                    $this->logger->warning('Login failed - email not found', [
+                        'email' => $email,
+                        'ip' => $request->getClientIp()
+                    ]);
+                    $error = 'Email not found.';
+                } else {
+                    $user = $this->authService->authenticate($email, $password);
+                    if ($user !== null) {
+                        $this->logger->info('Creating user session after successful login', [
+                            'email' => $email,
+                            'user_id' => $user['id'],
+                            'username' => $user['username'],
+                            'is_admin' => $user['is_admin'] ?? false,
+                            'ip' => $request->getClientIp()
+                        ]);
 
-    $this->logger->warning('Login failed - incorrect password', [
-        'email' => $email,
-        'ip' => $request->getClientIp()
-    ]);
-    $error = 'Incorrect password.';
-}
+                        // Record successful login
+                        $ipAddress = $request->getClientIp();
+                        $userAgent = $request->headers->get('User-Agent');
+                        $this->userLoginService->recordLogin(
+                            $user['id'],
+                            'email',
+                            $ipAddress,
+                            $userAgent
+                        );
+
+                        $request->getSession()->set('auth_user', $user);
+                        return $this->redirectToRoute('travel_home');
+                    }
+
+                    $this->logger->warning('Login failed - incorrect password', [
+                        'email' => $email,
+                        'ip' => $request->getClientIp()
+                    ]);
+                    $error = 'Incorrect password.';
+                }
             }
         }
 
@@ -98,12 +97,12 @@ class AuthController extends AbstractController
             'error' => $error,
         ]);
     }
-    
+
     #[Route('/logout', name: 'auth_logout', methods: ['POST'])]
     public function logout(Request $request): RedirectResponse
     {
         $user = $request->getSession()->get('auth_user');
-        
+
         if ($user) {
             $this->logger->info('User logging out', [
                 'user_id' => $user['id'] ?? null,
@@ -112,10 +111,9 @@ class AuthController extends AbstractController
                 'ip' => $request->getClientIp()
             ]);
         }
-        
+
         $request->getSession()->remove('auth_user');
 
         return $this->redirectToRoute('travel_home');
     }
-
 }

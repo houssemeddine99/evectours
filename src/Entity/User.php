@@ -4,11 +4,13 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -24,6 +26,9 @@ class User
     #[ORM\Column(length: 255)]
     private string $password = '';
 
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
+
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $tel = null;
 
@@ -36,6 +41,32 @@ class User
     public function getId(): ?int
     {
         return $this->id;
+    }
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // On garantit que chaque utilisateur possède au moins ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+        return $this;
+    }
+
+    /**
+     * Sert à effacer des données sensibles temporaires (souvent vide)
+     */
+    public function eraseCredentials(): void
+    {
+        // Si vous stockez des mots de passe en clair temporairement, videz-les ici
     }
 
     public function getUsername(): string

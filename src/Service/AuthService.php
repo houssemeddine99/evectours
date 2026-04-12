@@ -168,7 +168,27 @@ class AuthService
             'is_admin' => $this->isAdmin($user->getId()),
         ];
     }
+public function getUserByEmail(string $email): ?array
+{
+    // 1. Ask the repository to find the user entity by email
+    $user = $this->userRepository->findOneBy(['email' => $email]);
 
+    // 2. If no user found, return null
+    if (!$user) {
+        return null;
+    }
+
+    // 3. Return the user data in the same format as getUserById
+    return [
+        'id' => $user->getId(),
+        'username' => $user->getUsername(),
+        'email' => $user->getEmail(),
+        'tel' => $user->getTel(),
+        'image_url' => $user->getImageUrl(),
+        'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+        'is_admin' => $this->isAdmin($user->getId()),
+    ];
+}
  public function isAdmin(int $userId): bool
 {
     $admin = $this->adminRepository->findByUserId($userId);

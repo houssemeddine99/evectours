@@ -29,6 +29,40 @@ class SearchHistoryRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    /**
+ * Find paginated search history for admin
+ * @return array{data: SearchHistory[], totalItems: int, totalPages: int, currentPage: int, limit: int}
+ */
+public function findPaginated(int $page, int $limit): array
+{
+    $queryBuilder = $this->createQueryBuilder('sh')
+        ->orderBy('sh.searchTime', 'DESC');
+
+    // 1. Get total count
+$countQueryBuilder = clone $queryBuilder;
+$totalItems = (int) $countQueryBuilder
+    ->select('COUNT(sh.id)')
+    ->resetDQLPart('orderBy') // Add this line!
+    ->getQuery()
+    ->getSingleScalarResult();
+
+    // 2. Get paginated results
+    $results = $queryBuilder
+        ->setFirstResult(($page - 1) * $limit)
+        ->setMaxResults($limit)
+        ->getQuery()
+        ->getResult();
+
+    $totalPages = (int) ceil($totalItems / $limit);
+
+    return [
+        'data' => $results,
+        'totalItems' => $totalItems,
+        'totalPages' => $totalPages,
+        'currentPage' => $page,
+        'limit' => $limit
+    ];
+}
 
     /**
      * Find searches by type

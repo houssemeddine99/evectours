@@ -15,7 +15,16 @@ class SearchHistoryService
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
-
+/**
+ * Get paginated search history records (admin view)
+ */
+public function getPaginatedSearchHistory(int $page, int $limit): array
+{
+    return $this->safeExecute(
+        fn () => $this->searchHistoryRepository->findPaginated($page, $limit), 
+        ['data' => [], 'totalItems' => 0, 'totalPages' => 0, 'currentPage' => $page, 'limit' => $limit]
+    );
+}
     /**
      * Record a search
      */

@@ -1,0 +1,11 @@
+security:
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email # 
+    firewalls:
+        main:
+            # ...
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator

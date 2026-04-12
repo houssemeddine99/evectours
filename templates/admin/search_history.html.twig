@@ -7,6 +7,86 @@
     {% if histories is empty %}
         <p>No search history records found.</p>
     {% else %}
+    {% if histories is not empty %}
+    <div style="max-width: 500px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h3 style="text-align: center;">Searches by Type</h3>
+        <canvas id="searchTypeChart"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('searchTypeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut', // 'pie' also works well here
+                data: {
+                    labels: {{ chartLabels|json_encode|raw }},
+                    datasets: [{
+                        label: 'Search Count',
+                        data: {{ chartData|json_encode|raw }},
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <div class="pagination-wrapper" style="margin: 30px 0; display: flex; justify-content: center; align-items: center; gap: 15px;">
+    
+    {# Previous Button #}
+    {% if currentPage > 1 %}
+        <a href="{{ path('admin_search_history', { page: currentPage - 1, limit: limit }) }}" 
+           class="btn btn-secondary" 
+           style="padding: 8px 16px; background: #f0f0f0; border: 1px solid #ccc; text-decoration: none; border-radius: 4px; color: #333;">
+            &laquo; Previous
+        </a>
+    {% else %}
+        <span style="padding: 8px 16px; color: #ccc; border: 1px solid #eee; border-radius: 4px;">&laquo; Previous</span>
+    {% endif %}
+
+    {# Page Indicator #}
+    <span class="page-info" style="font-weight: bold;">
+        Page {{ currentPage }} of {{ totalPages }}
+    </span>
+
+    {# Next Button #}
+    {% if currentPage < totalPages %}
+        <a href="{{ path('admin_search_history', { page: currentPage + 1, limit: limit }) }}" 
+           class="btn btn-secondary" 
+           style="padding: 8px 16px; background: #f0f0f0; border: 1px solid #ccc; text-decoration: none; border-radius: 4px; color: #333;">
+            Next &raquo;
+        </a>
+    {% else %}
+        <span style="padding: 8px 16px; color: #ccc; border: 1px solid #eee; border-radius: 4px;">Next &raquo;</span>
+    {% endif %}
+
+</div>
+<div class="table-controls" style="margin-bottom: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+    <form method="get" action="{{ path('admin_search_history') }}" id="limitForm">
+        {# We keep the current page as 1 when changing limits to avoid "out of bounds" errors #}
+        <input type="hidden" name="page" value="1">
+        
+        <label for="limit" style="font-weight: bold;">Records per page:</label>
+        <select name="limit" id="limit" onchange="document.getElementById('limitForm').submit();" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="10" {{ limit == 10 ? 'selected' : '' }}>10</option>
+            <option value="20" {{ limit == 20 ? 'selected' : '' }}>20</option>
+            <option value="50" {{ limit == 50 ? 'selected' : '' }}>50</option>
+            <option value="100" {{ limit == 100 ? 'selected' : '' }}>100</option>
+        </select>
+    </form>
+</div>
+<p style="text-align: center; color: #666; font-size: 0.9em;">
+    Total Records: {{ totalItems }}
+</p>
+    {% endif %}
         <div class="admin-table-container" style="padding:24px; overflow:auto;">
         <table class="admin-table">
             <thead>
@@ -32,4 +112,16 @@
         </table>
         </div>
     {% endif %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .table-controls {
+            margin-bottom: 20px !important; 
+            display: flex !important; 
+            justify-content: center !important; 
+            align-items: center !important; 
+            gap: 10px !important;
+        }
+    </style>
+{% endblock %}
 {% endblock %}

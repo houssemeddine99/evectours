@@ -15,7 +15,22 @@ class UserLoginService
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
+// src/Service/UserLoginService.php
 
+public function getPaginatedLogins(int $page = 1, int $limit = 25): array
+{
+    $logins = $this->userLoginRepository->findPaginatedLogins($page, $limit);
+    $totalLogins = $this->userLoginRepository->countAllLogins();
+    $totalPages = ceil($totalLogins / $limit);
+
+    return [
+        'data' => $logins,
+        'currentPage' => $page,
+        'totalPages' => $totalPages,
+        'totalItems' => $totalLogins,
+        'limit' => $limit
+    ];
+}
     /**
      * Record a user login
      */

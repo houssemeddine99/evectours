@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Reclamation;
 use App\Repository\ReclamationRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\AuthService;
 use Psr\Log\LoggerInterface;
 
 class ReclamationService
@@ -13,6 +14,7 @@ class ReclamationService
         private readonly ReclamationRepository $reclamationRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly ?LoggerInterface $logger = null,
+        private readonly AuthService $authService
     ) {
     }
 
@@ -76,7 +78,23 @@ class ReclamationService
         $this->entityManager->flush();
         return $reclamation;
     }
+public function getPaginatedReclamations(int $page, int $limit, ?string $email = null): array
+{
+    return $this->safeExecute(function() use ($page, $limit, $email) {
+        $userId = null;
+        
+        // If an email is provided, try to find the user ID
+        if ($email) {
+            $user = $this->authService->getUserByEmail($email); // Assuming this exists
+            $userId = $user ? $user['id'] : -1; // -1 ensures no results if user not found
+        }
 
+        return $this->reclamationRepository->findPaginated($page, $limit, $userId);
+    }, [
+        'data' => [], 'totalItems' => 0, 'totalPages' => 0, 
+        'currentPage' => $page, 'limit' => $limit
+    ]);
+}
     /**
      * Get all open reclamations
      */
