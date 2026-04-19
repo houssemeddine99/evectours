@@ -6,6 +6,7 @@ use App\Service\ReservationService;
 use App\Service\VoyageService;
 use App\Service\OfferService;
 use App\Service\ValidationService;
+use App\Service\MailerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,8 @@ class ReservationController extends AbstractController
         private readonly VoyageService $voyageService,
         private readonly OfferService $offerService,
         private readonly AdminController $adminController,
-        private readonly ValidationService $validationService
+        private readonly ValidationService $validationService,
+        private readonly MailerService $mailerService
     ) {}
 
     #[Route('/voyages/{id}/reserve', name: 'travel_voyage_reserve', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
@@ -74,6 +76,16 @@ class ReservationController extends AbstractController
                 }
 
                 $this->addFlash('success', 'Reservation created successfully');
+
+                try {
+                    $userEmail = $user['email'] ?? null;
+                    if ($userEmail) {
+                        $this->mailerService->sendMailTo($userEmail);
+                    }
+                } catch (\Throwable $e) {
+                    // don't block the user if email fails
+                }
+
             } catch (\Throwable $e) {
                 $this->addFlash('error', $e->getMessage());
             }
@@ -85,8 +97,8 @@ class ReservationController extends AbstractController
             'active_nav' => 'voyages',
             'voyage' => $voyage,
             'offer' => $activeOffer,
-            'error' => null,  // Add this
-            'success' => null, // Add this
+            'error' => null,
+            'success' => null,
         ]);
     }
 
