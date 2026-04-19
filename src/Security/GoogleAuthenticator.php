@@ -15,6 +15,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use App\Repository\AdminRepository;
 use App\Service\UserLoginService;
 
 class GoogleAuthenticator extends OAuth2Authenticator
@@ -23,7 +24,8 @@ class GoogleAuthenticator extends OAuth2Authenticator
         private ClientRegistry $clientRegistry,
         private EntityManagerInterface $entityManager,
         private RouterInterface $router,
-        private UserLoginService $userLoginService
+        private UserLoginService $userLoginService,
+        private AdminRepository $adminRepository
     ) {}
 
     public function supports(Request $request): ?bool
@@ -76,11 +78,12 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
 
     // On transforme l'entité en tableau pour matcher le format de ton login classique
     // afin que tes templates Twig ne plantent pas.
+    $admin = $this->adminRepository->findOneBy(['user' => $user]);
     $userData = [
         'id' => $user->getId(),
         'email' => $user->getEmail(),
         'username' => $user->getUsername(),
-        'is_admin' => in_array('ROLE_ADMIN', $user->getRoles()),
+        'is_admin' => $admin !== null,
     ];
 
     // On remplit la session manuellement comme dans ton LoginController
@@ -102,11 +105,11 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
 {
     // Si la session 'auth_user' existe déjà, c'est que authenticate() a réussi 
     // avant que l'erreur ne survienne. On ignore l'erreur et on redirige.
-    if ($request->getSession()->has('auth_user')) {
-        return new RedirectResponse($this->router->generate('travel_home'));
-    }
-
+    // if ($request->getSession()->has('auth_user')) {
+    //     return new RedirectResponse($this->router->generate('travel_home'));
+    // }
+  return new RedirectResponse($this->router->generate('travel_home'));
     // Sinon, on affiche l'erreur normalement
-    return new Response("Erreur d'authentification : " . $exception->getMessage(), 403);
+    // return new Response("Erreur d'authentification : " . $exception->getMessage(), 403);
 }
 }
