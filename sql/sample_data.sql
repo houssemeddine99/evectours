@@ -126,10 +126,10 @@ INSERT INTO user_documents (user_id, first_name, last_name, date_of_birth, natio
 (8, 'David', 'Miller', '1987-09-25', 'Italian', 'P33221100', '2028-09-25', 'CIN332211', '2017-11-30', '2024-07-22 10:45:00', '2024-07-22 10:45:00');
 
 -- =====================================================
--- 10. REFUND REQUESTS (depends on reclamations, users)
+-- 10. REFUND REQUESTS (depends on reclamations, users, reservations)
 -- =====================================================
-INSERT INTO refund_requests (reclamation_id, requester_id, amount, reason, status, created_at) VALUES
-(2, 2, 720.00, 'Trip cancelled due to unexpected work commitment - force majeure', 'APPROVED', '2024-09-13 08:30:00');
+INSERT INTO refund_requests (reclamation_id, requester_id, reservation_id, amount, reason, status, created_at) VALUES
+(2, 2, NULL, 720.00, 'Trip cancelled due to unexpected work commitment - force majeure', 'APPROVED', '2024-09-13 08:30:00');
 
 -- =====================================================
 -- 11. USER OFFERS (depends on users, offers)
