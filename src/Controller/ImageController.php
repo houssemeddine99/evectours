@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Service\CloudinaryService;
 use App\Service\VoyageImageService;
 use App\Service\ValidationService;
 use App\Repository\VoyageRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -16,7 +18,8 @@ class ImageController extends AbstractController
         private readonly VoyageImageService $voyageImageService,
         private readonly VoyageRepository $voyageRepository,
         private readonly AdminController $adminController,
-        private readonly ValidationService $validationService
+        private readonly ValidationService $validationService,
+        private readonly CloudinaryService $cloudinaryService
     ) {
     }
 
@@ -77,6 +80,90 @@ unset($data['id']);
         return $this->render('admin/image_form.html.twig', [
             'image' => null,
             'voyages' => $this->voyageRepository->findAll(),
+        ]);
+    }
+
+    #[Route('/admin/images/cloudinary-upload', name: 'admin_cloudinary_upload', methods: ['GET', 'POST'])]
+    public function adminCloudinaryUpload(Request $request): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $voyages = $this->voyageRepository->findAll();
+        $selectedVoyageId = $request->query->getInt('voyage_id', 0);
+        $data = [];
+        if ($selectedVoyageId > 0) {
+            $data['voyage_id'] = $selectedVoyageId;
+        }
+
+        if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+            if (empty($data['voyage_id']) && $selectedVoyageId > 0) {
+                $data['voyage_id'] = $selectedVoyageId;
+            }
+            $file = $request->files->get('image');
+
+            $this->validationService->clearErrors();
+            $this->validationService->validateRequired($data, ['voyage_id']);
+            $this->validationService->validateNumber($data['voyage_id'] ?? '', 'voyage_id', 1);
+            if (!$file instanceof UploadedFile) {
+                $this->validationService->validateCustom(false, fn($value) => $value === true, 'Please select an image file to upload.', 'image');
+            }
+
+            if (!$this->validationService->isValid()) {
+                $errors = $this->validationService->getErrors();
+                foreach ($errors as $fieldErrors) {
+                    foreach ($fieldErrors as $error) {
+                        $this->addFlash('error', $error);
+                    }
+                }
+
+                return $this->render('admin/cloudinary_upload.html.twig', [
+                    'voyages' => $voyages,
+                    'data' => $data,
+                    'errors' => $errors,
+                    'selectedVoyageId' => $selectedVoyageId,
+                ]);
+            }
+
+            try {
+                $uploadResult = $this->cloudinaryService->uploadImageFile(
+                    $file,
+                    $data['cloudinary_public_id'] ?? null,
+                    'voyage_images'
+                );
+            } catch (\Throwable $e) {
+                $this->addFlash('error', 'Cloudinary upload failed: ' . $e->getMessage());
+
+                return $this->render('admin/cloudinary_upload.html.twig', [
+                    'voyages' => $voyages,
+                    'data' => $data,
+                    'errors' => ['cloudinary' => [$e->getMessage()]],
+                    'selectedVoyageId' => $selectedVoyageId,
+                ]);
+            }
+
+            $imageData = [
+                'voyage_id' => (int) $data['voyage_id'],
+                'image_url' => $uploadResult['secure_url'] ?? $uploadResult['url'] ?? '',
+                'cloudinary_public_id' => $uploadResult['public_id'] ?? '',
+            ];
+
+            $image = $this->voyageImageService->createVoyageImage($imageData);
+            if ($image) {
+                $this->addFlash('success', 'Image uploaded to Cloudinary and saved successfully!');
+                return $this->redirectToRoute('admin_images');
+            }
+
+            $this->addFlash('error', 'Uploaded successfully, but saving the image record failed.');
+        }
+
+        return $this->render('admin/cloudinary_upload.html.twig', [
+            'voyages' => $voyages,
+            'data' => $data,
+            'errors' => [],
+            'selectedVoyageId' => $selectedVoyageId,
         ]);
     }
 

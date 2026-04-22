@@ -119,7 +119,7 @@
     <section class="management-section">
         <div class="section-header">
             <h2>🖼️ Images</h2>
-            <a href="{{ path('admin_image_new') }}?voyage_id={{ voyage.id }}" class="btn btn-sm btn-primary">➕ Add Image</a>
+            <a href="{{ path('admin_cloudinary_upload') }}?voyage_id={{ voyage.id }}" class="btn btn-sm btn-primary">➕ Add Image</a>
         </div>
         
         {% if images|length > 0 %}
@@ -135,7 +135,7 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="empty-state">No images yet. <a href="{{ path('admin_image_new') }}?voyage_id={{ voyage.id }}">Add one now!</a></p>
+        <p class="empty-state">No images yet. <a href="{{ path('admin_cloudinary_upload') }}?voyage_id={{ voyage.id }}">Add one now!</a></p>
         {% endif %}
     </section>
 </div>

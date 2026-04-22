@@ -24,6 +24,7 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+<<<<<<< HEAD
     App\Service\TwilioSmsService:
         arguments:
             $accountSid: '%env(string:TWILIO_ACCOUNT_SID)%'
@@ -40,6 +41,13 @@ services:
     App\Service\StripeRefundService:
         arguments:
             $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+=======
+    App\Service\CloudinaryService:
+        arguments:
+            $cloudName: '%env(string:CLOUDINARY_CLOUD_NAME)%'
+            $apiKey: '%env(string:CLOUDINARY_API_KEY)%'
+            $apiSecret: '%env(string:CLOUDINARY_API_SECRET)%'
+>>>>>>> 1ea777cdabe725a35b6c3dda00b8ba9c696d9556
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
