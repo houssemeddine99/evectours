@@ -13,8 +13,7 @@ class VoyageVisitService
         private readonly VoyageVisitRepository $voyageVisitRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly ?LoggerInterface $logger = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Record a voyage visit
@@ -55,15 +54,30 @@ class VoyageVisitService
      */
     public function getVisitsByVoyage(int $voyageId): array
     {
-        return $this->safeExecute(fn () => $this->voyageVisitRepository->findByVoyageId($voyageId), []);
+        return $this->safeExecute(fn() => $this->voyageVisitRepository->findByVoyageId($voyageId), []);
     }
+    public function getPaginatedVisits(int $page = 1, int $limit = 50): array
+    {
+        $offset = ($page - 1) * $limit;
 
+        return $this->safeExecute(function () use ($limit, $offset, $page) {
+            $results = $this->voyageVisitRepository->findPaginatedWithNames($offset, $limit);
+            $totalItems = $this->voyageVisitRepository->count([]);
+
+            return [
+                'data' => $results,
+                'totalItems' => $totalItems,
+                'currentPage' => $page,
+                'totalPages' => ceil($totalItems / $limit)
+            ];
+        }, ['data' => [], 'totalItems' => 0, 'currentPage' => 1, 'totalPages' => 1]);
+    }
     /**
      * Get user's visited voyages
      */
     public function getUserVisits(int $userId): array
     {
-        return $this->safeExecute(fn () => $this->voyageVisitRepository->findByUserId($userId), []);
+        return $this->safeExecute(fn() => $this->voyageVisitRepository->findByUserId($userId), []);
     }
 
     /**
@@ -71,7 +85,7 @@ class VoyageVisitService
      */
     public function getMostVisitedVoyages(int $limit = 10): array
     {
-        return $this->safeExecute(fn () => $this->voyageVisitRepository->findMostVisitedVoyages($limit), []);
+        return $this->safeExecute(fn() => $this->voyageVisitRepository->findMostVisitedVoyagesWithNames($limit), []);
     }
 
     /**
@@ -79,7 +93,7 @@ class VoyageVisitService
      */
     public function getAverageViewDuration(int $voyageId): float
     {
-        return $this->safeExecute(fn () => $this->voyageVisitRepository->getAverageViewDuration($voyageId), 0.0);
+        return $this->safeExecute(fn() => $this->voyageVisitRepository->getAverageViewDuration($voyageId), 0.0);
     }
 
     /**

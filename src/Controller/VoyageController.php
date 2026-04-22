@@ -8,6 +8,7 @@ use App\Service\ActivityService;
 use App\Service\VoyageImageService;
 use App\Service\ValidationService;
 use App\Service\SearchHistoryService;
+use App\Service\VoyageVisitService;
 use App\Repository\VoyageRepository;
 
 use Psr\Log\LoggerInterface;
@@ -26,7 +27,7 @@ class VoyageController extends AbstractController
         private readonly VoyageRepository $voyageRepository,
         private readonly ValidationService $validationService,
         private readonly SearchHistoryService $searchHistoryService,
-
+        private readonly VoyageVisitService $voyageVisitService,
         private readonly AdminController $adminController,
         private readonly ?LoggerInterface $logger = null,
     ) {}
@@ -105,13 +106,22 @@ class VoyageController extends AbstractController
     }
 
     #[Route('/voyages/{id}', name: 'travel_voyage_detail', requirements: ['id' => '\\d+'], methods: ['GET'])]
-    public function voyageDetail(int $id): Response
+    public function voyageDetail(Request $request, int $id): Response
     {
         $voyage = $this->voyageService->getVoyageById($id);
 
         if ($voyage === null) {
             throw $this->createNotFoundException('Voyage not found');
         }
+
+        // Get user from session
+        $sessionUser = $request->getSession()->get('auth_user');
+
+        // Use session ID if available, otherwise default to 1
+        $userId = ($sessionUser && isset($sessionUser['id'])) ? (int)$sessionUser['id'] : 1;
+
+        // Record the visit for every guest or logged-in user
+        $this->voyageVisitService->recordVisit($userId, $id, 'detail');
 
         $offers = $this->offerService->getActiveOffers();
         $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $id);
@@ -159,7 +169,7 @@ class VoyageController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
-         
+
 
             $this->validationService->validateVoyage($data);
             if (!$this->validationService->isValid()) {
@@ -231,7 +241,7 @@ class VoyageController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
-          
+
 
             $this->voyageService->updateVoyage($id, $data);
             $this->addFlash('success', 'Voyage updated successfully!');

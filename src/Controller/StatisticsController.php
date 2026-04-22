@@ -7,6 +7,7 @@ use App\Service\ActivityService;
 use App\Service\SearchHistoryService;
 use App\Service\UserLoginService;
 use App\Service\ValidationService;
+use App\Service\VoyageVisitService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +30,7 @@ class StatisticsController extends AbstractController
         private readonly SearchHistoryService $searchHistoryService,
         private readonly UserLoginService $userLoginService,
         private readonly ValidationService $validationService,
+        private readonly VoyageVisitService $voyageVisitService,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -52,19 +54,43 @@ class StatisticsController extends AbstractController
         return null;
     }
 
+#[Route('/admin/voyage-visits', name: 'admin_voyage_visits', methods: ['GET'])]
+public function voyageVisits(Request $request): Response
+{
+    if ($response = $this->ensureAdmin($request)) {
+        return $response;
+    }
 
+    $page = $request->query->getInt('page', 1);
+    $limit = 20;
 
+    // Chart data now uses names
+    $mostVisited = $this->voyageVisitService->getMostVisitedVoyages(10);
+    $chartLabels = array_map(fn($v) => $v['voyageName'], $mostVisited);
+    $chartData = array_map(fn($v) => (int)$v['visitCount'], $mostVisited);
+
+    $pagination = $this->voyageVisitService->getPaginatedVisits($page, $limit);
+
+    return $this->render('admin/voyage_visits.html.twig', [
+        'visits' => $pagination['data'], // This now contains [0 => VoyageVisit object, 'voyageName' => '...']
+        'currentPage' => $pagination['currentPage'],
+        'totalPages' => $pagination['totalPages'],
+        'totalItems' => $pagination['totalItems'],
+        'chartLabels' => $chartLabels,
+        'chartData' => $chartData,
+    ]);
+}
     #[Route('/admin/search-history', name: 'admin_search_history', methods: ['GET'])]
     public function searchHistory(Request $request): Response
     {
         if ($response = $this->ensureAdmin($request)) {
             return $response;
         }
-  $page = $request->query->getInt('page', 1);
-$limit = $request->query->getInt('limit', 50);
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 50);
 
-// Get the specific slice of data from the service
-$paginationData = $this->searchHistoryService->getPaginatedSearchHistory($page, $limit);
+        // Get the specific slice of data from the service
+        $paginationData = $this->searchHistoryService->getPaginatedSearchHistory($page, $limit);
 
         // Map the 'data' portion of the results
         $histories = array_map(function ($h) {

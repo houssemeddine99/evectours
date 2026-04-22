@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Voyage;
 use App\Entity\VoyageVisit;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -175,4 +176,40 @@ class VoyageVisitRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    // Add/Update these methods in VoyageVisitRepository.php
+
+/**
+ * Find most visited voyages with their titles
+ */
+/**
+ * Find most visited voyages with their titles
+ */
+public function findMostVisitedVoyagesWithNames(int $limit = 10): array
+{
+    return $this->createQueryBuilder('vv')
+        // Use v.title (from Voyage entity) instead of titre
+        ->select('v.title as voyageName, vv.voyageId, COUNT(vv.id) as visitCount')
+        ->join('App\Entity\Voyage', 'v', 'WITH', 'vv.voyageId = v.id')
+        ->groupBy('vv.voyageId, v.title')
+        ->orderBy('visitCount', 'DESC')
+        ->setMaxResults($limit)
+        ->getQuery()
+        ->getResult();
+}
+
+/**
+ * Get paginated visits with voyage titles
+ */
+public function findPaginatedWithNames(int $offset, int $limit): array
+{
+    return $this->createQueryBuilder('vv')
+        // This selects the VoyageVisit object (index 0) and the title string
+        ->select('vv', 'v.title as voyageName')
+        ->join('App\Entity\Voyage', 'v', 'WITH', 'vv.voyageId = v.id')
+        ->orderBy('vv.visitTime', 'DESC')
+        ->setFirstResult($offset)
+        ->setMaxResults($limit)
+        ->getQuery()
+        ->getResult();
+}
 }
