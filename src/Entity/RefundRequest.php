@@ -12,6 +12,7 @@ class RefundRequest
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+
     private ?int $id = null;// @phpstan-ignore property.unusedType
 
     #[ORM\Column(name: 'reclamation_id')]
@@ -19,6 +20,9 @@ class RefundRequest
 
     #[ORM\Column(name: 'requester_id')]
     private int $requesterId;
+
+    #[ORM\Column(name: 'reservation_id', nullable: true)]
+    private ?int $reservationId = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private string $amount = '0.00';
@@ -37,12 +41,12 @@ class RefundRequest
         return $this->id;
     }
 
-    public function getReclamationId(): int
+    public function getReclamationId(): ?int
     {
         return $this->reclamationId;
     }
 
-    public function setReclamationId(int $reclamationId): self
+    public function setReclamationId(?int $reclamationId): self
     {
         $this->reclamationId = $reclamationId;
         return $this;
@@ -56,6 +60,17 @@ class RefundRequest
     public function setRequesterId(int $requesterId): self
     {
         $this->requesterId = $requesterId;
+        return $this;
+    }
+
+    public function getReservationId(): ?int
+    {
+        return $this->reservationId;
+    }
+
+    public function setReservationId(?int $reservationId): self
+    {
+        $this->reservationId = $reservationId;
         return $this;
     }
 

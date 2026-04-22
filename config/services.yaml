@@ -24,5 +24,22 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    App\Service\TwilioSmsService:
+        arguments:
+            $accountSid: '%env(string:TWILIO_ACCOUNT_SID)%'
+            $authToken: '%env(string:TWILIO_AUTH_TOKEN)%'
+            $fromNumber: '%env(string:TWILIO_FROM_NUMBER)%'
+
+    App\Service\AiResponseSuggestionService:
+        arguments:
+            $apiUrl: '%env(string:AI_API_URL)%'
+            $apiKey: '%env(string:AI_API_KEY)%'
+            $model: '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\StripeRefundService:
+        arguments:
+            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

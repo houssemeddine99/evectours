@@ -130,7 +130,9 @@ class ReservationController extends AbstractController
             return $this->adminController->ensureIsAdmin($request);
         }
 
-        if ($this->reservationService->confirmReservationAsAdmin($id)) {
+        $paymentReference = trim((string) $request->request->get('payment_reference', ''));
+
+        if ($this->reservationService->confirmReservationAsAdmin($id, $paymentReference !== '' ? $paymentReference : null)) {
             $this->addFlash('success', 'Reservation confirmed successfully.');
         } else {
             $this->addFlash('error', 'Unable to confirm reservation.');
@@ -190,7 +192,8 @@ class ReservationController extends AbstractController
             return $this->adminController->ensureIsAdmin($request);
         }
             if ($request->request->has('action_confirm')) {
-                if ($this->reservationService->confirmReservation($id, $user['id'])) {
+                $paymentReference = trim((string) $request->request->get('payment_reference', ''));
+                if ($this->reservationService->confirmReservation($id, $user['id'], $paymentReference !== '' ? $paymentReference : null)) {
                     $this->addFlash('success', 'Reservation confirmed successfully. Enjoy your trip!');
                     return $this->redirectToRoute('account_bookings');
                 } else {
@@ -219,7 +222,10 @@ class ReservationController extends AbstractController
                     $errors = $this->validationService->getErrors();
                     $error = implode(' ', array_map(fn($e) => implode(', ', $e), $errors));
                 } else {
-                    if ($this->reservationService->requestRefund($id, $user['id'], $reason)) {
+                    $eligibility = $this->reservationService->evaluateRefundEligibility($id, $user['id']);
+                    if (!$eligibility['eligible']) {
+                        $error = (string) ($eligibility['reason'] ?? 'Refund request is not eligible.');
+                    } elseif ($this->reservationService->requestRefund($id, $user['id'], $reason)) {
                         $success = 'Refund request submitted and awaiting admin review.';
                     } else {
                         $error = 'Unable to submit refund request. Please review reservation status and try again.';

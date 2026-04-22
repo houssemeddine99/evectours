@@ -13,8 +13,14 @@
     {% if reclamation.adminResponse %}
         <p>{{ reclamation.adminResponse }}</p>
     {% else %}
+        {% if suggestedResponse %}
+            <div class="alert alert-info" style="margin-bottom: 10px;">
+                <strong>AI Suggested Response:</strong>
+                <p style="margin-top: 8px; white-space: pre-wrap;">{{ suggestedResponse }}</p>
+            </div>
+        {% endif %}
         <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}">
-            <textarea name="response" class="form-control" required></textarea>
+            <textarea name="response" class="form-control" required>{{ suggestedResponse|default('') }}</textarea>
             <button type="submit" class="btn btn-primary mt-2">Add Response</button>
         </form>
     {% endif %}
