@@ -72,7 +72,7 @@ class ReservationController extends AbstractController
                 );
 
                 if ($created === null) {
-                    throw new \Exception('Creation failed');
+                    throw new \Exception('Creation failed sory');
                 }
 
                 $this->addFlash('success', 'Reservation created successfully');
@@ -83,10 +83,11 @@ class ReservationController extends AbstractController
                         $this->mailerService->sendMailTo($userEmail);
                     }
                 } catch (\Throwable $e) {
-                    // don't block the user if email fails
+                    
                 }
 
             } catch (\Throwable $e) {
+                $this->addFlash('error', 'Error: ' . $e->getMessage());
                 $this->addFlash('error', $e->getMessage());
             }
 
