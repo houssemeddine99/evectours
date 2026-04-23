@@ -18,6 +18,9 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+  App\Service\Analytics\NvidiaAIClient:
+        arguments:
+            $apiKeyNvidia: '%env(NVIDIA_API_KEY)%'
     App\Service\TwilioSmsService:
         arguments:
             $accountSid:          '%env(string:TWILIO_ACCOUNT_SID)%'
@@ -35,8 +38,10 @@ services:
         arguments:
             $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
 
+
     App\Service\CloudinaryService:
         arguments:
+        
             $cloudName: '%env(string:CLOUDINARY_CLOUD_NAME)%'
             $apiKey:    '%env(string:CLOUDINARY_API_KEY)%'
             $apiSecret: '%env(string:CLOUDINARY_API_SECRET)%'
