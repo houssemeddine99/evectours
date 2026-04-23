@@ -4,7 +4,32 @@
 -- This file contains sample data for all 17 tables
 -- Order of insertion respects foreign key constraints
 -- =====================================================
+-- Drop if exists
+DROP VIEW IF EXISTS public.unified_events;
 
+-- Recreate with schema-qualified table names
+CREATE VIEW public.unified_events AS
+SELECT 
+    id, user_id, 'voyage_visits' AS type, 
+    visit_time AS created_at, 
+    jsonb_build_object('voyage_id', voyage_id, 'source', source, 'duration', view_duration_seconds) AS data
+FROM public.voyage_visits
+
+UNION ALL
+
+SELECT 
+    id, user_id, 'search' AS type, 
+    search_time AS created_at,
+    jsonb_build_object('query', search_query, 'type', search_type, 'results', results_found) AS data
+FROM public.search_history
+
+UNION ALL
+
+SELECT 
+    id, user_id, 'login' AS type, 
+    login_time AS created_at,
+    jsonb_build_object('method', login_method, 'ip', ip_address) AS data
+FROM public.user_logins;
 -- =====================================================
 -- 1. ASSOCIATIONS (no dependencies)
 -- =====================================================
