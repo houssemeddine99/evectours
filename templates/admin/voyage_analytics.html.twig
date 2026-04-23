@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Voyage Analytics | Admin{% endblock %}
+
+{% block body %}
+<div class="analytics-page">
+    <div class="page-header">
+        <div>
+            <h1>Voyage Analytics</h1>
+            <p class="lead">Visit tracking, engagement, and source breakdown</p>
+        </div>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">← Dashboard</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👁</div>
+            <div class="stat-body">
+                <p class="stat-label">Total Visits</p>
+                <p class="stat-value">{{ total_visits|number_format }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-body">
+                <p class="stat-label">Top Voyages Tracked</p>
+                <p class="stat-value">{{ top_voyages|length }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📡</div>
+            <div class="stat-body">
+                <p class="stat-label">Traffic Sources</p>
+                <p class="stat-value">{{ source_breakdown|length }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-body">
+                <p class="stat-label">Days Tracked</p>
+                <p class="stat-value">30</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="analytics-card full-width">
+            <h2>Daily Visits (Last 30 Days)</h2>
+            {% if daily_visits|length > 0 %}
+                <div class="chart-bar-wrap">
+                    {% set max_cnt = 1 %}
+                    {% for d in daily_visits %}{% if d.cnt > max_cnt %}{% set max_cnt = d.cnt %}{% endif %}{% endfor %}
+                    {% for d in daily_visits %}
+                        <div class="bar-item" title="{{ d.day }}: {{ d.cnt }} visits">
+                            <div class="bar" style="height:{{ (d.cnt / max_cnt * 120)|round }}px"></div>
+                            <span class="bar-label">{{ d.day|slice(5,5) }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty">No visit data for the last 30 days.</p>
+            {% endif %}
+        </div>
+
+        <div class="analytics-card">
+            <h2>Most Visited Voyages</h2>
+            {% if top_voyages|length > 0 %}
+                <table class="data-table">
+                    <thead><tr><th>#</th><th>Voyage</th><th>Visits</th></tr></thead>
+                    <tbody>
+                        {% for item in top_voyages %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.voyageName }}</td>
+                            <td><span class="visit-count">{{ item.visitCount }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty">No visit data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="analytics-card">
+            <h2>Traffic Sources</h2>
+            {% if source_breakdown|length > 0 %}
+                {% set total_src = 0 %}
+                {% for s in source_breakdown %}{% set total_src = total_src + s.cnt %}{% endfor %}
+                <div class="source-list">
+                    {% for s in source_breakdown %}
+                        {% set pct = total_src > 0 ? ((s.cnt / total_src * 100)|round) : 0 %}
+                        <div class="source-item">
+                            <div class="source-header">
+                                <span class="source-name">{{ s.source }}</span>
+                                <span class="source-stat">{{ s.cnt }} ({{ pct }}%)</span>
+                            </div>
+                            <div class="source-bar-bg">
+                                <div class="source-bar-fill" style="width:{{ pct }}%"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty">No source data yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.analytics-page{padding:30px 20px;max-width:1200px;margin:0 auto}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;flex-wrap:wrap;gap:20px}
+.page-header h1{margin:0 0 6px 0;font-size:2rem}
+.lead{margin:0;color:var(--text-muted)}
+.btn{padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border-dark);background:var(--amazon-white);color:var(--text-primary);font-size:.95rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--amazon-white);border:1px solid var(--border-dark);border-radius:12px;padding:20px;display:flex;gap:16px;align-items:center}
+.stat-icon{font-size:2rem}
+.stat-label{margin:0 0 4px 0;color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{margin:0;font-size:1.8rem;font-weight:700;color:var(--amazon-orange)}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.analytics-card{background:var(--amazon-white);border:1px solid var(--border-dark);border-radius:12px;padding:24px}
+.analytics-card h2{margin:0 0 20px 0;font-size:1.15rem}
+.full-width{grid-column:1/-1}
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:4px;height:140px;overflow-x:auto;padding-bottom:28px;position:relative}
+.bar-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:28px}
+.bar{background:var(--amazon-orange);border-radius:4px 4px 0 0;width:20px;transition:opacity .2s;min-height:4px}
+.bar-item:hover .bar{opacity:.75}
+.bar-label{font-size:.65rem;color:var(--text-muted);white-space:nowrap;transform:rotate(-40deg);transform-origin:top center;margin-top:4px}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th,.data-table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border-dark);font-size:.9rem}
+.data-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:.8rem}
+.visit-count{background:rgba(255,153,0,.2);color:var(--amazon-orange);padding:3px 10px;border-radius:12px;font-weight:700}
+.source-list{display:flex;flex-direction:column;gap:14px}
+.source-header{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.9rem}
+.source-name{font-weight:600;text-transform:capitalize}
+.source-stat{color:var(--text-muted)}
+.source-bar-bg{background:rgba(255,255,255,.1);border-radius:6px;height:8px;overflow:hidden}
+.source-bar-fill{background:var(--amazon-orange);height:100%;border-radius:6px;transition:width .4s}
+.empty{color:var(--text-muted);font-style:italic}
+@media(max-width:768px){.analytics-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}

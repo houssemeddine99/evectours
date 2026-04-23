@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Reclamation;
 use App\Service\ReclamationService;
+use App\Service\AiResponseSuggestionService;
 use App\Service\ValidationService;
 use App\Service\ReservationService;
 use App\Controller\AdminController;
@@ -24,10 +25,11 @@ class ReclamationController extends AbstractController
 {
     public function __construct(
         private readonly ReclamationService $reclamationService,
-    private readonly ValidationService $validationService,
-    private readonly AdminController $adminController,
-    private readonly EntityManagerInterface $entityManager,
-    private readonly ReservationService $reservationService,
+        private readonly ValidationService $validationService,
+        private readonly AdminController $adminController,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly ReservationService $reservationService,
+        private readonly AiResponseSuggestionService $aiResponseSuggestionService,
     ) {}
 
     // ---------------------------------------------------------------------
@@ -166,8 +168,15 @@ public function adminList(Request $request): Response
         if (!$reclamation) {
             throw $this->createNotFoundException('Reclamation not found.');
         }
+
+        $suggestedResponse = null;
+        if (!$reclamation->getAdminResponse()) {
+            $suggestedResponse = $this->aiResponseSuggestionService->suggestForReclamation($reclamation);
+        }
+
         return $this->render('admin/reclamations/detail.html.twig', [
             'reclamation' => $reclamation,
+            'suggestedResponse' => $suggestedResponse,
         ]);
     }
 

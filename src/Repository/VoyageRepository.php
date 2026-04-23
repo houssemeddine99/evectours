@@ -19,6 +19,11 @@ class VoyageRepository extends ServiceEntityRepository
         parent::__construct($registry, Voyage::class);
     }
 
+    public function findBySlug(string $slug): ?Voyage
+    {
+        return $this->findOneBy(['slug' => $slug]);
+    }
+
     /** @return Voyage[] */
     public function findFeatured(int $limit = 3): array
     {
@@ -75,6 +80,13 @@ public function findById(int $id): ?Voyage
      */
     private function applyFilters(QueryBuilder $qb, array $filters): void
     {
+        // Filter by tag
+        if (!empty($filters['tag'])) {
+            $qb->join('v.tags', 'ft')
+                ->andWhere('ft.name = :tagName')
+                ->setParameter('tagName', $filters['tag']);
+        }
+
         // Search by destination (partial match)
         if (!empty($filters['destination'])) {
             $qb->andWhere('v.destination LIKE :destination')

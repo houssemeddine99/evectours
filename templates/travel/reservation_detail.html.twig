@@ -55,6 +55,10 @@
 				{% if is_admin_view %}
 					{% if reservation.status == 'PENDING' %}
 						<form method="post" class="inline-form">
+							<div class="form-group" style="margin-bottom: 8px;">
+								<label for="payment_reference">Payment Reference (optional)</label>
+								<input type="text" id="payment_reference" name="payment_reference" placeholder="pi_xxx or ch_xxx"/>
+							</div>
 							<button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
 						</form>
 					{% endif %}

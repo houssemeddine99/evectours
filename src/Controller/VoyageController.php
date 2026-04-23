@@ -9,10 +9,13 @@ use App\Service\VoyageImageService;
 use App\Service\ValidationService;
 use App\Service\SearchHistoryService;
 use App\Service\VoyageVisitService;
+use App\Service\TagService;
+use App\Service\AiVoyageService;
 use App\Repository\VoyageRepository;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -29,14 +32,14 @@ class VoyageController extends AbstractController
         private readonly SearchHistoryService $searchHistoryService,
         private readonly VoyageVisitService $voyageVisitService,
         private readonly AdminController $adminController,
+        private readonly TagService $tagService,
+        private readonly AiVoyageService $aiVoyageService,
         private readonly ?LoggerInterface $logger = null,
     ) {}
 
     #[Route('/', name: 'travel_home', methods: ['GET'])]
     public function home(): Response
     {
-
-
         return $this->render('travel/home.html.twig', [
             'active_nav' => 'home',
             'featured_voyages' => $this->voyageService->getFeaturedVoyages(6),
@@ -49,12 +52,12 @@ class VoyageController extends AbstractController
         $page = $request->query->getInt('page', 1);
         $limit = 12;
 
-        // Get search and filter parameters
         $search = $request->query->get('search', '');
         $minPrice = $request->query->get('min_price');
         $maxPrice = $request->query->get('max_price');
         $sortBy = $request->query->get('sort_by', 'startDate');
         $sortOrder = $request->query->get('sort_order', 'ASC');
+        $tagFilter = $request->query->get('tag', '');
 
         $filters = [
             'sort_by' => $sortBy,
@@ -63,7 +66,6 @@ class VoyageController extends AbstractController
             'offset' => ($page - 1) * $limit,
         ];
 
-        // Build search filters
         if (!empty($search)) {
             $filters['destination'] = $search;
             $filters['title'] = $search;
@@ -74,9 +76,13 @@ class VoyageController extends AbstractController
         if (!empty($maxPrice)) {
             $filters['max_price'] = $maxPrice;
         }
+        if (!empty($tagFilter)) {
+            $filters['tag'] = $tagFilter;
+        }
 
-        // Use search if filters are applied
-        if (!empty($search) || !empty($minPrice) || !empty($maxPrice)) {
+        $hasFilters = !empty($search) || !empty($minPrice) || !empty($maxPrice) || !empty($tagFilter);
+
+        if ($hasFilters) {
             $this->logger?->info('Public searching voyages', $filters);
             $voyages = $this->voyageService->searchVoyages($filters);
             $totalVoyages = $this->voyageService->countSearchResults($filters);
@@ -85,7 +91,6 @@ class VoyageController extends AbstractController
             $totalVoyages = $this->voyageService->getTotalVoyages();
         }
 
-        // Record search history for public searches (only when a search term is provided)
         if (!empty($search)) {
             $sessionUser = $request->getSession()->get('auth_user');
             $userId = $sessionUser['id'] ?? 0;
@@ -95,6 +100,9 @@ class VoyageController extends AbstractController
 
         $totalPages = ceil($totalVoyages / $limit) ?: 1;
 
+        $sessionUser = $request->getSession()->get('auth_user');
+        $userId = $sessionUser['id'] ?? 0;
+
         return $this->render('travel/voyages.html.twig', [
             'active_nav' => 'voyages',
             'voyages' => $voyages,
@@ -102,38 +110,107 @@ class VoyageController extends AbstractController
             'total_pages' => $totalPages,
             'search' => $search,
             'filters' => $filters,
+            'all_tags' => $this->tagService->getAllTags(),
+            'active_tag' => $tagFilter,
+            'user_id' => $userId,
+            'compare_list' => $request->getSession()->get('compare_list', []),
         ]);
     }
 
-    #[Route('/voyages/{id}', name: 'travel_voyage_detail', requirements: ['id' => '\\d+'], methods: ['GET'])]
-    public function voyageDetail(Request $request, int $id): Response
+    #[Route('/voyages/{slug}', name: 'travel_voyage_detail', methods: ['GET'])]
+    public function voyageDetail(Request $request, string $slug): Response
     {
-        $voyage = $this->voyageService->getVoyageById($id);
+        $voyage = $this->voyageService->getVoyageBySlug($slug);
 
         if ($voyage === null) {
             throw $this->createNotFoundException('Voyage not found');
         }
 
-        // Get user from session
         $sessionUser = $request->getSession()->get('auth_user');
+        $userId = ($sessionUser && isset($sessionUser['id'])) ? (int) $sessionUser['id'] : 1;
 
-        // Use session ID if available, otherwise default to 1
-        $userId = ($sessionUser && isset($sessionUser['id'])) ? (int)$sessionUser['id'] : 1;
-
-        // Record the visit for every guest or logged-in user
-        $this->voyageVisitService->recordVisit($userId, $id, 'detail');
+        $this->voyageVisitService->recordVisit($userId, $voyage['id'], 'detail');
 
         $offers = $this->offerService->getActiveOffers();
-        $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $id);
+        $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $voyage['id']);
         $offer = $offerForVoyage ? array_values($offerForVoyage)[0] : null;
+
+        $countryInfo = $this->fetchCountryInfo($voyage['destination']);
+
+        $isFavorite = false;
+        if ($userId > 1) {
+            $favIds = $request->getSession()->get('favorite_ids_' . $userId, null);
+            if ($favIds === null) {
+                $isFavorite = false;
+            } else {
+                $isFavorite = in_array($voyage['id'], $favIds, true);
+            }
+        }
+
+        $compareList = $request->getSession()->get('compare_list', []);
+
+        $startDate = $voyage['start_date'] ? new \DateTime($voyage['start_date']) : null;
+        $endDate = $voyage['end_date'] ? new \DateTime($voyage['end_date']) : null;
+        $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
 
         return $this->render('travel/voyage_detail.html.twig', [
             'active_nav' => 'voyages',
             'voyage' => $voyage,
             'offer' => $offer,
+            'country_info' => $countryInfo,
+            'is_favorite' => $isFavorite,
+            'compare_list' => $compareList,
+            'duration_days' => $durationDays,
+            'user_id' => $userId,
         ]);
     }
 
+    #[Route('/admin/voyages/ai/description', name: 'admin_voyage_ai_description', methods: ['POST'])]
+    public function aiGenerateDescription(Request $request): JsonResponse
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $title = $request->request->get('title', '');
+        $destination = $request->request->get('destination', '');
+        $existing = $request->request->get('description');
+        $duration = $request->request->getInt('duration_days', 5);
+
+        if (empty($title) || empty($destination)) {
+            return $this->json(['error' => 'Title and destination are required'], 400);
+        }
+
+        $description = $this->aiVoyageService->generateDescription($title, $destination, $duration, $existing ?: null);
+
+        if ($description === null) {
+            return $this->json(['error' => 'AI service unavailable'], 503);
+        }
+
+        return $this->json(['description' => $description]);
+    }
+
+    #[Route('/voyages/{slug}/itinerary', name: 'voyage_ai_itinerary', methods: ['GET'])]
+    public function aiItinerary(Request $request, string $slug): JsonResponse
+    {
+        $voyage = $this->voyageService->getVoyageBySlug($slug);
+        if ($voyage === null) {
+            return $this->json(['error' => 'Not found'], 404);
+        }
+
+        $startDate = $voyage['start_date'] ? new \DateTime($voyage['start_date']) : null;
+        $endDate = $voyage['end_date'] ? new \DateTime($voyage['end_date']) : null;
+        $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
+        $durationDays = max(1, $durationDays);
+
+        $itinerary = $this->aiVoyageService->generateItinerary($voyage['title'], $voyage['destination'], $durationDays);
+
+        if ($itinerary === null) {
+            return $this->json(['error' => 'AI service unavailable'], 503);
+        }
+
+        return $this->json(['itinerary' => $itinerary]);
+    }
 
     // ==================== ADMIN VOYAGES ====================
 
@@ -169,8 +246,6 @@ class VoyageController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
-
-
             $this->validationService->validateVoyage($data);
             if (!$this->validationService->isValid()) {
                 $this->logger?->warning('Validation failed for new voyage', $this->validationService->getErrors());
@@ -182,6 +257,7 @@ class VoyageController extends AbstractController
                 return $this->render('admin/voyage_form.html.twig', [
                     'voyage' => $data,
                     'voyages' => $this->voyageRepository->findAll(),
+                    'all_tags' => $this->tagService->getAllTags(),
                     'errors' => $this->validationService->getErrors(),
                 ]);
             }
@@ -189,6 +265,10 @@ class VoyageController extends AbstractController
             $this->logger?->info('Creating new voyage', ['title' => $data['title'] ?? '']);
             $voyage = $this->voyageService->createVoyage($data);
             if ($voyage) {
+                $tagIds = $data['tags'] ?? [];
+                if (!empty($tagIds)) {
+                    $this->tagService->syncVoyageTags($voyage, $tagIds);
+                }
                 $this->addFlash('success', 'Voyage created successfully!');
             } else {
                 $this->addFlash('error', 'Failed to create voyage.');
@@ -199,6 +279,7 @@ class VoyageController extends AbstractController
         return $this->render('admin/voyage_form.html.twig', [
             'voyage' => null,
             'voyages' => $this->voyageRepository->findAll(),
+            'all_tags' => $this->tagService->getAllTags(),
         ]);
     }
 
@@ -241,9 +322,14 @@ class VoyageController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
-
-
             $this->voyageService->updateVoyage($id, $data);
+
+            $tagIds = $data['tags'] ?? [];
+            $voyageEntity = $this->voyageRepository->find($id);
+            if ($voyageEntity) {
+                $this->tagService->syncVoyageTags($voyageEntity, $tagIds);
+            }
+
             $this->addFlash('success', 'Voyage updated successfully!');
             return $this->redirectToRoute('admin_voyages');
         }
@@ -251,6 +337,7 @@ class VoyageController extends AbstractController
         return $this->render('admin/voyage_form.html.twig', [
             'voyage' => $voyage,
             'voyages' => $this->voyageRepository->findAll(),
+            'all_tags' => $this->tagService->getAllTags(),
         ]);
     }
 
@@ -266,7 +353,80 @@ class VoyageController extends AbstractController
         return $this->redirectToRoute('admin_voyages');
     }
 
+    #[Route('/admin/tags', name: 'admin_tags', methods: ['GET', 'POST'])]
+    public function adminTags(Request $request): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        if ($request->isMethod('POST')) {
+            $name = trim((string) $request->request->get('name', ''));
+            $color = trim((string) $request->request->get('color', '')) ?: null;
+            if (!empty($name)) {
+                $this->tagService->createTag($name, $color);
+                $this->addFlash('success', "Tag \"{$name}\" created.");
+            }
+            return $this->redirectToRoute('admin_tags');
+        }
+
+        return $this->render('admin/tags.html.twig', [
+            'tags' => $this->tagService->getAllTags(),
+        ]);
+    }
+
+    #[Route('/admin/tags/{id}/delete', name: 'admin_tag_delete', methods: ['POST'])]
+    public function adminDeleteTag(Request $request, int $id): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $this->tagService->deleteTag($id);
+        $this->addFlash('success', 'Tag deleted.');
+        return $this->redirectToRoute('admin_tags');
+    }
+
     // ==================== HELPER METHODS ====================
+
+    private function fetchCountryInfo(string $destination): ?array
+    {
+        $parts = array_map('trim', explode(',', $destination));
+        $country = end($parts);
+        if (empty($country)) {
+            return null;
+        }
+
+        $url = 'https://restcountries.com/v3.1/name/' . urlencode($country) . '?fields=name,flags,languages,currencies,timezones,capital,flag';
+        $ctx = stream_context_create(['http' => ['timeout' => 4, 'ignore_errors' => true]]);
+        $raw = @file_get_contents($url, false, $ctx);
+        if ($raw === false) {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data) || empty($data) || isset($data['status'])) {
+            return null;
+        }
+
+        $c = reset($data);
+        if (!is_array($c)) {
+            return null;
+        }
+        $currencies = $c['currencies'] ?? [];
+        $currencyInfo = !empty($currencies) ? array_values($currencies)[0] : null;
+        $languages = array_values($c['languages'] ?? []);
+
+        return [
+            'name' => $c['name']['common'] ?? $country,
+            'flag_svg' => $c['flags']['svg'] ?? ($c['flags']['png'] ?? null),
+            'flag_emoji' => $c['flag'] ?? null,
+            'capital' => $c['capital'][0] ?? null,
+            'language' => $languages[0] ?? null,
+            'currency' => $currencyInfo ? ($currencyInfo['name'] . ' (' . ($currencyInfo['symbol'] ?? '') . ')') : null,
+            'timezone' => $c['timezones'][0] ?? null,
+        ];
+    }
 
     private function buildSearchFilters(Request $request): array
     {
@@ -312,7 +472,6 @@ class VoyageController extends AbstractController
             || !empty($filters['start_date_from'])
             || !empty($filters['start_date_to']);
     }
-
 
     private function filterByEntityId(array $entities, int $voyageId): array
     {

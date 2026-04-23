@@ -12,6 +12,7 @@
         "doctrine/orm": "^3.6",
         "knpuniversity/oauth2-client-bundle": "^2.20",
         "league/oauth2-google": "^5.0",
+        "stof/doctrine-extensions-bundle": "^1.15",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/flex": "^2",
@@ -21,7 +22,8 @@
         "symfony/runtime": "6.4.*",
         "symfony/security-bundle": "6.4.*",
         "symfony/twig-bundle": "6.4.*",
-        "symfony/yaml": "6.4.*"
+        "symfony/yaml": "6.4.*",
+        "twilio/sdk": "8.8"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.1",

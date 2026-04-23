@@ -20,7 +20,7 @@
                             <p>{{ voyage.description }}</p>
                             <div class="card-footer">
                                 <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
-                                <a href="{{ path('travel_voyage_detail', {id: voyage.id}) }}">View</a>
+                                <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}">View</a>
                             </div>
                         </div>
                     </article>

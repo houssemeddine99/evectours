@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Compare Voyages | Travagir{% endblock %}
+
+{% block body %}
+<section class="compare-page">
+    <div class="compare-header">
+        <h1>Voyage Comparison</h1>
+        <p class="lead">Side-by-side view of your selected voyages</p>
+        <div class="compare-actions">
+            <a href="{{ path('travel_voyages') }}" class="btn btn-secondary">← Back to Voyages</a>
+            {% if voyages|length > 0 %}
+                <form method="post" action="{{ path('compare_clear') }}" style="display:inline">
+                    <button type="submit" class="btn btn-outline">Clear All</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if voyages|length == 0 %}
+        <div class="empty-compare">
+            <p>No voyages selected for comparison.</p>
+            <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Browse Voyages</a>
+        </div>
+    {% else %}
+        <div class="compare-table-wrap">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th class="row-label"></th>
+                        {% for voyage in voyages %}
+                            <th class="voyage-col">
+                                <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80' }}" alt="{{ voyage.title }}" class="compare-img">
+                                <p class="compare-title">{{ voyage.title }}</p>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="row-label">Destination</td>
+                        {% for voyage in voyages %}
+                            <td>🌍 {{ voyage.destination }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Price</td>
+                        {% for voyage in voyages %}
+                            <td class="highlight">{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'On request' }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Start Date</td>
+                        {% for voyage in voyages %}
+                            <td>{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">End Date</td>
+                        {% for voyage in voyages %}
+                            <td>{{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Activities</td>
+                        {% for voyage in voyages %}
+                            <td>{{ voyage.activities|default([])|length }} included</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Tags</td>
+                        {% for voyage in voyages %}
+                            <td>
+                                {% if voyage.tags is defined and voyage.tags|length > 0 %}
+                                    {% for tag in voyage.tags %}
+                                        <span class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color:var(--text-muted)">—</span>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Description</td>
+                        {% for voyage in voyages %}
+                            <td class="desc-cell">{{ voyage.description|default('No description.')|slice(0, 140) }}{% if voyage.description|length > 140 %}…{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Action</td>
+                        {% for voyage in voyages %}
+                            <td>
+                                <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-primary btn-sm">View Details</a>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.compare-page{padding:40px 20px;max-width:1200px;margin:0 auto}
+.compare-header{margin-bottom:32px}
+.compare-header h1{margin:0 0 6px 0;font-size:2rem}
+.lead{color:var(--text-muted);margin:0 0 16px 0}
+.compare-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;font-size:.95rem}
+.btn-primary{background:var(--amazon-orange);color:#000}
+.btn-secondary{background:var(--amazon-white);color:var(--text-primary);border:1px solid var(--border-dark)}
+.btn-outline{background:transparent;color:var(--text-muted);border:1px solid var(--border-dark)}
+.btn-sm{padding:8px 16px;font-size:.88rem}
+.empty-compare{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-compare p{font-size:1.1rem;margin-bottom:20px}
+.compare-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border-dark)}
+.compare-table{width:100%;border-collapse:collapse;background:var(--amazon-white)}
+.compare-table th,.compare-table td{padding:16px 20px;border-bottom:1px solid var(--border-dark);vertical-align:top}
+.compare-table th{background:rgba(15,23,34,.4)}
+.row-label{font-weight:700;color:var(--text-muted);text-transform:uppercase;font-size:.8rem;letter-spacing:.5px;white-space:nowrap;width:130px;background:rgba(15,23,34,.2)}
+.voyage-col{text-align:center;min-width:220px}
+.compare-img{width:100%;max-width:200px;height:130px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
+.compare-title{font-weight:700;font-size:1rem;margin:0}
+.highlight{font-weight:700;color:var(--amazon-orange);font-size:1.05rem}
+.desc-cell{font-size:.88rem;color:var(--text-muted);line-height:1.5;max-width:240px}
+.tag-pill{display:inline-block;padding:2px 10px;border-radius:12px;border:1px solid;font-size:.8rem;font-weight:600;margin:2px}
+</style>
+{% endblock %}
