@@ -7,6 +7,28 @@
         <h1>My Bookings</h1>
         <p class="lead">Review and manage your current trip reservations.</p>
 
+        {# Loyalty Points Card #}
+        <div class="loyalty-card">
+            <div class="loyalty-icon">⭐</div>
+            <div class="loyalty-info">
+                <div class="loyalty-balance">{{ loyalty_balance }} <span>pts</span></div>
+                <div class="loyalty-label">Loyalty Points</div>
+                <div class="loyalty-progress-bar">
+                    <div class="loyalty-fill" style="width: {{ min(loyalty_balance, 100) }}%"></div>
+                </div>
+                <div class="loyalty-hint">
+                    {% if can_redeem %}
+                        🎉 You have enough points for a <strong>5% discount</strong> on your next booking!
+                    {% else %}
+                        {{ 100 - loyalty_balance }} more pts needed for a 5% discount · Earn 1 pt per TND spent
+                    {% endif %}
+                </div>
+            </div>
+            {% if can_redeem %}
+                <div class="loyalty-badge-ready">Discount Ready</div>
+            {% endif %}
+        </div>
+
         {% if bookings is empty %}
             <p>No bookings yet. Explore voyages and book your next adventure.</p>
         {% else %}
@@ -15,21 +37,34 @@
                     <article class="reservation-card">
                         <div class="reservation-header">
                             <div>
-                                <h3>{{ reservation.voyage_id }}</h3>
+                                <h3>{{ reservation.voyage_title|default('Voyage #' ~ reservation.voyage_id) }}</h3>
                                 <p class="meta">Reservation #{{ reservation.id }} · {{ reservation.reservation_date|date('d M Y H:i') }}</p>
+                                {% if reservation.destination is defined and reservation.destination %}
+                                    <p class="meta">📍 {{ reservation.destination }}</p>
+                                {% endif %}
                             </div>
                             <span class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</span>
                         </div>
 
                         <div class="reservation-info-grid">
-                      
-
+                            <div><strong>Dates</strong><br>
+                                {{ reservation.voyage_start is defined and reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}
+                                {% if reservation.voyage_end is defined and reservation.voyage_end %}→ {{ reservation.voyage_end|date('d M Y') }}{% endif %}
+                            </div>
                             <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
-                            <div><strong>Total</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
+                            <div><strong>Total</strong><br>{{ reservation.total_price|number_format(2, '.', ',') }} TND</div>
+                            <div><strong>Payment</strong><br>
+                                <span style="color:{% if reservation.payment_status == 'PAID' %}#22c55e{% elseif reservation.payment_status == 'REFUNDED' %}#f59e0b{% else %}#94a3b8{% endif %}">
+                                    {{ reservation.payment_status }}
+                                </span>
+                            </div>
                         </div>
 
                         <div class="card-footer">
                             <a href="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="btn btn-primary">Details</a>
+                            {% if reservation.status == 'CONFIRMED' %}
+                                <a href="{{ path('account_reservation_ticket', {id: reservation.id}) }}" class="btn btn-ticket" target="_blank">🎫 Ticket</a>
+                            {% endif %}
                             {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
                                 <form method="post" action="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="inline-form">
                                     <button type="submit" name="action_cancel" class="btn btn-danger">Cancel</button>
@@ -41,4 +76,18 @@
             </div>
         {% endif %}
     </section>
+
+    <style>
+    .loyalty-card { display:flex; align-items:center; gap:20px; background:linear-gradient(135deg,rgba(255,165,0,0.08),rgba(99,102,241,0.08)); border:1px solid rgba(255,165,0,0.3); border-radius:14px; padding:20px 24px; margin-bottom:28px; flex-wrap:wrap; }
+    .loyalty-icon { font-size:2.4rem; }
+    .loyalty-info { flex:1; min-width:180px; }
+    .loyalty-balance { font-size:2rem; font-weight:800; color:var(--amazon-orange); }
+    .loyalty-balance span { font-size:1rem; color:var(--text-muted); }
+    .loyalty-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px; }
+    .loyalty-progress-bar { height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+    .loyalty-fill { height:100%; background:var(--amazon-orange); border-radius:3px; transition:width 0.6s ease; }
+    .loyalty-hint { font-size:0.84rem; color:var(--text-muted); }
+    .loyalty-badge-ready { background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e; border-radius:20px; padding:6px 14px; font-size:0.82rem; font-weight:700; white-space:nowrap; }
+    .btn-ticket { background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; }
+    </style>
 {% endblock %}

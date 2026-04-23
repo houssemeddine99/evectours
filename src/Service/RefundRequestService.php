@@ -24,6 +24,7 @@ class RefundRequestService
         $refundRequest = new RefundRequest();
         $refundRequest->setReclamationId($data['reclamation_id'] ?? 0);
         $refundRequest->setRequesterId($data['requester_id'] ?? 0);
+        $refundRequest->setReservationId(isset($data['reservation_id']) ? (int) $data['reservation_id'] : null);
         $refundRequest->setAmount($data['amount'] ?? '0.00');
         $refundRequest->setReason($data['reason'] ?? null);
         $refundRequest->setStatus('PENDING');
@@ -81,6 +82,14 @@ class RefundRequestService
     public function countPendingRequests(): int
     {
         return $this->safeExecute(fn () => $this->refundRequestRepository->countPendingRequests(), 0);
+    }
+
+    /**
+     * Get all refund requests for a given reclamation
+     */
+    public function getRequestsByReclamation(int $reclamationId): array
+    {
+        return $this->safeExecute(fn () => $this->refundRequestRepository->findByReclamationId($reclamationId), []);
     }
 
     /**

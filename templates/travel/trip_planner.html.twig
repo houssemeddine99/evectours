@@ -1,0 +1,159 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}AI Trip Planner | Travagir{% endblock %}
+
+{% block body %}
+<section class="trip-planner-page">
+    <div class="planner-hero">
+        <h1>🤖 AI Trip Planner</h1>
+        <p class="lead">Tell us your budget, preferences, and travel dates — our AI finds the perfect voyage and offer for you.</p>
+    </div>
+
+    <div class="planner-container">
+        <div class="planner-form-card">
+            <h2>What are you looking for?</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;">Examples: <em>"Budget 800 TND, beach, 7 days in summer"</em> · <em>"Romantic trip for 2, max 600 TND"</em> · <em>"Adventure solo travel under 500 TND"</em></p>
+
+            <div class="form-group">
+                <textarea
+                    id="planner-query"
+                    class="form-control planner-textarea"
+                    rows="4"
+                    placeholder="Describe your ideal trip: budget, destination type, duration, number of people, dates…"
+                    maxlength="400"
+                ></textarea>
+                <div class="char-count"><span id="char-count">0</span>/400</div>
+            </div>
+
+            <button id="btn-plan" class="btn btn-primary btn-plan">
+                ✨ Find My Perfect Trip
+            </button>
+        </div>
+
+        <div id="planner-results" style="display:none;">
+            <div id="results-loading" class="planner-loading" style="display:none;">
+                <div class="spinner"></div>
+                <p>AI is planning your dream trip…</p>
+            </div>
+
+            <div id="results-error" class="alert alert-danger" style="display:none;"></div>
+
+            <div id="results-content">
+                <div id="explanation-box" class="planner-explanation" style="display:none;"></div>
+                <div id="recommendations-grid" class="recommendations-grid"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.trip-planner-page { padding: 40px 20px; max-width: 900px; margin: 0 auto; }
+.planner-hero { text-align: center; margin-bottom: 40px; }
+.planner-hero h1 { font-size: 2.4rem; margin-bottom: 10px; }
+.planner-container { display: flex; flex-direction: column; gap: 32px; }
+.planner-form-card { background: var(--amazon-white); border: 1px solid var(--border-dark); border-radius: 16px; padding: 32px; }
+.planner-form-card h2 { margin: 0 0 8px 0; }
+.planner-textarea { width: 100%; font-size: 1rem; padding: 14px; border-radius: 10px; border: 1px solid var(--border-dark); background: rgba(0,0,0,0.3); color: var(--text-primary); resize: vertical; }
+.char-count { text-align: right; color: var(--text-muted); font-size: 0.82em; margin-top: 4px; }
+.btn-plan { padding: 14px 32px; font-size: 1.05rem; margin-top: 16px; width: 100%; justify-content: center; }
+.planner-loading { text-align: center; padding: 40px; }
+.spinner { width: 40px; height: 40px; border: 3px solid rgba(255,165,0,0.3); border-top-color: var(--amazon-orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.planner-explanation { background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.35); border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; color: #a5b4fc; font-style: italic; }
+.recommendations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.rec-card { background: var(--amazon-white); border: 1px solid var(--border-dark); border-radius: 12px; overflow: hidden; }
+.rec-card-header { background: linear-gradient(135deg, rgba(255,165,0,0.15), rgba(99,102,241,0.15)); padding: 16px 18px; border-bottom: 1px solid var(--border-dark); }
+.rec-card-header h3 { margin: 0 0 4px; font-size: 1rem; }
+.rec-card-body { padding: 16px 18px; }
+.rec-price { font-size: 1.4rem; font-weight: 700; color: var(--amazon-orange); }
+.rec-reason { font-size: 0.88em; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+.rec-offer-badge { display: inline-block; background: rgba(34,197,94,0.2); color: #22c55e; border-radius: 20px; padding: 2px 10px; font-size: 0.8em; font-weight: 600; margin-top: 6px; }
+.rec-card-footer { padding: 12px 18px; border-top: 1px solid var(--border-dark); }
+</style>
+
+<script>
+(function () {
+    var textarea = document.getElementById('planner-query');
+    var charCount = document.getElementById('char-count');
+    var btn = document.getElementById('btn-plan');
+    var results = document.getElementById('planner-results');
+    var loading = document.getElementById('results-loading');
+    var errorBox = document.getElementById('results-error');
+    var explanBox = document.getElementById('explanation-box');
+    var grid = document.getElementById('recommendations-grid');
+
+    textarea.addEventListener('input', function () {
+        charCount.textContent = textarea.value.length;
+    });
+
+    btn.addEventListener('click', function () {
+        var query = textarea.value.trim();
+        if (!query) { alert('Please describe your trip first.'); return; }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Planning…';
+        results.style.display = 'block';
+        loading.style.display = 'block';
+        errorBox.style.display = 'none';
+        grid.innerHTML = '';
+        explanBox.style.display = 'none';
+
+        var fd = new FormData();
+        fd.append('query', query);
+
+        fetch('{{ path('trip_planner_plan') }}', { method: 'POST', body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                loading.style.display = 'none';
+                if (!data.success) {
+                    errorBox.textContent = data.error || 'Something went wrong.';
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                if (data.explanation) {
+                    explanBox.textContent = '🤖 ' + data.explanation;
+                    explanBox.style.display = 'block';
+                }
+
+                var recs = data.recommendations || [];
+                if (!recs.length) {
+                    errorBox.textContent = 'No matching voyages found. Try a different query.';
+                    errorBox.style.display = 'block';
+                    return;
+                }
+
+                recs.forEach(function (rec) {
+                    var v = rec.voyage;
+                    var o = rec.offer;
+                    var price = rec.estimated_price ? parseFloat(rec.estimated_price).toFixed(2) + ' TND' : '—';
+                    var offerBadge = o ? '<span class="rec-offer-badge">🎁 ' + o.title + ' −' + o.discount_percentage + '%</span>' : '';
+                    grid.innerHTML += '<div class="rec-card">'
+                        + '<div class="rec-card-header">'
+                        + '<h3>' + v.title + '</h3>'
+                        + '<small>📍 ' + v.destination + '</small>'
+                        + '</div>'
+                        + '<div class="rec-card-body">'
+                        + '<div class="rec-price">' + price + '</div>'
+                        + offerBadge
+                        + '<p class="rec-reason">' + rec.reason + '</p>'
+                        + '</div>'
+                        + '<div class="rec-card-footer">'
+                        + '<a href="/voyages/' + v.id + '/reserve" class="btn btn-primary" style="width:100%;justify-content:center;">Reserve Now</a>'
+                        + '</div>'
+                        + '</div>';
+                });
+            })
+            .catch(function (e) {
+                loading.style.display = 'none';
+                errorBox.textContent = 'Network error: ' + e.message;
+                errorBox.style.display = 'block';
+            })
+            .finally(function () {
+                btn.disabled = false;
+                btn.textContent = '✨ Find My Perfect Trip';
+            });
+    });
+})();
+</script>
+{% endblock %}

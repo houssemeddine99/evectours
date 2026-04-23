@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boarding Ticket #{{ reservation.id }} | Travagir</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; padding: 20px; color: #1a1a2e; }
+
+        .ticket-wrapper { max-width: 720px; margin: 0 auto; }
+
+        .ticket { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+
+        .ticket-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .ticket-header h1 { font-size: 1.8rem; letter-spacing: 2px; }
+        .ticket-header .status-badge { background: #22c55e; color: white; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
+
+        .ticket-body { padding: 32px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-bottom: 2px dashed #e2e8f0; }
+        .ticket-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; display: block; margin-bottom: 4px; }
+        .ticket-field span { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; }
+
+        .ticket-footer { padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
+
+        .qr-section { text-align: center; }
+        .qr-section img { width: 120px; height: 120px; border: 3px solid #e2e8f0; border-radius: 8px; }
+        .qr-section small { display: block; font-size: 0.72rem; color: #64748b; margin-top: 6px; }
+
+        .price-section { text-align: right; }
+        .price-section .price { font-size: 2rem; font-weight: 800; color: #0f3460; }
+        .price-section small { color: #64748b; display: block; margin-top: 4px; }
+
+        .carbon-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; margin-top: 12px; }
+
+        .ticket-barcode { text-align: center; padding: 16px 40px; background: white; border-top: 1px solid #e2e8f0; letter-spacing: 6px; font-family: monospace; font-size: 0.8rem; color: #94a3b8; }
+
+        .print-btn { display: block; text-align: center; margin: 24px auto; }
+        .btn-print { background: #0f3460; color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 50px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .print-btn { display: none; }
+            .ticket { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ticket-wrapper">
+    <div class="ticket">
+        <div class="ticket-header">
+            <div>
+                <h1>✈ TRAVAGIR</h1>
+                <p style="font-size:0.85rem;opacity:0.75;margin-top:4px;">Official Travel Confirmation</p>
+            </div>
+            <div>
+                <div class="status-badge">✓ Confirmed</div>
+                <p style="font-size:0.75rem;opacity:0.6;text-align:right;margin-top:6px;">Ticket #{{ reservation.id }}</p>
+            </div>
+        </div>
+
+        <div class="ticket-body">
+            <div class="ticket-field">
+                <label>Voyage</label>
+                <span>{{ reservation.voyage_title }}</span>
+            </div>
+            <div class="ticket-field">
+                <label>Destination</label>
+                <span>📍 {{ reservation.destination }}</span>
+            </div>
+            <div class="ticket-field">
+                <label>Departure</label>
+                <span>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}</span>
+            </div>
+            <div class="ticket-field">
+                <label>Return</label>
+                <span>{{ reservation.voyage_end ? reservation.voyage_end|date('d MMM Y') : 'TBD' }}</span>
+            </div>
+            <div class="ticket-field">
+                <label>Passengers</label>
+                <span>{{ reservation.number_of_people }} person{{ reservation.number_of_people > 1 ? 's' : '' }}</span>
+            </div>
+            <div class="ticket-field">
+                <label>Booked On</label>
+                <span>{{ reservation.reservation_date ? reservation.reservation_date|date('d M Y') : '—' }}</span>
+            </div>
+        </div>
+
+        <div class="ticket-footer">
+            <div class="qr-section">
+                {% set pdf_url = base_url ~ path('account_reservation_ticket_pdf', {id: reservation.id}) %}
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ pdf_url|url_encode }}" alt="QR Code">
+                <small>Scan to open PDF</small>
+            </div>
+
+            <div style="text-align:center;">
+                {% if carbon %}
+                    <div class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;">
+                        {{ carbon.badge }} {{ carbon.label }} · {{ carbon.co2_per_person }} kg CO₂/person
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="price-section">
+                <small>Total Amount Paid</small>
+                <div class="price">{{ reservation.total_price|number_format(2, '.', ',') }} TND</div>
+                <small>Payment ref: {{ reservation.payment_reference|default('N/A') }}</small>
+            </div>
+        </div>
+
+        <div class="ticket-barcode">
+            | TRV-{{ reservation.id }}-{{ reservation.voyage_id }}-{{ reservation.user_id ?? '??' }} |
+        </div>
+    </div>
+
+    <div class="print-btn">
+        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+        <p style="text-align:center;margin-top:10px;font-size:0.8rem;color:#64748b;">Use Ctrl+P → "Save as PDF" to download</p>
+    </div>
+</div>
+
+<script>
+    // Auto-open print dialog when page loads
+    window.addEventListener('load', function () {
+        setTimeout(function () { window.print(); }, 800);
+    });
+</script>
+</body>
+</html>

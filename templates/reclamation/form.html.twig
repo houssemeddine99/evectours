@@ -4,30 +4,56 @@
 
 {% block body %}
     <h1>Create Reclamation</h1>
+
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
     {% if errors %}
-        <div class="alert alert-danger">
+        <div class="alert alert-danger" style="margin-bottom:16px;">
             {% for field, msgs in errors %}
                 {{ field }}: {{ msgs|join(', ') }}<br>
             {% endfor %}
         </div>
     {% endif %}
-    <form method="post" action="{{ path('user_reclamation_new') }}">
-        <div class="form-group">
-            {% if data.reservation_id is defined %}
+
+    <form method="post" action="{{ path('user_reclamation_new') }}" style="max-width:600px;">
+        <div class="form-group" style="margin-bottom:14px;">
+            {% if data.reservation_id is defined and data.reservation_id is not empty %}
                 <input type="hidden" name="reservation_id" value="{{ data.reservation_id }}">
+                <p>Reservation: <strong>#{{ data.reservation_id }}</strong></p>
             {% else %}
                 <label for="reservation_id">Reservation ID</label>
-                <input type="number" name="reservation_id" id="reservation_id" class="form-control" value="{{ data.reservation_id|default('') }}" required>
+                <input type="number" name="reservation_id" id="reservation_id" class="form-control"
+                       value="{{ data.reservation_id|default('') }}" placeholder="Enter your reservation number" required>
             {% endif %}
         </div>
-        <div class="form-group">
-            <label for="title">Title</label>
-            <input type="text" name="title" id="title" class="form-control" value="{{ data.title|default('') }}" required>
+
+        <div class="form-group" style="margin-bottom:14px;">
+            <label for="title">Title <span style="color:red;">*</span></label>
+            <input type="text" name="title" id="title" class="form-control"
+                   value="{{ data.title|default('') }}" placeholder="Brief summary of your complaint" required>
         </div>
-        <div class="form-group">
-            <label for="description">Description</label>
-            <textarea name="description" id="description" class="form-control" required>{{ data.description|default('') }}</textarea>
+
+        <div class="form-group" style="margin-bottom:14px;">
+            <label for="description">Description <span style="color:red;">*</span></label>
+            <textarea name="description" id="description" class="form-control" rows="5"
+                      placeholder="Please describe the issue in detail..." required>{{ data.description|default('') }}</textarea>
         </div>
-        <button type="submit" class="btn btn-success">Submit</button>
+
+        <div class="form-group" style="margin-bottom:20px;">
+            <label for="priority">Priority / Urgency</label>
+            <select name="priority" id="priority" class="form-control">
+                <option value="LOW"    {% if data.priority|default('MEDIUM') == 'LOW'    %}selected{% endif %}>Low – Not urgent</option>
+                <option value="MEDIUM" {% if data.priority|default('MEDIUM') == 'MEDIUM' %}selected{% endif %}>Medium – Standard (default)</option>
+                <option value="HIGH"   {% if data.priority|default('MEDIUM') == 'HIGH'   %}selected{% endif %}>High – Needs prompt attention</option>
+                <option value="URGENT" {% if data.priority|default('MEDIUM') == 'URGENT' %}selected{% endif %}>Urgent – Critical issue</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Submit Reclamation</button>
+        <a href="{{ path('user_reclamations') }}" class="btn btn-secondary" style="margin-left:8px;">Cancel</a>
     </form>
 {% endblock %}

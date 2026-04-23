@@ -7,25 +7,37 @@
 <h1>Available Voyages</h1>
 <p class="lead">Choose your next destination from our curated travel collection.</p>
 
+{# Tag filter strip #}
+{% if all_tags is defined and all_tags|length > 0 %}
+<div class="tag-filter-strip">
+    <a href="{{ path('travel_voyages') }}" class="tag-btn {% if not active_tag %}tag-btn-active{% endif %}">All</a>
+    {% for tag in all_tags %}
+        <a href="{{ path('travel_voyages', {tag: tag.name}) }}"
+           class="tag-btn {% if active_tag == tag.name %}tag-btn-active{% endif %}"
+           style="--tag-color:{{ tag.color ?? '#ff9900' }}">
+            {{ tag.name }}
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+
 {# Filter Section #}
 <div class="filter-bar">
     <form method="get" action="{{ path('travel_voyages') }}" class="filter-form">
+        {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
         <div class="filter-row">
             <div class="filter-field">
                 <label for="search">Search</label>
                 <input type="text" id="search" name="search" value="{{ app.request.query.get('search', '') }}" placeholder="Search destinations...">
             </div>
-            
             <div class="filter-field">
                 <label for="min_price">Min Price</label>
                 <input type="number" id="min_price" name="min_price" value="{{ app.request.query.get('min_price', '') }}" placeholder="Min" min="0" step="0.01">
             </div>
-            
             <div class="filter-field">
                 <label for="max_price">Max Price</label>
                 <input type="number" id="max_price" name="max_price" value="{{ app.request.query.get('max_price', '') }}" placeholder="Max" min="0" step="0.01">
             </div>
-            
             <div class="filter-field">
                 <label for="sort_by">Sort By</label>
                 <select id="sort_by" name="sort_by">
@@ -34,7 +46,6 @@
                     <option value="title" {{ app.request.query.get('sort_by') == 'title' ? 'selected' : '' }}>Name</option>
                 </select>
             </div>
-            
             <div class="filter-field">
                 <label for="sort_order">Order</label>
                 <select id="sort_order" name="sort_order">
@@ -42,7 +53,6 @@
                     <option value="DESC" {{ app.request.query.get('sort_order') == 'DESC' ? 'selected' : '' }}>Descending</option>
                 </select>
             </div>
-            
             <div class="filter-buttons">
                 <button type="submit" class="btn-filter">Apply</button>
                 <a href="{{ path('travel_voyages') }}" class="btn-filter btn-filter-clear">Clear</a>
@@ -51,24 +61,115 @@
     </form>
 </div>
 
+{# Compare bar #}
+<div id="compareBar" class="compare-bar" style="display:none">
+    <span id="compareBarText">0 selected</span>
+    <a href="{{ path('compare_show') }}" class="btn-compare-go" id="compareGoBtn">Compare Now →</a>
+    <button onclick="clearCompare()" class="btn-compare-clear">✕ Clear</button>
+</div>
+
 <div class="grid">
 {% for voyage in voyages %}
-                <article class="card voyage-card">
-                    <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
-                    <div class="card-body">
-                        <div class="voyage-badges">
-                            <span class="badge destination">{{ voyage.destination }}</span>
-                            <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
-                        </div>
-                        <h3>{{ voyage.title }}</h3>
-                        <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
-                        <div class="card-footer">
-                            <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
-                            <a href="{{ path('travel_voyage_detail', {id: voyage.id}) }}" class="btn btn-primary">Read more</a>
-                        </div>
-                    </div>
-                </article>
-            {% endfor %}
+    <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
+        <div class="card-image-wrap" style="position:relative">
+            <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
+            <button class="fav-btn {% if user_id > 0 %}active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="Add to favorites">♥</button>
+            <button class="cmp-btn" data-voyage-id="{{ voyage.id }}" onclick="toggleCompare(event, {{ voyage.id }})" title="Add to comparison">⊕</button>
         </div>
-    </section>
+        <div class="card-body">
+            <div class="voyage-badges">
+                <span class="badge destination">{{ voyage.destination }}</span>
+                <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
+            </div>
+            {% if voyage.tags is defined and voyage.tags|length > 0 %}
+                <div class="card-tags">
+                    {% for tag in voyage.tags %}
+                        <span class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <h3>{{ voyage.title }}</h3>
+            <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
+            <div class="card-footer">
+                <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
+                <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-primary">Read more</a>
+            </div>
+        </div>
+    </article>
+{% endfor %}
+</div>
+</section>
+
+<script>
+const compareList = new Set({{ compare_list is defined ? compare_list|json_encode|raw : '[]' }});
+
+function updateCompareBar() {
+    const bar = document.getElementById('compareBar');
+    const text = document.getElementById('compareBarText');
+    if (compareList.size > 0) {
+        bar.style.display = 'flex';
+        text.textContent = compareList.size + ' voyage' + (compareList.size > 1 ? 's' : '') + ' selected';
+    } else {
+        bar.style.display = 'none';
+    }
+    document.querySelectorAll('.cmp-btn').forEach(btn => {
+        const id = parseInt(btn.dataset.voyageId);
+        btn.classList.toggle('cmp-active', compareList.has(id));
+    });
+}
+
+async function toggleCompare(e, voyageId) {
+    e.preventDefault();
+    const inList = compareList.has(voyageId);
+    const url = inList ? '/compare/remove/' + voyageId : '/compare/add/' + voyageId;
+    try {
+        const res = await fetch(url, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+        const data = await res.json();
+        if (res.ok) {
+            if (inList) compareList.delete(voyageId); else compareList.add(voyageId);
+            updateCompareBar();
+        } else {
+            alert(data.status === 'max_reached' ? 'Max 3 voyages can be compared at once.' : 'Error');
+        }
+    } catch(err) { console.error(err); }
+}
+
+async function clearCompare() {
+    try {
+        await fetch('/compare/clear', { method: 'POST' });
+        compareList.clear();
+        updateCompareBar();
+    } catch(err) { console.error(err); }
+}
+
+async function toggleFavorite(e, voyageId) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    try {
+        const res = await fetch('/favorites/toggle/' + voyageId, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        btn.classList.toggle('fav-active', data.added);
+    } catch(err) { console.error(err); }
+}
+
+updateCompareBar();
+</script>
+
+<style>
+.tag-filter-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.tag-btn{padding:6px 16px;border-radius:20px;text-decoration:none;font-weight:600;font-size:.88rem;border:2px solid var(--border-dark);color:var(--text-muted);transition:all .15s}
+.tag-btn:hover,.tag-btn-active{border-color:var(--tag-color,var(--amazon-orange));color:var(--tag-color,var(--amazon-orange));background:color-mix(in srgb,var(--tag-color,var(--amazon-orange)) 12%,transparent)}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.tag-pill{display:inline-block;padding:2px 10px;border-radius:12px;border:1px solid;font-size:.78rem;font-weight:600}
+.card-image-wrap{position:relative;overflow:hidden}
+.fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
+.fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
+.fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
+.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff}
+.cmp-btn:hover,.cmp-btn.cmp-active{background:var(--amazon-orange);color:#000}
+.compare-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--amazon-white);border:1px solid var(--border-dark);border-radius:50px;padding:12px 24px;display:flex;gap:16px;align-items:center;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:1000;white-space:nowrap}
+.btn-compare-go{background:var(--amazon-orange);color:#000;padding:8px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:.9rem}
+.btn-compare-clear{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:4px 8px}
+</style>
 {% endblock %}

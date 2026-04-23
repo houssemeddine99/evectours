@@ -44,6 +44,9 @@ class Reservation
     #[ORM\Column(name: 'payment_date', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $paymentDate = null;
 
+    #[ORM\Column(name: 'payment_reference', length: 255, nullable: true)]
+    private ?string $paymentReference = null;
+
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
@@ -159,6 +162,17 @@ class Reservation
     public function setPaymentDate(?\DateTimeInterface $paymentDate): self
     {
         $this->paymentDate = $paymentDate;
+        return $this;
+    }
+
+    public function getPaymentReference(): ?string
+    {
+        return $this->paymentReference;
+    }
+
+    public function setPaymentReference(?string $paymentReference): self
+    {
+        $this->paymentReference = $paymentReference;
         return $this;
     }
 

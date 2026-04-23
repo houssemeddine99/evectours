@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS refund_requests (
     id SERIAL PRIMARY KEY,
     reclamation_id INTEGER,
     requester_id INTEGER NOT NULL,
+    reservation_id INTEGER,
     amount NUMERIC(10,2) NOT NULL CHECK (amount >= 0),
     reason TEXT,
     status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING','APPROVED','REJECTED')),

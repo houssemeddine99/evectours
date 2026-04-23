@@ -1,18 +1,12 @@
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
-
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
 
 services:
-    # default configuration for services in *this* file
     _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        autowire: true
+        autoconfigure: true
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
         exclude:
@@ -24,14 +18,57 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    App\Service\TwilioSmsService:
+        arguments:
+            $accountSid:          '%env(string:TWILIO_ACCOUNT_SID)%'
+            $authToken:           '%env(string:TWILIO_AUTH_TOKEN)%'
+            $messagingServiceSid: '%env(string:TWILIO_MESSAGING_SERVICE_SID)%'
+
+    App\Service\AiResponseSuggestionService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\StripeRefundService:
+        arguments:
+            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+
+    App\Service\StripePaymentService:
+        arguments:
+            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+
     App\Service\CloudinaryService:
         arguments:
             $cloudName: '%env(string:CLOUDINARY_CLOUD_NAME)%'
-            $apiKey: '%env(string:CLOUDINARY_API_KEY)%'
+            $apiKey:    '%env(string:CLOUDINARY_API_KEY)%'
             $apiSecret: '%env(string:CLOUDINARY_API_SECRET)%'
+
+    App\Service\AiVoyageService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\AiBudgetPlannerService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\AiCancellationService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\WeatherService:
+        arguments:
+            $apiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Service\MailerService:
-        arguments:
-            $apiKey: '%env(RESEND_API_KEY)%'

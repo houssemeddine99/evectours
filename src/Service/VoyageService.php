@@ -117,9 +117,19 @@ class VoyageService
     private function mapVoyageForAdmin(object $voyage): array
     {
         $imageUrls = $this->extractImageUrls($voyage->getId());
+        $tags = [];
+        foreach ($voyage->getTags() as $tag) {
+            $tags[] = ['id' => $tag->getId(), 'name' => $tag->getName(), 'color' => $tag->getColor()];
+        }
+
+        $slug = $voyage->getSlug();
+        if ($slug === '') {
+            $slug = 'voyage-' . $voyage->getId();
+        }
 
         return [
             'id' => $voyage->getId(),
+            'slug' => $slug,
             'title' => $voyage->getTitle(),
             'description' => $voyage->getDescription(),
             'destination' => $voyage->getDestination(),
@@ -130,6 +140,7 @@ class VoyageService
             'created_at' => $voyage->getCreatedAt()?->format('Y-m-d H:i:s'),
             'activities_count' => $voyage->getActivities()->count(),
             'offers_count' => $voyage->getOffers()->count(),
+            'tags' => $tags,
         ];
     }
 
@@ -184,18 +195,53 @@ class VoyageService
 
     private function mapVoyage(object $voyage): array
     {
-     
+        $tags = [];
+        foreach ($voyage->getTags() as $tag) {
+            $tags[] = ['id' => $tag->getId(), 'name' => $tag->getName(), 'color' => $tag->getColor()];
+        }
+
+        $slug = $voyage->getSlug();
+        if ($slug === '') {
+            $slug = 'voyage-' . $voyage->getId();
+        }
 
         return [
             'id' => $voyage->getId(),
+            'slug' => $slug,
             'title' => $voyage->getTitle(),
             'description' => $voyage->getDescription(),
             'destination' => $voyage->getDestination(),
             'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
             'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
             'price' => $voyage->getPrice(),
-            'image_url'  => $this->extractImageUrls($voyage->getId())
+            'image_url' => $this->extractImageUrls($voyage->getId()),
+            'tags' => $tags,
         ];
+    }
+
+    public function getVoyageBySlug(string $slug): ?array
+    {
+        $voyage = $this->safeExecute(fn () => $this->voyageRepository->findBySlug($slug));
+
+        // Fallback: if slug is the "voyage-{id}" pattern and not found by slug, try by ID
+        if ($voyage === null && preg_match('/^voyage-(\d+)$/', $slug, $m)) {
+            $voyage = $this->safeExecute(fn () => $this->voyageRepository->find((int) $m[1]));
+        }
+
+        if ($voyage === null) {
+            return null;
+        }
+        $mapped = $this->mapVoyage($voyage);
+        $mapped['activities'] = [];
+        foreach ($voyage->getActivities() as $activity) {
+            $mapped['activities'][] = [
+                'name' => $activity->getName(),
+                'description' => $activity->getDescription(),
+                'duration_hours' => $activity->getDurationHours(),
+                'price_per_person' => $activity->getPricePerPerson(),
+            ];
+        }
+        return $mapped;
     }
 
     /**
