@@ -1,3 +1,1 @@
-
-SELECT * from voyage_visits ;
-
+SELECT * FROM public.unified_events;

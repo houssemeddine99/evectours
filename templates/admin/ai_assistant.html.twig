@@ -1,0 +1,320 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – AI Analytics Assistant{% endblock %}
+
+{% block body %}
+<style>
+    :root {
+        --admin-orange: #ff8c00;
+        --admin-orange-light: #fff4e6;
+        --admin-orange-dark: #e67e00;
+    }
+    .ai-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .stats-header {
+        color: var(--admin-orange-dark);
+        border-bottom: 2px solid var(--admin-orange);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
+    .chat-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    .chat-messages {
+        height: 400px;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f9f9f9;
+    }
+    .message {
+        display: flex;
+        margin-bottom: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+    .message.user {
+        justify-content: flex-end;
+    }
+    .message.assistant {
+        justify-content: flex-start;
+    }
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin: 0 12px;
+    }
+    .message.user .avatar {
+        background: var(--admin-orange);
+        order: 2;
+    }
+    .message.assistant .avatar {
+        background: #e9ecef;
+    }
+    .bubble {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+    .message.user .bubble {
+        background: var(--admin-orange);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    .message.assistant .bubble {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-bottom-left-radius: 4px;
+        color: #212529;
+    }
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 12px;
+    }
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: #adb5bd;
+        border-radius: 50%;
+        animation: blink 1.4s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+        0%, 60%, 100% { opacity: 0.3; transform: scale(0.8);}
+        30% { opacity: 1; transform: scale(1.2);}
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px);}
+        to { opacity: 1; transform: translateY(0);}
+    }
+    .chat-input-area {
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 12px;
+    }
+    .chat-input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 24px;
+        font-size: 14px;
+        resize: none;
+        font-family: inherit;
+    }
+    .chat-input:focus {
+        outline: none;
+        border-color: var(--admin-orange);
+    }
+    .send-btn {
+        background: var(--admin-orange);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .send-btn:hover {
+        background: var(--admin-orange-dark);
+    }
+    .send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 10px 20px;
+    }
+    .example-questions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .example-btn {
+        background: var(--admin-orange-light);
+        border: 1px solid var(--admin-orange);
+        color: var(--admin-orange-dark);
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+    .example-btn:hover {
+        background: var(--admin-orange);
+        color: white;
+    }
+</style>
+
+<div class="ai-container">
+    <h1 class="stats-header">🤖 AI Analytics Assistant</h1>
+    <p>Ask anything about your travel data – metrics, trends, conversions, popular destinations.</p>
+
+    <div class="chat-card">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    Hello! I'm your AI analytics assistant. I can answer questions like:<br>
+                    • "What are the weekly metrics?"<br>
+                    • "Show me top destinations"<br>
+                    • "What's the conversion rate?"<br>
+                    • "Average view duration?"<br>
+                    Just type your question below.
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <textarea class="chat-input" id="questionInput" rows="1" placeholder="Ask something..." @keydown.enter.prevent="sendQuestion"></textarea>
+            <button class="send-btn" id="sendBtn" @click="sendQuestion">➤</button>
+        </div>
+    </div>
+
+    <div class="example-questions">
+        <span style="font-weight: bold;">Examples:</span>
+        <button class="example-btn" data-question="What are the weekly metrics for last week?">Weekly metrics</button>
+        <button class="example-btn" data-question="Show me conversion rate">Conversion rate</button>
+        <button class="example-btn" data-question="What are the top 5 destinations?">Top destinations</button>
+        <button class="example-btn" data-question="Average view duration">Average view duration</button>
+        <button class="example-btn" data-question="How many searches and voyage views last week?">Searches vs views</button>
+    </div>
+</div>
+
+<script>
+    // Simple Vue-like behavior with vanilla JS (or you can use Vue if already present)
+    const chatMessages = document.getElementById('chatMessages');
+    const questionInput = document.getElementById('questionInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function addMessage(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = role === 'user' ? '👤' : '🤖';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        // Preserve line breaks
+        bubble.innerHTML = content.replace(/\n/g, '<br>');
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return messageDiv;
+    }
+
+    function showTyping() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message assistant';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="avatar">🤖</div>
+            <div class="bubble">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTyping() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        // Disable input during request
+        sendBtn.disabled = true;
+        questionInput.disabled = true;
+
+        // Add user message
+        addMessage('user', question);
+        questionInput.value = '';
+        questionInput.style.height = 'auto';
+
+        // Show typing indicator
+        showTyping();
+
+        try {
+            const response = await fetch('{{ path('ai_ask') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            removeTyping();
+            addMessage('assistant', data.answer || 'Sorry, I could not generate an answer.');
+        } catch (error) {
+            console.error('Error:', error);
+            removeTyping();
+            addMessage('assistant', '❌ Error: Could not reach AI service. Please try again later.');
+        } finally {
+            sendBtn.disabled = false;
+            questionInput.disabled = false;
+            questionInput.focus();
+        }
+    }
+
+    // Auto-resize textarea
+    questionInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Send on Enter (without Shift)
+    questionInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendQuestion();
+        }
+    });
+
+    // Example buttons
+    document.querySelectorAll('.example-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const question = btn.getAttribute('data-question');
+            questionInput.value = question;
+            sendQuestion();
+        });
+    });
+</script>
+{% endblock %}

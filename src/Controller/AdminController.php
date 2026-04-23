@@ -19,8 +19,7 @@ class AdminController extends AbstractController
         private readonly ReservationService $reservationService,
         private readonly VoyageService $voyageService,
         private readonly ValidationService $validationService
-    ) {
-    }
+    ) {}
 
     // ==================== ADMIN AUTHORIZATION ====================
 
@@ -69,6 +68,15 @@ class AdminController extends AbstractController
         return $this->ensureAdmin($request);
     }
 
+    #[Route('/ai-assistant', name: 'admin_ai_assistant')]
+
+    public function aiAssistant(Request $request): Response
+    {
+        if ($this->ensureAdmin($request) !== null) {
+            return $this->ensureAdmin($request);
+        }
+        return $this->render('admin/ai_assistant.html.twig');
+    }
     // ==================== ADMIN DASHBOARD ====================
 
     #[Route('/', name: 'admin_dashboard', methods: ['GET'])]
@@ -158,7 +166,7 @@ class AdminController extends AbstractController
 
             // Use ValidationService for validation
             $this->validationService->validateUserRegistration($formData);
-            
+
             // Check password match
             if ($formData['password'] !== $formData['confirm_password']) {
                 $this->validationService->getErrors()['confirm_password'][] = 'Passwords do not match.';
@@ -246,7 +254,7 @@ class AdminController extends AbstractController
             $this->validationService->validateEmail($formData['email']);
             $this->validationService->validateString($formData['username'], 'username', 3, 50);
             $this->validationService->validateAlphaNum($formData['username'], 'username');
-            
+
             // Phone validation (optional field)
             if (!empty($formData['tel'])) {
                 $this->validationService->validatePhone($formData['tel']);
