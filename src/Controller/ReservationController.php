@@ -96,11 +96,12 @@ class ReservationController extends AbstractController
                 );
 
                 if ($created === null) {
-                    throw new \Exception('Creation failed');
+                    throw new \Exception('Creation failed sory');
                 }
 
                 $this->addFlash('success', 'Reservation created successfully!' . ($loyaltyDiscount > 0 ? ' 5% loyalty discount applied.' : ''));
             } catch (\Throwable $e) {
+                $this->addFlash('error', 'Error: ' . $e->getMessage());
                 $this->addFlash('error', $e->getMessage());
             }
 
