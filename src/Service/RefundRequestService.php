@@ -85,6 +85,14 @@ class RefundRequestService
     }
 
     /**
+     * Get all refund requests for a given reclamation
+     */
+    public function getRequestsByReclamation(int $reclamationId): array
+    {
+        return $this->safeExecute(fn () => $this->refundRequestRepository->findByReclamationId($reclamationId), []);
+    }
+
+    /**
      * Safely execute a callback with error handling
      */
     private function safeExecute(callable $callback, mixed $default = []): mixed

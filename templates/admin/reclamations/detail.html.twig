@@ -1,42 +1,139 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Admin – Reclamation Detail{% endblock %}
+{% block title %}Admin – Reclamation #{{ reclamation.id }}{% endblock %}
 
 {% block body %}
-    <h1>Reclamation: {{ reclamation.title }}</h1>
-    <p>Status: {{ reclamation.status }}</p>
-    <p>Priority: {{ reclamation.priority }}</p>
-    <p>Description: {{ reclamation.description }}</p>
-    <p>Created at: {{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : 'N/A' }}</p>
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
 
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h1 style="margin:0;">Reclamation #{{ reclamation.id }}</h1>
+        <a href="{{ path('admin_reclamations') }}" class="btn btn-secondary">← Back to List</a>
+    </div>
+
+    {# ── Meta info ── #}
+    <div class="admin-table-container" style="margin-bottom:24px;">
+        <table class="admin-table">
+            <tbody>
+                <tr>
+                    <th>User</th>
+                    <td>
+                        {% if user %}
+                            <strong>{{ user.username }}</strong> &lt;{{ user.email }}&gt;
+                            {% if user.tel %} · 📞 {{ user.tel }}{% endif %}
+                        {% else %}
+                            User #{{ reclamation.userId }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr><th>Reservation ID</th><td>{{ reclamation.reservationId }}</td></tr>
+                <tr><th>Title</th><td><strong>{{ reclamation.title }}</strong></td></tr>
+                <tr><th>Description</th><td style="white-space:pre-wrap;">{{ reclamation.description }}</td></tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        {% set s = reclamation.status %}
+                        <span style="padding:3px 12px;border-radius:12px;font-weight:600;font-size:0.85em;
+                            background:{% if s == 'OPEN' %}#fff3cd;color:#856404{% elseif s == 'IN_PROGRESS' %}#cce5ff;color:#004085{% elseif s == 'RESOLVED' %}#d4edda;color:#155724{% else %}#e2e3e5;color:#383d41{% endif %};">
+                            {{ s }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Priority</th>
+                    <td>
+                        {% set p = reclamation.priority %}
+                        <span style="padding:3px 12px;border-radius:12px;font-weight:600;font-size:0.85em;
+                            background:{% if p == 'URGENT' %}#f8d7da;color:#721c24{% elseif p == 'HIGH' %}#fde8d8;color:#8a3a00{% elseif p == 'LOW' %}#e2e3e5;color:#383d41{% else %}#d4edda;color:#155724{% endif %};">
+                            {{ p }}
+                        </span>
+                    </td>
+                </tr>
+                <tr><th>Filed At</th><td>{{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : '—' }}</td></tr>
+                {% if reclamation.resolutionDate %}
+                    <tr><th>Resolved At</th><td>{{ reclamation.resolutionDate|date('Y-m-d H:i') }}</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {# ── Admin response ── #}
     <h2>Admin Response</h2>
     {% if reclamation.adminResponse %}
-        <p>{{ reclamation.adminResponse }}</p>
+        <div class="alert alert-success" style="white-space:pre-wrap;margin-bottom:16px;">
+            {{ reclamation.adminResponse }}
+            <br><small style="opacity:0.7;">Responded at {{ reclamation.responseDate ? reclamation.responseDate|date('Y-m-d H:i') : '?' }}</small>
+        </div>
     {% else %}
         {% if suggestedResponse %}
-            <div class="alert alert-info" style="margin-bottom: 10px;">
-                <strong>AI Suggested Response:</strong>
-                <p style="margin-top: 8px; white-space: pre-wrap;">{{ suggestedResponse }}</p>
+            <div class="alert alert-info" style="margin-bottom:10px;">
+                <strong>✨ AI Suggested Response:</strong>
+                <p style="margin-top:8px;white-space:pre-wrap;">{{ suggestedResponse }}</p>
             </div>
         {% endif %}
-        <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}">
-            <textarea name="response" class="form-control" required>{{ suggestedResponse|default('') }}</textarea>
-            <button type="submit" class="btn btn-primary mt-2">Add Response</button>
+        <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}" style="max-width:600px;">
+            <textarea name="response" class="form-control" rows="5" required style="width:100%;margin-bottom:8px;">{{ suggestedResponse|default('') }}</textarea>
+            <button type="submit" class="btn btn-primary">Send Response</button>
         </form>
     {% endif %}
 
-    <h2>Update Status</h2>
-    <form method="post" action="{{ path('admin_reclamation_status', {'id': reclamation.id}) }}">
+    {# ── Status update ── #}
+    <h2 style="margin-top:24px;">Update Status</h2>
+    <form method="post" action="{{ path('admin_reclamation_status', {'id': reclamation.id}) }}" style="display:flex;gap:8px;align-items:center;max-width:400px;">
         <select name="status" class="form-control">
-            <option value="OPEN" {% if reclamation.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+            <option value="OPEN"        {% if reclamation.status == 'OPEN'        %}selected{% endif %}>OPEN</option>
             <option value="IN_PROGRESS" {% if reclamation.status == 'IN_PROGRESS' %}selected{% endif %}>IN_PROGRESS</option>
-            <option value="RESOLVED" {% if reclamation.status == 'RESOLVED' %}selected{% endif %}>RESOLVED</option>
-            <option value="CLOSED" {% if reclamation.status == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+            <option value="RESOLVED"    {% if reclamation.status == 'RESOLVED'    %}selected{% endif %}>RESOLVED</option>
+            <option value="CLOSED"      {% if reclamation.status == 'CLOSED'      %}selected{% endif %}>CLOSED</option>
         </select>
-        <button type="submit" class="btn btn-success mt-2">Update Status</button>
+        <button type="submit" class="btn btn-success">Update</button>
     </form>
 
-    <form method="post" action="{{ path('admin_reclamation_delete', {'id': reclamation.id}) }}" onsubmit="return confirm('Delete this reclamation?');" class="mt-3">
-        <button type="submit" class="btn btn-danger">Delete</button>
-    </form>
+    {# ── Related refund requests ── #}
+    <h2 style="margin-top:28px;">Refund Requests</h2>
+    {% if refundRequests|length > 0 %}
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Amount (TND)</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rr in refundRequests %}
+                        <tr>
+                            <td>{{ rr.id }}</td>
+                            <td>{{ rr.amount }}</td>
+                            <td>
+                                {% set rs = rr.status %}
+                                <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
+                                    background:{% if rs == 'APPROVED' %}#d4edda;color:#155724{% elseif rs == 'REJECTED' %}#f8d7da;color:#721c24{% else %}#fff3cd;color:#856404{% endif %};">
+                                    {{ rs }}
+                                </span>
+                            </td>
+                            <td>{{ rr.createdAt ? rr.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                            <td><a href="{{ path('admin_refund_detail', {'id': rr.id}) }}" class="btn btn-primary" style="font-size:0.82em;padding:3px 10px;">Manage</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="color:#888;">No refund requests for this reclamation yet.</p>
+    {% endif %}
+
+    {# ── Danger zone ── #}
+    <div style="margin-top:32px;padding:16px;border:1px solid #f5c6cb;border-radius:8px;background:#fff5f5;">
+        <h3 style="color:#721c24;margin:0 0 8px;">Danger Zone</h3>
+        <form method="post" action="{{ path('admin_reclamation_delete', {'id': reclamation.id}) }}" onsubmit="return confirm('Permanently delete this reclamation? This cannot be undone.');">
+            <button type="submit" class="btn btn-danger">Delete Reclamation</button>
+        </form>
+    </div>
 {% endblock %}

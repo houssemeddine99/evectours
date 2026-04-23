@@ -1,30 +1,129 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Reclamation Detail{% endblock %}
+{% block title %}Reclamation #{{ reclamation.id }}{% endblock %}
 
 {% block body %}
-    <h1>Reclamation Detail</h1>
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <h1>Reclamation #{{ reclamation.id }}</h1>
+
     {% if reclamation %}
         <div class="admin-table-container">
             <table class="admin-table">
                 <tbody>
-                    <tr><th>ID</th><td>{{ reclamation.id }}</td></tr>
+                    <tr><th>Title</th><td><strong>{{ reclamation.title }}</strong></td></tr>
                     <tr><th>Reservation ID</th><td>{{ reclamation.reservationId }}</td></tr>
-                    <tr><th>User ID</th><td>{{ reclamation.userId }}</td></tr>
-                    <tr><th>Title</th><td>{{ reclamation.title }}</td></tr>
-                    <tr><th>Description</th><td>{{ reclamation.description }}</td></tr>
-                    <tr><th>Status</th><td>{{ reclamation.status }}</td></tr>
-                    <tr><th>Priority</th><td>{{ reclamation.priority }}</td></tr>
-                    <tr><th>Created At</th><td>{{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : '' }}</td></tr>
-                    <tr><th>Updated At</th><td>{{ reclamation.updatedAt ? reclamation.updatedAt|date('Y-m-d H:i') : '' }}</td></tr>
-                    <tr><th>Admin Response</th><td>{{ reclamation.adminResponse|default('') }}</td></tr>
-                    <tr><th>Response Date</th><td>{{ reclamation.responseDate ? reclamation.responseDate|date('Y-m-d H:i') : '' }}</td></tr>
-                    <tr><th>Resolution Date</th><td>{{ reclamation.resolutionDate ? reclamation.resolutionDate|date('Y-m-d H:i') : '' }}</td></tr>
+                    <tr><th>Description</th><td style="white-space:pre-wrap;">{{ reclamation.description }}</td></tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            {% set s = reclamation.status %}
+                            <span style="padding:3px 12px;border-radius:12px;font-weight:600;font-size:0.85em;
+                                background:{% if s == 'OPEN' %}#fff3cd;color:#856404{% elseif s == 'IN_PROGRESS' %}#cce5ff;color:#004085{% elseif s == 'RESOLVED' %}#d4edda;color:#155724{% else %}#e2e3e5;color:#383d41{% endif %};">
+                                {{ s }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Priority</th>
+                        <td>
+                            {% set p = reclamation.priority %}
+                            <span style="padding:3px 12px;border-radius:12px;font-weight:600;font-size:0.85em;
+                                background:{% if p == 'URGENT' %}#f8d7da;color:#721c24{% elseif p == 'HIGH' %}#fde8d8;color:#8a3a00{% elseif p == 'LOW' %}#e2e3e5;color:#383d41{% else %}#d4edda;color:#155724{% endif %};">
+                                {{ p }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr><th>Filed At</th><td>{{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : '—' }}</td></tr>
+                    <tr><th>Last Updated</th><td>{{ reclamation.updatedAt ? reclamation.updatedAt|date('Y-m-d H:i') : '—' }}</td></tr>
+                    {% if reclamation.resolutionDate %}
+                        <tr><th>Resolved At</th><td>{{ reclamation.resolutionDate|date('Y-m-d H:i') }}</td></tr>
+                    {% endif %}
                 </tbody>
             </table>
+        </div>
+
+        {# ── Admin response ── #}
+        {% if reclamation.adminResponse %}
+            <div style="margin-top:20px;padding:16px;background:#d4edda;border:1px solid #c3e6cb;border-radius:8px;">
+                <strong>Admin Response</strong>
+                <p style="margin-top:8px;white-space:pre-wrap;">{{ reclamation.adminResponse }}</p>
+                {% if reclamation.responseDate %}
+                    <small style="opacity:0.7;">Received on {{ reclamation.responseDate|date('Y-m-d H:i') }}</small>
+                {% endif %}
+            </div>
+        {% else %}
+            <div style="margin-top:20px;padding:14px;background:#fff3cd;border:1px solid #ffeeba;border-radius:8px;">
+                <strong>⏳ Awaiting admin response</strong>
+            </div>
+        {% endif %}
+
+        {# ── Refund section ── #}
+        <div style="margin-top:28px;">
+            <h2>Refund</h2>
+
+            {% if refundRequests|length > 0 %}
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>Request ID</th><th>Amount (TND)</th><th>Status</th><th>Submitted</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for rr in refundRequests %}
+                                <tr>
+                                    <td>#{{ rr.id }}</td>
+                                    <td>{{ rr.amount }}</td>
+                                    <td>
+                                        {% set rs = rr.status %}
+                                        <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
+                                            background:{% if rs == 'APPROVED' %}#d4edda;color:#155724{% elseif rs == 'REJECTED' %}#f8d7da;color:#721c24{% else %}#fff3cd;color:#856404{% endif %};">
+                                            {{ rs }}
+                                        </span>
+                                    </td>
+                                    <td>{{ rr.createdAt ? rr.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% elseif eligibility is defined and eligibility.eligible %}
+                <div style="padding:16px;background:#e8f4fd;border:1px solid #bee5eb;border-radius:8px;">
+                    <p style="margin:0 0 10px;"><strong>✅ You are eligible for a refund</strong> for this reclamation.</p>
+                    <form method="post" action="{{ path('user_reclamation_request_refund', {'id': reclamation.id}) }}">
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Submit a refund request for the full reservation amount?');">
+                            Request Refund
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div style="padding:14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;">
+                    <p style="margin:0;color:#6c757d;">
+                        {% if eligibility is defined and eligibility.reason is defined %}
+                            ℹ️ {{ eligibility.reason }}
+                        {% else %}
+                            Refund is not available for this reclamation.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
         </div>
     {% else %}
         <p>Reclamation not found.</p>
     {% endif %}
-    <p><a href="{{ path('user_reclamations') }}" class="btn btn-primary">Back to My Reclamations</a></p>
+
+    <p style="margin-top:24px;"><a href="{{ path('user_reclamations') }}" class="btn btn-primary">← Back to My Reclamations</a></p>
+{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .admin-table { width:100%;border-collapse:collapse;margin-top:12px;background:var(--amazon-white);border-radius:12px;overflow:hidden; }
+        .admin-table th,.admin-table td { padding:12px 8px;border-bottom:1px solid var(--border-dark);text-align:left;color:var(--text-muted); }
+        .admin-table th { background:var(--amazon-navy);color:var(--text-primary);font-weight:600; }
+        .admin-table tr:hover { background:rgba(255,153,0,.08); }
+        .admin-table-container { margin-top:16px;background:var(--amazon-white);border:1px solid var(--border-dark);border-radius:12px;overflow-x:auto;box-shadow:0 8px 25px rgba(255,153,0,.2);padding:24px; }
+    </style>
 {% endblock %}

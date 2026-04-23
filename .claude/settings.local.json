@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} basename {})",
+      "Bash(grep -E \"\\\\.php$\")",
+      "Bash(php bin/console doctrine:migrations:migrate --no-interaction)",
+      "Bash(php bin/console cache:clear)",
+      "Bash(php bin/console debug:router)",
+      "Bash(php bin/console doctrine:query:sql \"SELECT id, title, slug FROM voyages LIMIT 5\")"
+    ]
+  }
+}

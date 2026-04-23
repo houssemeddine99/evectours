@@ -6,18 +6,65 @@
     <section>
         <h1>Active Offers</h1>
         <p class="lead">Save more with our limited-time discounts and packages.</p>
+
         <div class="offers-grid">
             {% for offer in offers %}
                 {% set base_price = offer.price|default(0) %}
                 {% set discount = offer.discount_percentage|default(0) %}
-                {% set final_price = base_price - ((discount / 100) * base_price) %}
-                <article class="offer futuristic-offer">
+                {% set flash_extra = offer.flash_sale_active ? offer.flash_sale_discount|default(0) : 0 %}
+                {% set effective_discount = discount + flash_extra %}
+                {% set final_price = base_price - ((effective_discount / 100) * base_price) %}
+                {% set days_left = offer.days_until_expiry|default(999) %}
+
+                <article class="offer futuristic-offer {% if offer.flash_sale_active %}flash-sale-card{% endif %}">
+
+                    {% if offer.flash_sale_active %}
+                        <div class="flash-banner">
+                            ⚡ FLASH SALE — ends in
+                            <span class="flash-countdown" data-ends="{{ offer.flash_sale_ends_at }}">calculating…</span>
+                        </div>
+                    {% elseif days_left >= 0 and days_left <= 3 %}
+                        <div class="urgency-banner">🔥 Expiring in {{ days_left == 0 ? 'today' : days_left ~ ' day' ~ (days_left > 1 ? 's' : '') }}!</div>
+                    {% endif %}
+
                     <div class="offer-banner" style="background-image: url('{{ offer.image_url|default('https://images.unsplash.com/photo-1523206489230-c0126d2b36fc?auto=format&fit=crop&w=1920&q=80') }}');">
                         <span class="offer-tag">{{ offer.voyage_title|default('Voyage') }}</span>
                     </div>
+
                     <div class="offer-body">
-                        <h3>{{ offer.title|default('Special offer') }} <span>-{{ discount }}%</span></h3>
+                        <h3>
+                            {{ offer.title|default('Special offer') }}
+                            <span>
+                                -{{ discount }}%
+                                {% if flash_extra > 0 %}<span class="flash-extra">+{{ flash_extra }}% FLASH</span>{% endif %}
+                            </span>
+                        </h3>
                         <p class="offer-desc">{{ offer.description|default('Explore the unknown with future-forward comfort.') }}</p>
+
+                        {# Carbon footprint badge #}
+                        {% set dest = offer.destination|default('') %}
+                        {% if dest %}
+                            {% set carbon_distances = {
+                                'paris': 1820, 'london': 2100, 'rome': 1700, 'dubai': 4900,
+                                'istanbul': 2100, 'cairo': 2300, 'barcelona': 1590, 'madrid': 1700,
+                                'casablanca': 1700, 'marrakech': 1600, 'algiers': 900, 'tripoli': 650,
+                                'new york': 7900, 'tokyo': 9600, 'bangkok': 8200, 'berlin': 2300
+                            } %}
+                            {% set dest_lower = dest|lower %}
+                            {% set dist_km = 2500 %}
+                            {% for key, km in carbon_distances %}
+                                {% if key in dest_lower %}{% set dist_km = km %}{% endif %}
+                            {% endfor %}
+                            {% set co2 = (dist_km * 0.255)|round %}
+                            {% if co2 <= 400 %}
+                                <span class="carbon-badge eco">🌿 Eco-friendly · {{ co2 }} kg CO₂</span>
+                            {% elseif co2 <= 900 %}
+                                <span class="carbon-badge moderate">🍂 Moderate · {{ co2 }} kg CO₂</span>
+                            {% else %}
+                                <span class="carbon-badge high">🔥 High impact · {{ co2 }} kg CO₂</span>
+                            {% endif %}
+                        {% endif %}
+
                         <div class="offer-meta">
                             <small>Destination: {{ offer.destination|default('Unknown') }}</small>
                             <small>Valid: {{ offer.start_date ? offer.start_date|date('d M Y') : 'TBD' }} – {{ offer.end_date ? offer.end_date|date('d M Y') : 'TBD' }}</small>
@@ -27,11 +74,38 @@
                                 <small>From</small>
                                 <p><del>${{ base_price|number_format(2, '.', ',') }}</del> <strong>${{ final_price|number_format(2, '.', ',') }}</strong></p>
                             </div>
-                            <a class="btn-primary" href="{{ path('travel_voyage_detail', {id: offer.voyage_id}) }}">Fly now</a>
+                            <a class="btn-primary" href="{{ path('travel_voyage_detail', {slug: offer.voyage_slug}) }}">Fly now</a>
                         </div>
                     </div>
                 </article>
             {% endfor %}
         </div>
     </section>
+
+    <style>
+    .flash-sale-card { border: 2px solid #f59e0b !important; box-shadow: 0 0 20px rgba(245,158,11,0.25); }
+    .flash-banner { background: linear-gradient(90deg,#b45309,#f59e0b); color:#fff; text-align:center; padding:8px 12px; font-size:0.88rem; font-weight:700; letter-spacing:0.5px; }
+    .urgency-banner { background: linear-gradient(90deg,#991b1b,#ef4444); color:#fff; text-align:center; padding:6px 12px; font-size:0.84rem; font-weight:600; }
+    .flash-extra { background:#f59e0b; color:#000; border-radius:4px; padding:2px 6px; font-size:0.72em; margin-left:4px; }
+    .carbon-badge { display:inline-block; border-radius:14px; padding:3px 10px; font-size:0.78rem; font-weight:600; margin:6px 0 4px; }
+    .carbon-badge.eco { background:rgba(34,197,94,0.15); color:#22c55e; }
+    .carbon-badge.moderate { background:rgba(245,158,11,0.15); color:#f59e0b; }
+    .carbon-badge.high { background:rgba(239,68,68,0.15); color:#ef4444; }
+    </style>
+
+    <script>
+    document.querySelectorAll('.flash-countdown').forEach(function (el) {
+        var endsAt = new Date(el.dataset.ends).getTime();
+        function update() {
+            var diff = endsAt - Date.now();
+            if (diff <= 0) { el.textContent = 'ended'; return; }
+            var h = Math.floor(diff / 3600000);
+            var m = Math.floor((diff % 3600000) / 60000);
+            var s = Math.floor((diff % 60000) / 1000);
+            el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }
+        update();
+        setInterval(update, 1000);
+    });
+    </script>
 {% endblock %}

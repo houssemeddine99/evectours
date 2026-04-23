@@ -38,6 +38,9 @@ services:
         arguments:
             $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
 
+    App\Service\StripePaymentService:
+        arguments:
+            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
 
     App\Service\CloudinaryService:
         arguments:
@@ -52,6 +55,24 @@ services:
             $apiKey:  '%env(string:AI_API_KEY)%'
             $model:   '%env(string:AI_MODEL)%'
             $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\AiBudgetPlannerService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\AiCancellationService:
+        arguments:
+            $apiUrl:  '%env(string:AI_API_URL)%'
+            $apiKey:  '%env(string:AI_API_KEY)%'
+            $model:   '%env(string:AI_MODEL)%'
+            $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
+
+    App\Service\WeatherService:
+        arguments:
+            $apiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

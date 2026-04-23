@@ -20,6 +20,7 @@
                 <a class="{{ active_nav|default('') == 'home' ? 'active' : '' }}" href="{{ path('travel_home') }}">Home</a>
                 <a class="{{ active_nav|default('') == 'voyages' ? 'active' : '' }}" href="{{ path('travel_voyages') }}">Voyages</a>
                 <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
+                <a class="{{ active_nav|default('') == 'trip-planner' ? 'active' : '' }}" href="{{ path('trip_planner') }}">🤖 Trip Planner</a>
                 <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
                 {% if app.session.get('auth_user') %}
                     <div class="account-dropdown">

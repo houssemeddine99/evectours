@@ -7,6 +7,7 @@ use App\Entity\RefundRequest;
 use App\Entity\Reclamation;
 use App\Repository\ReservationRepository;
 use App\Service\RefundRequestService;
+use App\Service\LoyaltyPointsService;
 use App\Repository\VoyageRepository;
 use App\Repository\UserRepository;
 use Psr\Log\LoggerInterface;
@@ -19,6 +20,7 @@ class ReservationService
         private readonly VoyageRepository $voyageRepository,
         private readonly UserRepository $userRepository,
         private readonly RefundRequestService $refundRequestService,
+        private readonly LoyaltyPointsService $loyaltyPointsService,
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger
     ) {
@@ -206,6 +208,9 @@ class ReservationService
             $entityManager = $this->reservationRepository->getEntityManager();
             $entityManager->flush();
 
+            // Award loyalty points: 1 point per TND spent
+            $this->loyaltyPointsService->awardPoints($reservation->getUserId(), (float) $reservation->getTotalPrice());
+
             return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to confirm reservation as admin', ['error' => $e->getMessage(), 'reservation_id' => $reservationId]);
@@ -295,6 +300,9 @@ public function listAllReservations(): array
 
             $entityManager = $this->reservationRepository->getEntityManager();
             $entityManager->flush();
+
+            // Award loyalty points: 1 point per TND spent
+            $this->loyaltyPointsService->awardPoints($userId, (float) $reservation->getTotalPrice());
 
             return true;
         } catch (\Throwable $e) {

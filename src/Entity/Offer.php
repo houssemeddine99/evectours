@@ -37,6 +37,12 @@ class Offer
     #[ORM\Column(name: 'is_active')]
     private bool $isActive = true;
 
+    #[ORM\Column(name: 'flash_sale_ends_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $flashSaleEndsAt = null;
+
+    #[ORM\Column(name: 'flash_sale_discount', type: Types::DECIMAL, precision: 5, scale: 2, nullable: true)]
+    private ?string $flashSaleDiscount = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -124,5 +130,16 @@ class Offer
         $this->isActive = $isActive;
 
         return $this;
+    }
+
+    public function getFlashSaleEndsAt(): ?\DateTimeInterface { return $this->flashSaleEndsAt; }
+    public function setFlashSaleEndsAt(?\DateTimeInterface $flashSaleEndsAt): self { $this->flashSaleEndsAt = $flashSaleEndsAt; return $this; }
+
+    public function getFlashSaleDiscount(): ?string { return $this->flashSaleDiscount; }
+    public function setFlashSaleDiscount(?string $flashSaleDiscount): self { $this->flashSaleDiscount = $flashSaleDiscount; return $this; }
+
+    public function isFlashSaleActive(): bool
+    {
+        return $this->flashSaleEndsAt !== null && $this->flashSaleEndsAt > new \DateTime();
     }
 }

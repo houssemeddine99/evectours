@@ -100,4 +100,31 @@ class TwilioSmsService
             $username
         ));
     }
+
+    // -------------------------------------------------------------------------
+    // Waitlist helper
+    // -------------------------------------------------------------------------
+
+    public function sendWaitlistSpotAvailable(string $phone, string $username, string $voyageTitle): bool
+    {
+        return $this->send($phone, sprintf(
+            'Good news, %s! A spot just opened up for "%s". Log in now to secure your reservation before it\'s gone! – TravelAgency',
+            $username,
+            $voyageTitle
+        ));
+    }
+
+    // -------------------------------------------------------------------------
+    // Loyalty points helper
+    // -------------------------------------------------------------------------
+
+    public function sendLoyaltyPointsEarned(string $phone, string $username, int $points, int $balance): bool
+    {
+        return $this->send($phone, sprintf(
+            'Hi %s! You earned %d loyalty points for your reservation. Total balance: %d pts. Reach 100 pts for a 5%% discount! – TravelAgency',
+            $username,
+            $points,
+            $balance
+        ));
+    }
 }

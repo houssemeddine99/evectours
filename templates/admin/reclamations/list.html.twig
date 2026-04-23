@@ -4,65 +4,70 @@
 
 {% block body %}
     <h1>All Reclamations (Admin)</h1>
+
+    {# Email filter is always visible, even when results are empty #}
+    <form method="get" action="{{ path('admin_reclamations') }}" style="margin-bottom:20px;display:flex;gap:8px;align-items:center;">
+        <input type="email" name="email" value="{{ currentEmail|default('') }}" placeholder="Filter by User Email..." class="form-control" style="max-width:300px;">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if currentEmail %}
+            <a href="{{ path('admin_reclamations') }}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+
     {% if reclamations|length > 0 %}
-    <form method="get" action="{{ path('admin_reclamations') }}" style="margin-bottom: 20px;">
-    <input type="email" name="email" value="{{ currentEmail }}" placeholder="Filter by User Email...">
-    <button type="submit">Search</button>
-    {% if currentEmail %}
-        <a href="{{ path('admin_reclamations') }}">Clear</a>
-    {% endif %}
-</form>
         <div class="admin-table-container">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Reservation ID</th>
-                    <th>User ID</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
-                    <th>Admin Response</th>
-                    <th>Response Date</th>
-                    <th>Resolution Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rec in reclamations %}
+            <table class="admin-table">
+                <thead>
                     <tr>
-                        <td>{{ rec.id }}</td>
-                        <td>{{ rec.reservationId }}</td>
-                        <td>{{ rec.userId }}</td>
-                        <td><a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
-                        <td>{{ rec.description }}</td>
-                        <td>{{ rec.status }}</td>
-                        <td>{{ rec.priority }}</td>
-                        <td>{{ rec.createdAt ? rec.createdAt|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.updatedAt ? rec.updatedAt|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.adminResponse|default('') }}</td>
-                        <td>{{ rec.responseDate ? rec.responseDate|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.resolutionDate ? rec.resolutionDate|date('Y-m-d H:i') : '' }}</td>
+                        <th>ID</th>
+                        <th>Reservation ID</th>
+                        <th>User ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Created At</th>
+                        <th>Response</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for rec in reclamations %}
+                        <tr>
+                            <td>{{ rec.id }}</td>
+                            <td>{{ rec.reservationId }}</td>
+                            <td>{{ rec.userId }}</td>
+                            <td><a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
+                            <td>
+                                {% set s = rec.status %}
+                                <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
+                                    background:{% if s == 'OPEN' %}#fff3cd;color:#856404{% elseif s == 'IN_PROGRESS' %}#cce5ff;color:#004085{% elseif s == 'RESOLVED' %}#d4edda;color:#155724{% else %}#e2e3e5;color:#383d41{% endif %};">
+                                    {{ s }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set p = rec.priority %}
+                                <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
+                                    background:{% if p == 'URGENT' %}#f8d7da;color:#721c24{% elseif p == 'HIGH' %}#fde8d8;color:#8a3a00{% elseif p == 'LOW' %}#e2e3e5;color:#383d41{% else %}#d4edda;color:#155724{% endif %};">
+                                    {{ p }}
+                                </span>
+                            </td>
+                            <td>{{ rec.createdAt ? rec.createdAt|date('Y-m-d H:i') : '—' }}</td>
+                            <td>{{ rec.adminResponse ? '✓ Responded' : '—' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {# 2. Pagination Controls #}
-<div class="pagination">
-    {% if currentPage > 1 %}
-        <a href="{{ path('admin_reclamations', {page: currentPage - 1, email: currentEmail, limit: limit}) }}">Previous</a>
-    {% endif %}
 
-    <span>Page {{ currentPage }} of {{ totalPages }}</span>
-
-    {% if currentPage < totalPages %}
-        <a href="{{ path('admin_reclamations', {page: currentPage + 1, email: currentEmail, limit: limit}) }}">Next</a>
-    {% endif %}
-</div>
+        <div class="pagination" style="margin-top:16px;display:flex;gap:8px;align-items:center;">
+            {% if currentPage > 1 %}
+                <a href="{{ path('admin_reclamations', {page: currentPage - 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary">← Previous</a>
+            {% endif %}
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            {% if currentPage < totalPages %}
+                <a href="{{ path('admin_reclamations', {page: currentPage + 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary">Next →</a>
+            {% endif %}
+        </div>
     {% else %}
-        <p>No reclamations found.</p>
+        <p>No reclamations found{% if currentEmail %} for "{{ currentEmail }}"{% endif %}.</p>
     {% endif %}
 {% endblock %}

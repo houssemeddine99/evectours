@@ -157,16 +157,27 @@ class OfferService
                 'start_date' => $offer->getStartDate()?->format('Y-m-d'),
                 'end_date' => $offer->getEndDate()?->format('Y-m-d'),
                 'is_active' => $offer->isActive(),
-                'voyage_id' => $voyage->getId(),
+                'voyage_id'    => $voyage->getId(),
+                'voyage_slug'  => $voyage->getSlug(),
                 'voyage_title' => $voyage->getTitle(),
-                'destination' => $voyage->getDestination(),
+                'destination'  => $voyage->getDestination(),
             ];
 
             if ($includePriceAndImage) {
                 $data['price'] = (float) ($voyage->getPrice() ?? 0);
-                
                 $data['image_url'] = ($this->voyageService->extractImageUrls($voyage->getId())[0] ?? null) ?? self::DEFAULT_IMAGE;
             }
+
+            // Days until expiry
+            $endDate = $offer->getEndDate();
+            $data['days_until_expiry'] = $endDate
+                ? max(-1, (int) ceil(($endDate->getTimestamp() - time()) / 86400))
+                : 999;
+
+            // Flash sale
+            $data['flash_sale_active']    = $offer->isFlashSaleActive();
+            $data['flash_sale_ends_at']   = $offer->isFlashSaleActive() ? $offer->getFlashSaleEndsAt()?->format('c') : null;
+            $data['flash_sale_discount']  = $offer->isFlashSaleActive() ? (float) ($offer->getFlashSaleDiscount() ?? 0) : 0;
 
             $normalized[] = $data;
         }
