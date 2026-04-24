@@ -3,16 +3,21 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class WeatherService
 {
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
+        #[Target('cache.api_external')]
+        private readonly CacheInterface $cache,
     ) {}
 
     /**
-     * Returns current weather for a city.
+     * Returns current weather for a city, cached for 30 minutes.
      * @return array{temp: float, description: string, icon: string, city: string}|null
      */
     public function getCurrentWeather(string $city): ?array
@@ -21,6 +26,14 @@ class WeatherService
             return null;
         }
 
+        return $this->cache->get('weather_' . md5($city), function (ItemInterface $item) use ($city): ?array {
+            $item->expiresAfter(1800);
+            return $this->doFetchWeather($city);
+        });
+    }
+
+    private function doFetchWeather(string $city): ?array
+    {
         $url = 'https://api.openweathermap.org/data/2.5/weather?q='
             . urlencode($city)
             . '&appid=' . $this->apiKey

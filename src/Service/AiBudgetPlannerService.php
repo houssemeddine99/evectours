@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class AiBudgetPlannerService
 {
@@ -12,6 +15,8 @@ class AiBudgetPlannerService
         private readonly string $apiKey,
         private readonly string $model,
         private readonly bool $enabled,
+        #[Target('cache.ai_responses')]
+        private readonly CacheInterface $cache,
     ) {}
 
     /**
@@ -25,52 +30,60 @@ class AiBudgetPlannerService
             return null;
         }
 
-        $voyageList = implode("\n", array_map(fn($v) => sprintf(
-            'ID %d: %s → %s | %s TND/person | %s to %s',
-            $v['id'], $v['title'], $v['destination'],
-            number_format((float)($v['price'] ?? 0), 0),
-            $v['start_date'] ?? 'TBD', $v['end_date'] ?? 'TBD'
-        ), array_slice($voyages, 0, 20)));
+        $voyageIds = implode('|', array_column(array_slice($voyages, 0, 20), 'id'));
+        $offerIds  = implode('|', array_column($offers, 'id'));
+        $cacheKey  = 'ai_budget_' . md5($userInput . $voyageIds . $offerIds);
 
-        $offerList = empty($offers) ? 'No active offers.' : implode("\n", array_map(fn($o) => sprintf(
-            'Offer ID %d: %s — %s%% off voyage "%s" (valid until %s)',
-            $o['id'], $o['title'], $o['discount_percentage'], $o['voyage_title'], $o['end_date'] ?? 'TBD'
-        ), $offers));
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($userInput, $voyages, $offers): ?array {
+            $item->expiresAfter(3600); // 1 hour
 
-        $payload = [
-            'model'    => $this->model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a smart travel planner. A user describes their travel budget and preferences. You recommend the best 1-3 matching voyages from the list, apply available offers if they fit, and calculate the estimated total. Reply in this JSON structure: {"recommendations": [{"voyage_id": X, "offer_id": null_or_Y, "estimated_price": Z, "reason": "..."}], "explanation": "..."}. Only use voyage IDs and offer IDs from the provided lists. No other text outside the JSON.'],
-                ['role' => 'user', 'content' => "User request: {$userInput}\n\nAvailable voyages:\n{$voyageList}\n\nActive offers:\n{$offerList}"],
-            ],
-            'temperature' => 0.5,
-            'max_tokens'  => 600,
-        ];
+            $voyageList = implode("\n", array_map(fn($v) => sprintf(
+                'ID %d: %s → %s | %s TND/person | %s to %s',
+                $v['id'], $v['title'], $v['destination'],
+                number_format((float)($v['price'] ?? 0), 0),
+                $v['start_date'] ?? 'TBD', $v['end_date'] ?? 'TBD'
+            ), array_slice($voyages, 0, 20)));
 
-        $body = json_encode($payload);
-        if (!is_string($body)) {
-            return null;
-        }
+            $offerList = empty($offers) ? 'No active offers.' : implode("\n", array_map(fn($o) => sprintf(
+                'Offer ID %d: %s — %s%% off voyage "%s" (valid until %s)',
+                $o['id'], $o['title'], $o['discount_percentage'], $o['voyage_title'], $o['end_date'] ?? 'TBD'
+            ), $offers));
 
-        [$raw, $code] = $this->sendRequest($body);
-        if (!is_string($raw) || $code >= 400) {
-            $this->logger->warning('AiBudgetPlannerService: API failed', ['code' => $code]);
-            return null;
-        }
+            $payload = [
+                'model'    => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a smart travel planner. A user describes their travel budget and preferences. You recommend the best 1-3 matching voyages from the list, apply available offers if they fit, and calculate the estimated total. Reply in this JSON structure: {"recommendations": [{"voyage_id": X, "offer_id": null_or_Y, "estimated_price": Z, "reason": "..."}], "explanation": "..."}. Only use voyage IDs and offer IDs from the provided lists. No other text outside the JSON.'],
+                    ['role' => 'user', 'content' => "User request: {$userInput}\n\nAvailable voyages:\n{$voyageList}\n\nActive offers:\n{$offerList}"],
+                ],
+                'temperature' => 0.5,
+                'max_tokens'  => 600,
+            ];
 
-        $decoded = json_decode($raw, true);
-        $content = $decoded['choices'][0]['message']['content'] ?? '';
-        if (!is_string($content) || $content === '') {
-            return null;
-        }
+            $body = json_encode($payload);
+            if (!is_string($body)) {
+                return null;
+            }
 
-        preg_match('/\{.*\}/s', $content, $m);
-        if (empty($m[0])) {
-            return null;
-        }
+            [$raw, $code] = $this->sendRequest($body);
+            if (!is_string($raw) || $code >= 400) {
+                $this->logger->warning('AiBudgetPlannerService: API failed', ['code' => $code]);
+                return null;
+            }
 
-        $result = json_decode($m[0], true);
-        return is_array($result) ? $result : null;
+            $decoded = json_decode($raw, true);
+            $content = $decoded['choices'][0]['message']['content'] ?? '';
+            if (!is_string($content) || $content === '') {
+                return null;
+            }
+
+            preg_match('/\{.*\}/s', $content, $m);
+            if (empty($m[0])) {
+                return null;
+            }
+
+            $result = json_decode($m[0], true);
+            return is_array($result) ? $result : null;
+        });
     }
 
     /** @return array{0: ?string, 1: int} */

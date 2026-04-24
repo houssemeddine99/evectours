@@ -4,10 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Reservation;
 use App\Repository\UserRepository;
+use App\Message\SendSmsMessage;
 use App\Service\StripePaymentService;
 use App\Service\StripeRefundService;
-use App\Service\TwilioSmsService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +21,7 @@ class AdminRefundController extends AbstractController
         private readonly AdminController $adminController,
         private readonly EntityManagerInterface $entityManager,
         private readonly UserRepository $userRepository,
-        private readonly TwilioSmsService $twilioSmsService,
+        private readonly MessageBusInterface $bus,
         private readonly StripeRefundService $stripeRefundService,
         private readonly StripePaymentService $stripePaymentService,
     ) {}
@@ -88,7 +89,16 @@ class AdminRefundController extends AbstractController
             $previousStatus  = strtoupper((string) $refundRequest->getStatus());
             $normalizedStatus = strtoupper(trim((string) $status));
 
+            // Handle partial approved amount
+            $approvedAmountRaw = trim((string) $request->request->get('approved_amount', ''));
+            if ($approvedAmountRaw !== '' && is_numeric($approvedAmountRaw)) {
+                $approvedAmount = number_format((float) $approvedAmountRaw, 2, '.', '');
+                $refundRequest->setApprovedAmount($approvedAmount);
+            }
+
             if ($normalizedStatus === 'APPROVED' && $normalizedStatus !== $previousStatus) {
+
+                $effectiveAmount = $refundRequest->getEffectiveAmount();
 
                 // 1. Try payment reference from the form field
                 $paymentReference = trim((string) $request->request->get('payment_reference', ''));
@@ -102,7 +112,7 @@ class AdminRefundController extends AbstractController
 
                 // 3. No reference at all — auto-create a Stripe test payment so we have something to refund
                 if ($paymentReference === '') {
-                    $autoResult = $this->stripePaymentService->createAndConfirmTestPayment((string) $refundRequest->getAmount());
+                    $autoResult = $this->stripePaymentService->createAndConfirmTestPayment($effectiveAmount);
                     if ($autoResult['success']) {
                         $paymentReference = $autoResult['reference'] ?? '';
                         if ($paymentReference !== '' && $reservation !== null) {
@@ -113,7 +123,7 @@ class AdminRefundController extends AbstractController
 
                 $stripeResult = $this->stripeRefundService->createRefund(
                     $paymentReference,
-                    (string) $refundRequest->getAmount()
+                    $effectiveAmount
                 );
 
                 if (!$stripeResult['success']) {
@@ -137,11 +147,10 @@ class AdminRefundController extends AbstractController
                 $username  = $requester?->getUsername() ?? 'Customer';
 
                 if ($phone) {
-                    if ($normalizedStatus === 'APPROVED') {
-                        $this->twilioSmsService->sendRefundApproved($phone, $username, (float) $refundRequest->getAmount());
-                    } else {
-                        $this->twilioSmsService->sendRefundRejected($phone, $username);
-                    }
+                    $body = $normalizedStatus === 'APPROVED'
+                        ? sprintf('Hello %s, your refund of %.2f TND has been APPROVED. It will be processed in 3-5 days. – TravelAgency', $username, (float) $refundRequest->getAmount())
+                        : sprintf('Hello %s, your refund request has been REJECTED. Contact support for more info. – TravelAgency', $username);
+                    $this->bus->dispatch(new SendSmsMessage($phone, $body));
                 }
             }
 

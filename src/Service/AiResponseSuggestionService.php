@@ -4,6 +4,9 @@ namespace App\Service;
 
 use App\Entity\Reclamation;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class AiResponseSuggestionService
 {
@@ -13,6 +16,8 @@ class AiResponseSuggestionService
         private readonly string $apiKey,
         private readonly string $model,
         private readonly bool $enabled,
+        #[Target('cache.ai_responses')]
+        private readonly CacheInterface $cache,
     ) {
     }
 
@@ -22,17 +27,37 @@ class AiResponseSuggestionService
             return null;
         }
 
+        $cacheKey = 'ai_suggest_' . $reclamation->getId() . '_' . $reclamation->getStatus() . '_' . $reclamation->getPriority();
+
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($reclamation): ?string {
+            $item->expiresAfter(86400); // 24 hours — same reclamation state = same suggestion
+
         $payload = [
             'model' => $this->model,
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => 'You are a customer support assistant. Write a concise, polite admin response for a complaint. Do not invent facts. Keep it under 120 words.',
+                    'content' => <<<PROMPT
+You are a senior customer support agent for Travagir, a travel agency.
+Your job is to write a personalised, ready-to-send admin reply to a customer complaint.
+
+Rules:
+- Read the title and description carefully and address the SPECIFIC issue raised.
+- Adapt your tone to the priority: URGENT/HIGH → more urgent, empathetic, and action-oriented. LOW/NORMAL → calm and reassuring.
+- If the complaint is about a REFUND → acknowledge the cancellation, confirm the refund process is being initiated, give an estimated timeframe (3-5 business days).
+- If the complaint is about a DELAY or SCHEDULE → apologise, explain general causes, offer an update timeline.
+- If the complaint is about SERVICE QUALITY (hotel, guide, transport) → apologise specifically, mention an internal review will be conducted.
+- If the complaint is about BOOKING/TECHNICAL issues → reassure, mention the technical team will look into it.
+- If none of the above match, write a warm, specific reply that directly references the user's words.
+- Start with "Dear valued customer," — never use placeholders like [Name].
+- Do NOT invent specific dates, names, order numbers, or amounts not given to you.
+- Keep it between 60 and 130 words. No bullet points. Plain paragraph only.
+PROMPT,
                 ],
                 [
                     'role' => 'user',
                     'content' => sprintf(
-                        "Reclamation title: %s\nDescription: %s\nPriority: %s\nStatus: %s\nProvide one ready-to-send admin response.",
+                        "Title: %s\nDescription: %s\nPriority: %s\nStatus: %s",
                         $reclamation->getTitle(),
                         $reclamation->getDescription(),
                         $reclamation->getPriority(),
@@ -40,8 +65,8 @@ class AiResponseSuggestionService
                     ),
                 ],
             ],
-            'temperature' => 0.4,
-            'max_tokens' => 220,
+            'temperature' => 0.7,
+            'max_tokens' => 260,
         ];
 
         $requestBody = json_encode($payload, JSON_UNESCAPED_SLASHES);
@@ -67,6 +92,7 @@ class AiResponseSuggestionService
         }
 
         return trim($content);
+        }); // end cache->get()
     }
 
     /**

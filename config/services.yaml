@@ -18,7 +18,7 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
-  App\Service\Analytics\NvidiaAIClient:
+    App\Service\Analytics\NvidiaAIClient:
         arguments:
             $apiKeyNvidia: '%env(NVIDIA_API_KEY)%'
     App\Service\TwilioSmsService:
@@ -73,6 +73,10 @@ services:
     App\Service\WeatherService:
         arguments:
             $apiKey: '%env(string:OPENWEATHERMAP_API_KEY)%'
+
+    App\Service\MailerService:
+        arguments:
+            $apiKey: '%env(RESEND_API_KEY)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

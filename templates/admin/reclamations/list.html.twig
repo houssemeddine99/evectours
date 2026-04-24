@@ -1,73 +1,413 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Admin – Reclamations{% endblock %}
 
+{% block stylesheets %}
+<style>
+/* ── Page ──────────────────────────────────────────────────── */
+.ar-page {
+    padding: 32px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.ar-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-dark);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.ar-header h1 {
+    margin: 0 0 4px;
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.ar-header .subtitle { font-size: 0.85em; color: var(--text-muted); margin: 0; }
+
+/* ── Stat Cards ────────────────────────────────────────────── */
+.ar-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.ar-stat {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-left: 4px solid transparent;
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.ar-stat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.ar-stat-open     { border-left-color: #febd69; }
+.ar-stat-urgent   { border-left-color: #fca5a5; }
+.ar-stat-resolved { border-left-color: #86efac; }
+.ar-stat-total    { border-left-color: rgba(148,163,184,0.5); }
+.ar-stat-value { font-size: 1.7rem; font-weight: 800; color: var(--text-primary); line-height: 1; }
+.ar-stat-open     .ar-stat-value { color: #febd69; }
+.ar-stat-urgent   .ar-stat-value { color: #fca5a5; }
+.ar-stat-resolved .ar-stat-value { color: #86efac; }
+.ar-stat-label { font-size: 0.72em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+
+/* ── Filter Bar ────────────────────────────────────────────── */
+.ar-filter {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.ar-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    max-width: 340px;
+    background: #0f1722;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color .2s;
+}
+.ar-search-wrap:focus-within { border-color: rgba(255,153,0,0.5); box-shadow: 0 0 0 3px rgba(255,153,0,0.1); }
+.ar-search-icon {
+    padding: 0 10px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.ar-filter input.form-control {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 9px 12px 9px 0;
+    font-size: 0.88em;
+    outline: none;
+}
+.ar-filter input.form-control::placeholder { color: var(--text-muted); }
+.ar-filter-actions { display: flex; gap: 8px; align-items: center; }
+.ar-results-label { margin-left: auto; font-size: 0.83em; color: var(--text-muted); white-space: nowrap; }
+.ar-results-label strong { color: var(--text-primary); }
+
+/* ── Table ─────────────────────────────────────────────────── */
+.ar-table-wrap {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.ar-table { width: 100%; border-collapse: collapse; min-width: 780px; }
+.ar-table thead th {
+    background: var(--amazon-navy);
+    color: var(--text-muted);
+    font-size: 0.73em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 13px 16px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-dark);
+}
+.ar-table tbody td {
+    padding: 13px 16px;
+    font-size: 0.86em;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(47,59,77,0.5);
+    vertical-align: middle;
+}
+.ar-table tbody tr:last-child td { border-bottom: none; }
+.ar-table tbody tr:hover td { background: rgba(255,153,0,0.04); }
+
+/* Row status accent */
+.tr-s-open td:first-child        { border-left: 3px solid rgba(255,153,0,0.6); }
+.tr-s-in-progress td:first-child { border-left: 3px solid rgba(68,121,207,0.6); }
+.tr-s-resolved td:first-child    { border-left: 3px solid rgba(22,163,74,0.6); }
+.tr-s-closed td:first-child      { border-left: 3px solid rgba(100,116,139,0.3); opacity: 0.7; }
+
+.td-id      { color: var(--amazon-orange) !important; font-family: monospace; font-weight: 700; font-size: 0.85em !important; white-space: nowrap; }
+.td-primary { color: var(--text-primary) !important; }
+.td-nowrap  { white-space: nowrap; }
+
+.recl-title-link {
+    max-width: 220px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color .2s;
+}
+.recl-title-link:hover { color: var(--amazon-orange); }
+
+/* Response column indicators */
+.resp-done    { display:inline-flex;align-items:center;gap:4px;font-size:0.78em;font-weight:700;color:#22c55e; }
+.resp-pending { display:inline-flex;align-items:center;gap:4px;font-size:0.78em;font-weight:600;color:var(--text-muted); }
+
+/* ── Badge Pills ───────────────────────────────────────────── */
+.badge-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.71em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid;
+    white-space: nowrap;
+}
+/* Status */
+.badge-s-open        { background:rgba(255,153,0,0.15);  color:#febd69;  border-color:rgba(255,153,0,0.3); }
+.badge-s-in-progress { background:rgba(68,121,207,0.15); color:#93c5fd;  border-color:rgba(68,121,207,0.3); }
+.badge-s-resolved    { background:rgba(22,163,74,0.15);  color:#86efac;  border-color:rgba(22,163,74,0.3); }
+.badge-s-closed      { background:rgba(100,116,139,0.15);color:#94a3b8;  border-color:rgba(100,116,139,0.3); }
+/* Priority */
+.badge-p-urgent { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
+.badge-p-high   { background:rgba(234,88,12,0.15);  color:#fdba74; border-color:rgba(234,88,12,0.3); }
+.badge-p-medium { background:rgba(68,121,207,0.15); color:#93c5fd; border-color:rgba(68,121,207,0.3); }
+.badge-p-low    { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
+
+/* ── SLA Chips ─────────────────────────────────────────────── */
+.sla-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.73em;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+}
+.sla-ok      { background:rgba(22,163,74,0.12);   color:#86efac; border-color:rgba(22,163,74,0.3); }
+.sla-warn    { background:rgba(255,153,0,0.12);   color:#febd69; border-color:rgba(255,153,0,0.3); }
+.sla-overdue { background:rgba(220,38,38,0.15);   color:#fca5a5; border-color:rgba(220,38,38,0.4); animation: sla-pulse 1.8s ease-in-out infinite; }
+.sla-none    { background:rgba(100,116,139,0.1);  color:#94a3b8; border-color:rgba(100,116,139,0.2); }
+@keyframes sla-pulse {
+    0%,100% { box-shadow: none; }
+    50%     { box-shadow: 0 0 8px rgba(220,38,38,0.5); }
+}
+
+/* ── Action Button ─────────────────────────────────────────── */
+.ar-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    border-radius: 8px;
+    font-size: 0.78em;
+    font-weight: 700;
+    background: rgba(255,153,0,0.12);
+    color: var(--amazon-orange);
+    border: 1px solid rgba(255,153,0,0.25);
+    text-decoration: none;
+    transition: background .18s, box-shadow .18s, transform .15s;
+    white-space: nowrap;
+}
+.ar-action-btn:hover {
+    background: var(--amazon-orange);
+    color: #000;
+    box-shadow: 0 2px 10px rgba(255,153,0,0.3);
+    transform: translateY(-1px);
+}
+
+/* ── Pagination ────────────────────────────────────────────── */
+.ar-pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+.ar-page-info { color: var(--text-primary); font-weight: 600; }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.ar-empty {
+    text-align: center;
+    padding: 72px 20px;
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    color: var(--text-muted);
+}
+.ar-empty-icon { font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 14px; }
+.ar-empty h3 { color: var(--text-primary); font-weight: 700; margin: 0 0 6px; font-size: 1.1rem; }
+.ar-empty p  { font-size: 0.87em; margin: 0; }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .ar-header { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 768px) {
+    .ar-page { padding: 20px 14px; }
+    .ar-filter { flex-direction: column; align-items: stretch; }
+    .ar-search-wrap { max-width: 100%; }
+    .ar-results-label { margin-left: 0; }
+}
+</style>
+{% endblock %}
+
 {% block body %}
-    <h1>All Reclamations (Admin)</h1>
+<div class="ar-page">
 
-    {# Email filter is always visible, even when results are empty #}
-    <form method="get" action="{{ path('admin_reclamations') }}" style="margin-bottom:20px;display:flex;gap:8px;align-items:center;">
-        <input type="email" name="email" value="{{ currentEmail|default('') }}" placeholder="Filter by User Email..." class="form-control" style="max-width:300px;">
-        <button type="submit" class="btn btn-primary">Search</button>
+<div class="ar-header">
+    <div>
+        <h1>Reclamations</h1>
+        <p class="subtitle">All customer complaints — review and respond</p>
+    </div>
+    <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary" style="font-size:0.86em;">← Dashboard</a>
+</div>
+
+{% if reclamations|length > 0 %}
+{% set total      = reclamations|length %}
+{% set openCnt    = reclamations|filter(r => r.status == 'OPEN')|length %}
+{% set urgentCnt  = reclamations|filter(r => r.priority == 'URGENT')|length %}
+{% set resolvedCnt= reclamations|filter(r => r.status == 'RESOLVED')|length %}
+<div class="ar-stats">
+    <div class="ar-stat ar-stat-open">
+        <span class="ar-stat-value">{{ openCnt }}</span>
+        <span class="ar-stat-label">Open</span>
+    </div>
+    <div class="ar-stat ar-stat-urgent">
+        <span class="ar-stat-value">{{ urgentCnt }}</span>
+        <span class="ar-stat-label">Urgent</span>
+    </div>
+    <div class="ar-stat ar-stat-resolved">
+        <span class="ar-stat-value">{{ resolvedCnt }}</span>
+        <span class="ar-stat-label">Resolved</span>
+    </div>
+    <div class="ar-stat ar-stat-total">
+        <span class="ar-stat-value">{{ total }}</span>
+        <span class="ar-stat-label">Total</span>
+    </div>
+</div>
+{% endif %}
+
+<form method="get" action="{{ path('admin_reclamations') }}" class="ar-filter">
+    <div class="ar-search-wrap">
+        <span class="ar-search-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="email" name="email" value="{{ currentEmail|default('') }}" placeholder="Filter by user email…" class="form-control">
+    </div>
+    <div class="ar-filter-actions">
+        <button type="submit" class="btn btn-primary" style="font-size:0.86em;padding:8px 16px;">Search</button>
         {% if currentEmail %}
-            <a href="{{ path('admin_reclamations') }}" class="btn btn-secondary">Clear</a>
+            <a href="{{ path('admin_reclamations') }}" class="btn btn-secondary" style="font-size:0.86em;padding:8px 16px;">Clear</a>
         {% endif %}
-    </form>
-
+    </div>
     {% if reclamations|length > 0 %}
-        <div class="admin-table-container">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Reservation ID</th>
-                        <th>User ID</th>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Created At</th>
-                        <th>Response</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rec in reclamations %}
-                        <tr>
-                            <td>{{ rec.id }}</td>
-                            <td>{{ rec.reservationId }}</td>
-                            <td>{{ rec.userId }}</td>
-                            <td><a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
-                            <td>
-                                {% set s = rec.status %}
-                                <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
-                                    background:{% if s == 'OPEN' %}#fff3cd;color:#856404{% elseif s == 'IN_PROGRESS' %}#cce5ff;color:#004085{% elseif s == 'RESOLVED' %}#d4edda;color:#155724{% else %}#e2e3e5;color:#383d41{% endif %};">
-                                    {{ s }}
-                                </span>
-                            </td>
-                            <td>
-                                {% set p = rec.priority %}
-                                <span style="padding:2px 8px;border-radius:10px;font-size:0.82em;font-weight:600;
-                                    background:{% if p == 'URGENT' %}#f8d7da;color:#721c24{% elseif p == 'HIGH' %}#fde8d8;color:#8a3a00{% elseif p == 'LOW' %}#e2e3e5;color:#383d41{% else %}#d4edda;color:#155724{% endif %};">
-                                    {{ p }}
-                                </span>
-                            </td>
-                            <td>{{ rec.createdAt ? rec.createdAt|date('Y-m-d H:i') : '—' }}</td>
-                            <td>{{ rec.adminResponse ? '✓ Responded' : '—' }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="pagination" style="margin-top:16px;display:flex;gap:8px;align-items:center;">
-            {% if currentPage > 1 %}
-                <a href="{{ path('admin_reclamations', {page: currentPage - 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary">← Previous</a>
-            {% endif %}
-            <span>Page {{ currentPage }} of {{ totalPages }}</span>
-            {% if currentPage < totalPages %}
-                <a href="{{ path('admin_reclamations', {page: currentPage + 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary">Next →</a>
-            {% endif %}
-        </div>
-    {% else %}
-        <p>No reclamations found{% if currentEmail %} for "{{ currentEmail }}"{% endif %}.</p>
+    <span class="ar-results-label"><strong>{{ reclamations|length }}</strong> result{{ reclamations|length != 1 ? 's' : '' }}</span>
     {% endif %}
+</form>
+
+{% if reclamations|length == 0 %}
+    <div class="ar-empty">
+        <span class="ar-empty-icon">📋</span>
+        <h3>No reclamations found{% if currentEmail %} for "{{ currentEmail }}"{% endif %}</h3>
+        <p>Try a different email or clear the filter.</p>
+    </div>
+{% else %}
+    <div class="ar-table-wrap" style="overflow-x:auto;">
+        <table class="ar-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>SLA</th>
+                    <th>Filed</th>
+                    <th>Response</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in reclamations %}
+                <tr class="tr-s-{{ rec.status|lower|replace({'_': '-'}) }}">
+                    <td class="td-id">#{{ rec.id }}</td>
+                    <td class="td-primary">User #{{ rec.userId }}</td>
+                    <td>
+                        <a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}" class="recl-title-link" title="{{ rec.title }}">
+                            {{ rec.title }}
+                        </a>
+                    </td>
+                    <td><span class="badge-pill badge-s-{{ rec.status|lower|replace({'_': '-'}) }}">{{ rec.status }}</span></td>
+                    <td><span class="badge-pill badge-p-{{ rec.priority|lower }}">{{ rec.priority }}</span></td>
+                    <td>
+                        {% if rec.status in ['RESOLVED','CLOSED'] %}
+                            <span class="sla-chip sla-none">Done</span>
+                        {% elseif rec.responseDeadline is null %}
+                            <span class="sla-chip sla-none">—</span>
+                        {% else %}
+                            {% set hours = rec.slaHoursRemaining %}
+                            {% if hours < 0 %}
+                                <span class="sla-chip sla-overdue">⚠ {{ (hours * -1)|round(0,'ceil') }}h overdue</span>
+                            {% elseif hours < 6 %}
+                                <span class="sla-chip sla-warn">{{ hours|round(1) }}h left</span>
+                            {% else %}
+                                <span class="sla-chip sla-ok">{{ hours|round(0) }}h left</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="td-nowrap">{{ rec.createdAt ? rec.createdAt|date('M d, Y') : '—' }}</td>
+                    <td>
+                        {% if rec.adminResponse %}
+                            <span class="resp-done">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                Responded
+                            </span>
+                        {% else %}
+                            <span class="resp-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}" class="ar-action-btn">
+                            Review
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="ar-pagination">
+        {% if currentPage > 1 %}
+            <a href="{{ path('admin_reclamations', {page: currentPage - 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary" style="font-size:0.82em;padding:6px 14px;">← Prev</a>
+        {% endif %}
+        <span class="ar-page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        {% if currentPage < totalPages %}
+            <a href="{{ path('admin_reclamations', {page: currentPage + 1, email: currentEmail, limit: limit}) }}" class="btn btn-secondary" style="font-size:0.82em;padding:6px 14px;">Next →</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+</div>
 {% endblock %}

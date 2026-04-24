@@ -19,7 +19,7 @@ class MailerService
             'from'    => 'Travigir Bot <onboarding@resend.dev>',
             'to'      => [$mailAddress],
             'subject' => 'Message from Travigir Bot',
-            'html'    => '<p>Hello! This is a message from Travigir bot.</p>',
+            'html'    => '<p>Hello! you successfully registered in a voyage.</p>',
         ]);
     }
 }

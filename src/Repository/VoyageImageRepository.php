@@ -43,7 +43,34 @@ private function getDefaultImages(): array
     $defaultImage->setCloudinaryPublicId('default');
     $defaultImage->setCreatedAt(new \DateTime());
     $defaultImage->setUpdatedAt(new \DateTime());
-    
+
     return [$defaultImage];
 }
+
+    /**
+     * Batch-load images for multiple voyages in a single query.
+     *
+     * @param int[] $ids
+     * @return array<int, VoyageImage[]>  voyageId => VoyageImage[]
+     */
+    public function findImagesByVoyageIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        /** @var VoyageImage[] $images */
+        $images = $this->createQueryBuilder('vi')
+            ->where('vi.voyageId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+
+        $map = [];
+        foreach ($images as $img) {
+            $map[$img->getVoyageId()][] = $img;
+        }
+
+        return $map;
+    }
 }

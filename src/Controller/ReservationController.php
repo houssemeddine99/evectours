@@ -8,14 +8,17 @@ use App\Service\CarbonFootprintService;
 use App\Service\LoyaltyPointsService;
 use App\Service\OfferService;
 use App\Service\ReservationService;
-use App\Service\TwilioSmsService;
+use App\Message\SendSmsMessage;
 use App\Service\ValidationService;
+use Symfony\Component\Messenger\MessageBusInterface;
+use App\Service\MailerService;
 use App\Service\VoyageService;
 use App\Service\WaitlistService;
 use App\Service\WeatherService;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -34,8 +37,19 @@ class ReservationController extends AbstractController
         private readonly AiCancellationService $aiCancellationService,
         private readonly LoyaltyPointsService $loyaltyPointsService,
         private readonly UserRepository $userRepository,
-        private readonly TwilioSmsService $twilioSmsService,
+        private readonly MessageBusInterface $bus,
+        private readonly MailerService $mailerService,
     ) {}
+
+    #[Route('/api/weather', name: 'api_weather', methods: ['GET'])]
+    public function apiWeather(Request $request): JsonResponse
+    {
+        $city = trim((string) $request->query->get('city', ''));
+        if ($city === '') {
+            return $this->json(null);
+        }
+        return $this->json($this->weatherService->getCurrentWeather($city));
+    }
 
     #[Route('/voyages/{id}/reserve', name: 'travel_voyage_reserve', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
     public function reserveVoyage(Request $request, int $id): Response
@@ -96,10 +110,19 @@ class ReservationController extends AbstractController
                 );
 
                 if ($created === null) {
-                    throw new \Exception('Creation failed sory');
+                    throw new \Exception('Creation failed sorry');
                 }
 
                 $this->addFlash('success', 'Reservation created successfully!' . ($loyaltyDiscount > 0 ? ' 5% loyalty discount applied.' : ''));
+
+                try {
+                    $userEmail = $user['email'] ?? null;
+                    if ($userEmail) {
+                        $this->mailerService->sendMailTo($userEmail);
+                    }
+                } catch (\Throwable $e) {
+                    // don't block the user if email fails
+                }
             } catch (\Throwable $e) {
                 $this->addFlash('error', 'Error: ' . $e->getMessage());
                 $this->addFlash('error', $e->getMessage());
@@ -364,11 +387,14 @@ class ReservationController extends AbstractController
                     if ($nextEntry) {
                         $waitlistUser = $this->userRepository->find($nextEntry->getUserId());
                         if ($waitlistUser?->getTel()) {
-                            $this->twilioSmsService->sendWaitlistSpotAvailable(
+                            $this->bus->dispatch(new SendSmsMessage(
                                 $waitlistUser->getTel(),
-                                $waitlistUser->getUsername() ?? 'Traveller',
-                                $reservation['voyage_title'] ?? 'your trip'
-                            );
+                                sprintf(
+                                    'Good news, %s! A spot just opened up for "%s". Log in now to secure your reservation before it\'s gone! – TravelAgency',
+                                    $waitlistUser->getUsername() ?? 'Traveller',
+                                    $reservation['voyage_title'] ?? 'your trip'
+                                )
+                            ));
                         }
                         $this->waitlistService->markNotified($nextEntry->getId());
                     }
@@ -402,12 +428,6 @@ class ReservationController extends AbstractController
             }
         }
 
-        // Weather for confirmed reservations
-        $weather = null;
-        if ($reservation['status'] === 'CONFIRMED' && !empty($reservation['destination'])) {
-            $weather = $this->weatherService->getCurrentWeather($reservation['destination']);
-        }
-
         // Carbon footprint
         $carbon = $this->carbonService->calculate(
             $reservation['destination'] ?? '',
@@ -420,7 +440,6 @@ class ReservationController extends AbstractController
             'error'         => $error,
             'success'       => $success,
             'is_admin_view' => $isAdmin,
-            'weather'       => $weather,
             'carbon'        => $carbon,
             'base_url'      => $this->resolveBaseUrl($request),
         ]);

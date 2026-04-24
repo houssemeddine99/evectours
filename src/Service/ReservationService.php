@@ -37,7 +37,7 @@ class ReservationService
         }
 
         $status = strtoupper((string) $reservation->getStatus());
-        if (!in_array($status, ['CONFIRMED', 'COMPLETED'], true)) {
+        if (!in_array($status, ['CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
             return ['eligible' => false, 'reason' => 'Reservation status is not refundable.'];
         }
 
@@ -244,43 +244,59 @@ class ReservationService
         }
     }
 
-public function listAllReservations(): array
-{
-    try {
-        $reservations = $this->reservationRepository->findAll();
-        $result = [];
+    public function listAllReservations(): array
+    {
+        try {
+            $reservations = $this->reservationRepository->findAll();
+            if (empty($reservations)) {
+                return [];
+            }
 
-        foreach ($reservations as $reservation) {
-            $user = $this->userRepository->findById($reservation->getUserId());
-            $voyage = $this->voyageRepository->findById($reservation->getVoyageId());
+            // Batch-load users and voyages — 2 queries instead of 2N
+            $userIds   = array_unique(array_map(fn($r) => $r->getUserId(),   $reservations));
+            $voyageIds = array_unique(array_map(fn($r) => $r->getVoyageId(), $reservations));
 
-            $result[] = [
-                'id' => $reservation->getId(),
-                'user_id' => $reservation->getUserId(),
-                'user_name' => $user ? $user->getUsername() : null,
-                'voyage_id' => $reservation->getVoyageId(),
-                'voyage_title' => $voyage ? $voyage->getTitle() : null,
-                'offer_id' => $reservation->getOfferId(),
-                'reservation_date' => $reservation->getReservationDate(),
-                'number_of_people' => $reservation->getNumberOfPeople(),
-                'total_price' => $reservation->getTotalPrice(),
-                'status' => $reservation->getStatus(),
-                'special_requests' => $reservation->getSpecialRequests(),
-                'payment_status' => $reservation->getPaymentStatus(),
-                'payment_date' => $reservation->getPaymentDate(),
-                'payment_reference' => $reservation->getPaymentReference(),
-                'updated_at' => $reservation->getUpdatedAt(),
-                'user_email' => $user ? $user->getEmail() : null,
-                'destination' => $voyage ? $voyage->getDestination() : null, 
-            ];
+            $userMap = [];
+            foreach ($this->userRepository->findByIds($userIds) as $u) {
+                $userMap[$u->getId()] = $u;
+            }
+            $voyageMap = [];
+            foreach ($this->voyageRepository->findByIds($voyageIds) as $v) {
+                $voyageMap[$v->getId()] = $v;
+            }
+
+            $result = [];
+            foreach ($reservations as $reservation) {
+                $user   = $userMap[$reservation->getUserId()]   ?? null;
+                $voyage = $voyageMap[$reservation->getVoyageId()] ?? null;
+
+                $result[] = [
+                    'id'               => $reservation->getId(),
+                    'user_id'          => $reservation->getUserId(),
+                    'user_name'        => $user?->getUsername(),
+                    'voyage_id'        => $reservation->getVoyageId(),
+                    'voyage_title'     => $voyage?->getTitle(),
+                    'offer_id'         => $reservation->getOfferId(),
+                    'reservation_date' => $reservation->getReservationDate(),
+                    'number_of_people' => $reservation->getNumberOfPeople(),
+                    'total_price'      => $reservation->getTotalPrice(),
+                    'status'           => $reservation->getStatus(),
+                    'special_requests' => $reservation->getSpecialRequests(),
+                    'payment_status'   => $reservation->getPaymentStatus(),
+                    'payment_date'     => $reservation->getPaymentDate(),
+                    'payment_reference'=> $reservation->getPaymentReference(),
+                    'updated_at'       => $reservation->getUpdatedAt(),
+                    'user_email'       => $user?->getEmail(),
+                    'destination'      => $voyage?->getDestination(),
+                ];
+            }
+
+            return $result;
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to list all reservations', ['error' => $e->getMessage()]);
+            return [];
         }
-
-        return $result;
-    } catch (\Throwable $e) {
-        $this->logger->error('Failed to list all reservations', ['error' => $e->getMessage()]);
-        return [];
     }
-}
 
     public function confirmReservation(int $reservationId, int $userId, ?string $paymentReference = null): bool
     {

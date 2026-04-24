@@ -42,7 +42,7 @@ class ReclamationService
         }
 
         $reservationStatus = strtoupper((string) $reservation->getStatus());
-        if (!in_array($reservationStatus, ['CONFIRMED', 'COMPLETED'], true)) {
+        if (!in_array($reservationStatus, ['CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
             return ['eligible' => false, 'reason' => 'Reservation status is not refundable.'];
         }
 
@@ -86,11 +86,28 @@ class ReclamationService
         $reclamation->setReclamationDate(new \DateTime());
         $reclamation->setCreatedAt(new \DateTime());
         $reclamation->setUpdatedAt(new \DateTime());
+        $reclamation->setResponseDeadline($this->computeDeadline($data['priority'] ?? 'MEDIUM'));
 
         $this->entityManager->persist($reclamation);
         $this->entityManager->flush();
 
         return $reclamation;
+    }
+
+    public static function slaHours(string $priority): int
+    {
+        return match (strtoupper($priority)) {
+            'URGENT' => 4,
+            'HIGH'   => 24,
+            'LOW'    => 120,
+            default  => 72,
+        };
+    }
+
+    private function computeDeadline(string $priority): \DateTime
+    {
+        $hours = self::slaHours($priority);
+        return (new \DateTime())->modify("+{$hours} hours");
     }
 
     /**
