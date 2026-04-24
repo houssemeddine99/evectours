@@ -33,6 +33,9 @@ class RefundRequest
     #[ORM\Column(length: 20)]
     private string $status = 'PENDING';
 
+    #[ORM\Column(name: 'approved_amount', type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $approvedAmount = null;
+
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
 
@@ -110,6 +113,22 @@ class RefundRequest
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
+    }
+
+    public function getApprovedAmount(): ?string
+    {
+        return $this->approvedAmount;
+    }
+
+    public function setApprovedAmount(?string $approvedAmount): self
+    {
+        $this->approvedAmount = $approvedAmount;
+        return $this;
+    }
+
+    public function getEffectiveAmount(): string
+    {
+        return $this->approvedAmount ?? $this->amount;
     }
 
     public function setCreatedAt(?\DateTimeInterface $createdAt): self

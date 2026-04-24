@@ -1,98 +1,211 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}My Reclamations{% endblock %}
 
-{% block body %}
-    <h1>My Reclamations</h1>
- 
-    {% if reclamations|length > 0 %}
-        <div class="admin-table-container">
-        <table class="admin-table">
-            <thead>
-                <tr>
-              
-                    <th>Reservation Number</th>
-                    <th>Title</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
-                    <th>Admin Response</th>
-                    <th>Response Date</th>
-                    <th>Resolution Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rec in reclamations %}
-                    <tr>
-                        
-                        <td>{{ rec.reservationId }}</td>
-                        <td><a href="{{ path('user_reclamation_detail', {'id': rec.id}) }}">{{ rec.title }}</a></td>
-                        <td>{{ rec.description }}</td>
-                        <td>{{ rec.status }}</td>
-                        <td>{{ rec.priority }}</td>
-                        <td>{{ rec.createdAt ? rec.createdAt|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.updatedAt ? rec.updatedAt|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.adminResponse|default('') }}</td>
-                        <td>{{ rec.responseDate ? rec.responseDate|date('Y-m-d H:i') : '' }}</td>
-                        <td>{{ rec.resolutionDate ? rec.resolutionDate|date('Y-m-d H:i') : '' }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-    {% else %}
-        <p>No reclamations found.</p>
-    {% endif %}
-{% endblock %}
 {% block stylesheets %}
-    <style>
-        /* Ensure the admin table styling is applied on the user side */
-     .admin-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12px;
-    background: var(--amazon-white);
+<style>
+/* ── Page ──────────────────────────────────────────────────── */
+.recl-page {
+    padding: 32px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
 
-    border-radius: 12px;
+/* ── Hero ──────────────────────────────────────────────────── */
+.recl-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-dark);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.recl-hero h1 {
+    margin: 0 0 4px;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.recl-hero .subtitle { color: var(--text-muted); font-size: 0.88em; margin: 0; }
+
+/* ── Cards Grid ────────────────────────────────────────────── */
+.recl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 18px;
+}
+
+/* ── Card ──────────────────────────────────────────────────── */
+.recl-card {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.recl-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,153,0,0.12);
+    border-color: rgba(255,153,0,0.3);
+}
+.recl-card.card-urgent:hover {
+    border-color: rgba(220,38,38,0.35);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(220,38,38,0.2);
+}
+
+/* Top accent bar */
+.recl-card-top { height: 4px; width: 100%; }
+.accent-p-urgent { background: #dc2626; }
+.accent-p-high   { background: #ea580c; }
+.accent-p-medium { background: #4479cf; }
+.accent-p-low    { background: #475569; }
+
+.recl-card-body { padding: 18px 20px; flex: 1; }
+.recl-card-meta-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.recl-id {
+    font-size: 0.72em;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.recl-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+    line-height: 1.35;
+}
+.recl-card-desc {
+    font-size: 0.83em;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.admin-table th,
-.admin-table td {
-    padding: 12px 8px;
-    border-bottom: 1px solid var(--border-dark);
-    text-align: left;
+.recl-card-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: rgba(0,0,0,0.12);
+}
+.recl-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.recl-date-label { font-size: 0.73em; color: var(--text-muted); }
+.recl-view-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8em;
+    font-weight: 700;
+    color: var(--amazon-orange);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: gap 0.18s ease, color 0.18s ease;
+}
+.recl-view-link:hover { gap: 9px; color: #febd69; }
+
+/* ── Badge Pills ───────────────────────────────────────────── */
+.badge-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.71em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid;
+    white-space: nowrap;
+}
+.badge-s-open        { background:rgba(255,153,0,0.15);  color:#febd69;  border-color:rgba(255,153,0,0.3); }
+.badge-s-in-progress { background:rgba(68,121,207,0.15); color:#93c5fd;  border-color:rgba(68,121,207,0.3); }
+.badge-s-resolved    { background:rgba(22,163,74,0.15);  color:#86efac;  border-color:rgba(22,163,74,0.3); }
+.badge-s-closed      { background:rgba(100,116,139,0.15);color:#94a3b8;  border-color:rgba(100,116,139,0.3); }
+.badge-p-urgent { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
+.badge-p-high   { background:rgba(234,88,12,0.15);  color:#fdba74; border-color:rgba(234,88,12,0.3); }
+.badge-p-medium { background:rgba(68,121,207,0.15); color:#93c5fd; border-color:rgba(68,121,207,0.3); }
+.badge-p-low    { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
+
+/* ── Empty State ───────────────────────────────────────────── */
+.recl-empty {
+    text-align: center;
+    padding: 80px 20px;
     color: var(--text-muted);
 }
-/* Header style for admin tables – dark navy background with primary text for better contrast */
-.admin-table th {
-    background: var(--amazon-navy);
-    color: var(--text-primary);
-    font-weight: 600;
-}
+.recl-empty-icon { font-size: 3.5rem; margin-bottom: 16px; opacity: 0.35; display: block; }
+.recl-empty h3 { color: var(--text-primary); font-size: 1.2rem; font-weight: 700; margin: 0 0 8px; }
+.recl-empty p  { font-size: 0.9em; max-width: 360px; margin: 0 auto; }
 
-.admin-table tr:hover {
-    background: rgba(255, 153, 0, 0.08);
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .recl-page { padding: 20px 14px; }
+    .recl-hero { flex-direction: column; align-items: flex-start; }
+    .recl-grid { grid-template-columns: 1fr; }
 }
+</style>
+{% endblock %}
 
-/* Ensure tables have a reasonable minimum width and consistent spacing */
-.admin-table {
-    min-width: 800px;
-}
+{% block body %}
+<div class="recl-page">
 
-/* Enhance the container that wraps admin tables – similar to the reservations page container */
-/* Enhanced container for admin tables – provides a distinct card‑like appearance */
-/* Container for admin tables – mirrors the styling of the reservations page table container */
-.admin-table-container {
-    margin-top: 24px;
-    background: var(--amazon-white);
-    border: 1px solid var(--border-dark);
-    border-radius: 12px;
-    overflow-x: auto;
-    box-shadow: 0 8px 25px rgba(255, 153, 0, 0.2);
-    padding: 24px; /* provides consistent inner spacing */
-}
-    </style>
+<div class="recl-hero">
+    <div>
+        <h1>My Reclamations</h1>
+        <p class="subtitle">{{ reclamations|length }} complaint{{ reclamations|length != 1 ? 's' : '' }} submitted</p>
+    </div>
+</div>
+
+{% if reclamations|length == 0 %}
+    <div class="recl-empty">
+        <span class="recl-empty-icon">📋</span>
+        <h3>No reclamations yet</h3>
+        <p>You haven't filed any complaints. If something went wrong with your booking, we're here to help.</p>
+    </div>
+{% else %}
+    <div class="recl-grid">
+        {% for rec in reclamations %}
+        <div class="recl-card {{ rec.priority == 'URGENT' ? 'card-urgent' : '' }}">
+            <div class="recl-card-top accent-p-{{ rec.priority|lower }}"></div>
+            <div class="recl-card-body">
+                <div class="recl-card-meta-top">
+                    <span class="recl-id">#{{ rec.id }} · Res. #{{ rec.reservationId }}</span>
+                    <span class="badge-pill badge-s-{{ rec.status|lower|replace({'_': '-'}) }}">{{ rec.status }}</span>
+                </div>
+                <h3 class="recl-card-title">{{ rec.title }}</h3>
+                <p class="recl-card-desc">{{ rec.description }}</p>
+            </div>
+            <div class="recl-card-footer">
+                <div class="recl-badges">
+                    <span class="badge-pill badge-p-{{ rec.priority|lower }}">{{ rec.priority }}</span>
+                    <span class="recl-date-label">{{ rec.createdAt ? rec.createdAt|date('M d, Y') : '—' }}</span>
+                </div>
+                <a href="{{ path('user_reclamation_detail', {'id': rec.id}) }}" class="recl-view-link">
+                    View
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+</div>
 {% endblock %}

@@ -26,7 +26,23 @@ class UserRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
     public function findById(int $id): ?User
-{
-    return $this->find($id);
-}
+    {
+        return $this->find($id);
+    }
+
+    /**
+     * @param int[] $ids
+     * @return User[]
+     */
+    public function findByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        return $this->createQueryBuilder('u')
+            ->where('u.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -1,37 +1,193 @@
 {% extends 'base.html.twig' %}
+{% block title %}Admin – Refund Requests{% endblock %}
 
-{% block title %}Admin – Refunds{% endblock %}
+{% block stylesheets %}
+<style>
+.rf-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-dark);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.rf-header h1 {
+    margin: 0 0 4px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.rf-header .subtitle { font-size: 0.85em; color: var(--text-muted); }
+.rf-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.rf-stat {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+}
+.rf-stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+}
+.rf-stat.pending::before  { background: #fde047; }
+.rf-stat.approved::before { background: #86efac; }
+.rf-stat.rejected::before { background: #fca5a5; }
+.rf-stat.total::before    { background: linear-gradient(90deg,#ff9900,#febd69); }
+.rf-stat-value { font-size: 1.7rem; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
+.rf-stat-label { font-size: 0.72em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+.rf-stat.pending  .rf-stat-value { color: #fde047; }
+.rf-stat.approved .rf-stat-value { color: #86efac; }
+.rf-stat.rejected .rf-stat-value { color: #fca5a5; }
+.rf-stat.total    .rf-stat-value { color: #febd69; }
+.rf-table-wrap {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+}
+.rf-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+.rf-table thead th {
+    background: var(--amazon-navy);
+    color: var(--text-muted);
+    font-size: 0.73em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    white-space: nowrap;
+}
+.rf-table tbody td {
+    padding: 13px 16px;
+    font-size: 0.86em;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(47,59,77,0.6);
+    vertical-align: middle;
+}
+.rf-table tbody tr:last-child td { border-bottom: none; }
+.rf-table tbody tr:hover td { background: rgba(255,153,0,0.05); }
+.badge-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.71em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid;
+    white-space: nowrap;
+}
+.rf-manage-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 13px;
+    border-radius: 8px;
+    font-size: 0.78em;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff9900, #febd69);
+    color: #131a22;
+    text-decoration: none;
+    transition: opacity .2s, transform .2s;
+}
+.rf-manage-btn:hover { opacity: .85; transform: translateY(-1px); }
+.rf-empty {
+    text-align: center;
+    padding: 70px 20px;
+    color: var(--text-muted);
+}
+.rf-empty-icon { font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 14px; }
+.rf-empty h3 { color: var(--text-primary); font-weight: 700; margin-bottom: 6px; }
+</style>
+{% endblock %}
 
 {% block body %}
-    <h1>All Refund Requests (Admin)</h1>
-    {% if refunds|length > 0 %}
-        <div class="admin-table-container">
-        <table class="admin-table">
-            <thead>
+<div class="rf-header">
+    <div>
+        <h1>Refund Requests</h1>
+        <p class="subtitle">Review and process customer refund requests</p>
+    </div>
+</div>
+
+{% if refunds|length > 0 %}
+{% set pendingCnt  = refunds|filter(r => r.status == 'PENDING')|length %}
+{% set approvedCnt = refunds|filter(r => r.status == 'APPROVED')|length %}
+{% set rejectedCnt = refunds|filter(r => r.status == 'REJECTED')|length %}
+<div class="rf-stats">
+    <div class="rf-stat pending">
+        <div class="rf-stat-value">{{ pendingCnt }}</div>
+        <div class="rf-stat-label">Pending</div>
+    </div>
+    <div class="rf-stat approved">
+        <div class="rf-stat-value">{{ approvedCnt }}</div>
+        <div class="rf-stat-label">Approved</div>
+    </div>
+    <div class="rf-stat rejected">
+        <div class="rf-stat-value">{{ rejectedCnt }}</div>
+        <div class="rf-stat-label">Rejected</div>
+    </div>
+    <div class="rf-stat total">
+        <div class="rf-stat-value">{{ refunds|length }}</div>
+        <div class="rf-stat-label">Total</div>
+    </div>
+</div>
+
+<div class="rf-table-wrap" style="overflow-x:auto;">
+    <table class="rf-table">
+        <thead>
             <tr>
                 <th>ID</th>
-                <th>Requester ID</th>
+                <th>Requester</th>
+                <th>Reservation</th>
                 <th>Amount</th>
                 <th>Reason</th>
                 <th>Status</th>
-                <th>Created At</th>
+                <th>Submitted</th>
+                <th></th>
             </tr>
-            </thead>
+        </thead>
         <tbody>
-                {% for r in refunds %}
+            {% for r in refunds %}
+                {% set rsStyle =
+                    r.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#86efac;border-color:rgba(22,163,74,0.3)' :
+                    r.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#fca5a5;border-color:rgba(220,38,38,0.3)' :
+                    'background:rgba(255,193,7,0.15);color:#fde047;border-color:rgba(255,193,7,0.3)' %}
                 <tr>
-                    <td><a href="{{ path('admin_refund_detail', {'id': r.id}) }}">{{ r.id }}</a></td>
-                    <td>{{ r.requesterId|default('') }}</td>
-                    <td>{{ r.amount|default('') }}</td>
-                    <td>{{ r.reason|default('') }}</td>
-                    <td>{{ r.status }}</td>
-                    <td>{{ r.createdAt ? r.createdAt|date('Y-m-d H:i') : '' }}</td>
+                    <td style="color:var(--text-primary);font-weight:600;">#{{ r.id }}</td>
+                    <td>User #{{ r.requesterId|default('—') }}</td>
+                    <td>#{{ r.reservationId|default('—') }}</td>
+                    <td style="color:#febd69;font-weight:700;">{{ r.amount|default('0.00') }} TND</td>
+                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.reason|default('') }}">
+                        {{ r.reason|default('—')|slice(0, 50) }}{% if (r.reason|default(''))|length > 50 %}…{% endif %}
+                    </td>
+                    <td><span class="badge-pill" style="{{ rsStyle }}">{{ r.status }}</span></td>
+                    <td style="white-space:nowrap;">{{ r.createdAt ? r.createdAt|date('M d, Y') : '—' }}</td>
+                    <td><a href="{{ path('admin_refund_detail', {'id': r.id}) }}" class="rf-manage-btn">Review →</a></td>
                 </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-    {% else %}
-        <p>No refund requests found.</p>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="rf-empty">
+    <span class="rf-empty-icon">💳</span>
+    <h3>No refund requests yet</h3>
+    <p>When customers submit refund requests, they will appear here.</p>
+</div>
+{% endif %}
 {% endblock %}

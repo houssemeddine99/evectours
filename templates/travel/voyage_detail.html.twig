@@ -46,11 +46,7 @@
                     <div class="voyage-headline-enhanced">
                         <div class="headline-content">
                             <p class="meta-location">
-                                {% if country_info is defined and country_info and country_info.flag_emoji %}
-                                    {{ country_info.flag_emoji }}
-                                {% else %}
-                                    🌍
-                                {% endif %}
+                                <span id="meta-flag">🌍</span>
                                 {{ voyage.destination|default('') }}
                             </p>
                             <h1 class="voyage-title-premium">{{ voyage.title|default('') }}</h1>
@@ -97,27 +93,15 @@
                     </div>
                 </div>
 
-                {# Country Info Section #}
-                {% if country_info is defined and country_info %}
-                <div class="country-info-section">
-                    <h2 class="section-title">🗺 Destination Info</h2>
-                    <div class="country-grid">
-                        {% if country_info.flag_svg %}
-                            <div class="country-flag-wrap">
-                                <img src="{{ country_info.flag_svg }}" alt="{{ country_info.name }} flag" class="country-flag">
-                            </div>
-                        {% endif %}
-                        <div class="country-facts">
-                            <div class="fact-item"><span class="fact-icon">🏳</span><span class="fact-label">Country</span><span class="fact-value">{{ country_info.name }}</span></div>
-                            {% if country_info.capital %}<div class="fact-item"><span class="fact-icon">🏛</span><span class="fact-label">Capital</span><span class="fact-value">{{ country_info.capital }}</span></div>{% endif %}
-                            {% if country_info.language %}<div class="fact-item"><span class="fact-icon">💬</span><span class="fact-label">Language</span><span class="fact-value">{{ country_info.language }}</span></div>{% endif %}
-                            {% if country_info.currency %}<div class="fact-item"><span class="fact-icon">💱</span><span class="fact-label">Currency</span><span class="fact-value">{{ country_info.currency }}</span></div>{% endif %}
-                            {% if country_info.timezone %}<div class="fact-item"><span class="fact-icon">🕐</span><span class="fact-label">Timezone</span><span class="fact-value">{{ country_info.timezone }}</span></div>{% endif %}
-                        </div>
+                {# Country Info Section — loaded async via /api/voyage-meta #}
+                <div id="country-info-section">
+                    <div class="country-info-skeleton">
+                        <div class="skeleton-line skeleton-line--short"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
                     </div>
                 </div>
                 <div class="voyage-separator"></div>
-                {% endif %}
 
                 <div class="voyage-separator"></div>
 
@@ -303,5 +287,58 @@
         .btn-compare.cmp-active,.btn-compare:hover { background: var(--amazon-orange); color: #000; }
         .voyage-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
         .voyage-actions .btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        /* Country info skeleton */
+        .country-info-skeleton { padding: 20px 0; }
+        .skeleton-line { height: 14px; background: linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.06) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; margin: 10px 0; }
+        .skeleton-line--short { width: 40%; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     </style>
+
+    <script>
+    (function () {
+        var destination = {{ voyage.destination|json_encode|raw }};
+
+        fetch('/api/voyage-meta?destination=' + encodeURIComponent(destination))
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                // Update flag emoji in header
+                var flagEl = document.getElementById('meta-flag');
+                if (flagEl && data && data.flag_emoji) {
+                    flagEl.textContent = data.flag_emoji;
+                }
+
+                var section = document.getElementById('country-info-section');
+                if (!section) return;
+
+                if (!data) {
+                    section.innerHTML = '';
+                    return;
+                }
+
+                var flagImg = data.flag_svg
+                    ? '<div class="country-flag-wrap"><img src="' + escHtml(data.flag_svg) + '" alt="' + escHtml(data.name) + ' flag" class="country-flag"></div>'
+                    : '';
+
+                var facts = '<div class="fact-item"><span class="fact-icon">🏳</span><span class="fact-label">Country</span><span class="fact-value">' + escHtml(data.name) + '</span></div>';
+                if (data.capital)  facts += '<div class="fact-item"><span class="fact-icon">🏛</span><span class="fact-label">Capital</span><span class="fact-value">'  + escHtml(data.capital)  + '</span></div>';
+                if (data.language) facts += '<div class="fact-item"><span class="fact-icon">💬</span><span class="fact-label">Language</span><span class="fact-value">' + escHtml(data.language) + '</span></div>';
+                if (data.currency) facts += '<div class="fact-item"><span class="fact-icon">💱</span><span class="fact-label">Currency</span><span class="fact-value">' + escHtml(data.currency) + '</span></div>';
+                if (data.timezone) facts += '<div class="fact-item"><span class="fact-icon">🕐</span><span class="fact-label">Timezone</span><span class="fact-value">' + escHtml(data.timezone) + '</span></div>';
+
+                section.innerHTML =
+                    '<div class="country-info-section">' +
+                        '<h2 class="section-title">🗺 Destination Info</h2>' +
+                        '<div class="country-grid">' + flagImg + '<div class="country-facts">' + facts + '</div></div>' +
+                    '</div>';
+            })
+            .catch(function() {
+                var section = document.getElementById('country-info-section');
+                if (section) section.innerHTML = '';
+            });
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+    })();
+    </script>
 {% endblock %}

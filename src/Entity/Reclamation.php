@@ -50,6 +50,9 @@ class Reclamation
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(name: 'response_deadline', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $responseDeadline = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -185,5 +188,35 @@ class Reclamation
     {
         $this->updatedAt = $updatedAt;
         return $this;
+    }
+
+    public function getResponseDeadline(): ?\DateTimeInterface
+    {
+        return $this->responseDeadline;
+    }
+
+    public function setResponseDeadline(?\DateTimeInterface $responseDeadline): self
+    {
+        $this->responseDeadline = $responseDeadline;
+        return $this;
+    }
+
+    public function isOverdue(): bool
+    {
+        if ($this->responseDeadline === null) {
+            return false;
+        }
+        return new \DateTime() > $this->responseDeadline
+            && !in_array($this->status, ['RESOLVED', 'CLOSED'], true);
+    }
+
+    public function getSlaHoursRemaining(): float
+    {
+        if ($this->responseDeadline === null) {
+            return 0;
+        }
+        $diff = (new \DateTime())->diff($this->responseDeadline);
+        $hours = ($diff->days * 24) + $diff->h + ($diff->i / 60);
+        return $diff->invert ? -$hours : $hours;
     }
 }

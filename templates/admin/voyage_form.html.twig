@@ -62,7 +62,7 @@
                         <label class="tag-checkbox">
                             <input type="checkbox" name="tags[]" value="{{ tag.id }}"
                                 {% if voyage and voyage.tags is defined %}
-                                    {% for vt in voyage.tags %}{% if vt.id == tag.id %}checked{% endif %}{% endfor %}
+                                    {% for vt in voyage.tags %}{% set vtId = vt.id is defined ? vt.id : vt %}{% if vtId == tag.id %}checked{% endif %}{% endfor %}
                                 {% endif %}>
                             <span class="tag-label" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
                         </label>

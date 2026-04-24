@@ -8,9 +8,10 @@ use App\Service\ReclamationService;
 use App\Service\AiResponseSuggestionService;
 use App\Service\ValidationService;
 use App\Service\ReservationService;
+use App\Message\SendSmsMessage;
 use App\Service\RefundRequestService;
-use App\Service\TwilioSmsService;
 use App\Controller\AdminController;
+use Symfony\Component\Messenger\MessageBusInterface;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,7 +29,7 @@ class ReclamationController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly ReservationService $reservationService,
         private readonly AiResponseSuggestionService $aiResponseSuggestionService,
-        private readonly TwilioSmsService $twilioSmsService,
+        private readonly MessageBusInterface $bus,
         private readonly UserRepository $userRepository,
         private readonly RefundRequestService $refundRequestService,
     ) {}
@@ -237,7 +238,10 @@ class ReclamationController extends AbstractController
         if ($reclamation) {
             $user = $this->userRepository->find($reclamation->getUserId());
             if ($user?->getTel()) {
-                $this->twilioSmsService->sendReclamationResponse($user->getTel(), $user->getUsername());
+                $this->bus->dispatch(new SendSmsMessage(
+                    $user->getTel(),
+                    sprintf('Hello %s, an admin has responded to your reclamation. Log in to read it. – TravelAgency', $user->getUsername())
+                ));
             }
         }
 
@@ -257,7 +261,16 @@ class ReclamationController extends AbstractController
         if ($reclamation && in_array($status, ['IN_PROGRESS', 'RESOLVED', 'CLOSED'], true)) {
             $user = $this->userRepository->find($reclamation->getUserId());
             if ($user?->getTel()) {
-                $this->twilioSmsService->sendReclamationStatusChanged($user->getTel(), $user->getUsername(), $status);
+                $friendly = match (strtoupper($status)) {
+                    'IN_PROGRESS' => 'is now being reviewed',
+                    'RESOLVED'    => 'has been resolved',
+                    'CLOSED'      => 'has been closed',
+                    default       => 'has been updated to ' . $status,
+                };
+                $this->bus->dispatch(new SendSmsMessage(
+                    $user->getTel(),
+                    sprintf('Hello %s, your reclamation %s. Log in to see details. – TravelAgency', $user->getUsername(), $friendly)
+                ));
             }
         }
 

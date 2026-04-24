@@ -14,6 +14,9 @@ use App\Service\AiVoyageService;
 use App\Repository\VoyageRepository;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,6 +37,8 @@ class VoyageController extends AbstractController
         private readonly AdminController $adminController,
         private readonly TagService $tagService,
         private readonly AiVoyageService $aiVoyageService,
+        #[Target('cache.api_external')]
+        private readonly CacheInterface $cache,
         private readonly ?LoggerInterface $logger = null,
     ) {}
 
@@ -135,8 +140,6 @@ class VoyageController extends AbstractController
         $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $voyage['id']);
         $offer = $offerForVoyage ? array_values($offerForVoyage)[0] : null;
 
-        $countryInfo = $this->fetchCountryInfo($voyage['destination']);
-
         $isFavorite = false;
         if ($userId > 1) {
             $favIds = $request->getSession()->get('favorite_ids_' . $userId, null);
@@ -157,12 +160,21 @@ class VoyageController extends AbstractController
             'active_nav' => 'voyages',
             'voyage' => $voyage,
             'offer' => $offer,
-            'country_info' => $countryInfo,
             'is_favorite' => $isFavorite,
             'compare_list' => $compareList,
             'duration_days' => $durationDays,
             'user_id' => $userId,
         ]);
+    }
+
+    #[Route('/api/voyage-meta', name: 'api_voyage_meta', methods: ['GET'])]
+    public function apiVoyageMeta(Request $request): JsonResponse
+    {
+        $destination = trim((string) $request->query->get('destination', ''));
+        if ($destination === '') {
+            return $this->json(null);
+        }
+        return $this->json($this->fetchCountryInfo($destination));
     }
 
     #[Route('/admin/voyages/ai/description', name: 'admin_voyage_ai_description', methods: ['POST'])]
@@ -397,35 +409,39 @@ class VoyageController extends AbstractController
             return null;
         }
 
-        $url = 'https://restcountries.com/v3.1/name/' . urlencode($country) . '?fields=name,flags,languages,currencies,timezones,capital,flag';
-        $ctx = stream_context_create(['http' => ['timeout' => 4, 'ignore_errors' => true]]);
-        $raw = @file_get_contents($url, false, $ctx);
-        if ($raw === false) {
-            return null;
-        }
+        return $this->cache->get('country_' . md5($destination), function (ItemInterface $item) use ($country, $destination): ?array {
+            $item->expiresAfter(86400); // 24 hours
 
-        $data = json_decode($raw, true);
-        if (!is_array($data) || empty($data) || isset($data['status'])) {
-            return null;
-        }
+            $url = 'https://restcountries.com/v3.1/name/' . urlencode($country) . '?fields=name,flags,languages,currencies,timezones,capital,flag';
+            $ctx = stream_context_create(['http' => ['timeout' => 4, 'ignore_errors' => true]]);
+            $raw = @file_get_contents($url, false, $ctx);
+            if ($raw === false) {
+                return null;
+            }
 
-        $c = reset($data);
-        if (!is_array($c)) {
-            return null;
-        }
-        $currencies = $c['currencies'] ?? [];
-        $currencyInfo = !empty($currencies) ? array_values($currencies)[0] : null;
-        $languages = array_values($c['languages'] ?? []);
+            $data = json_decode($raw, true);
+            if (!is_array($data) || empty($data) || isset($data['status'])) {
+                return null;
+            }
 
-        return [
-            'name' => $c['name']['common'] ?? $country,
-            'flag_svg' => $c['flags']['svg'] ?? ($c['flags']['png'] ?? null),
-            'flag_emoji' => $c['flag'] ?? null,
-            'capital' => $c['capital'][0] ?? null,
-            'language' => $languages[0] ?? null,
-            'currency' => $currencyInfo ? ($currencyInfo['name'] . ' (' . ($currencyInfo['symbol'] ?? '') . ')') : null,
-            'timezone' => $c['timezones'][0] ?? null,
-        ];
+            $c = reset($data);
+            if (!is_array($c)) {
+                return null;
+            }
+            $currencies = $c['currencies'] ?? [];
+            $currencyInfo = !empty($currencies) ? array_values($currencies)[0] : null;
+            $languages = array_values($c['languages'] ?? []);
+
+            return [
+                'name'       => $c['name']['common'] ?? $country,
+                'flag_svg'   => $c['flags']['svg'] ?? ($c['flags']['png'] ?? null),
+                'flag_emoji' => $c['flag'] ?? null,
+                'capital'    => $c['capital'][0] ?? null,
+                'language'   => $languages[0] ?? null,
+                'currency'   => $currencyInfo ? ($currencyInfo['name'] . ' (' . ($currencyInfo['symbol'] ?? '') . ')') : null,
+                'timezone'   => $c['timezones'][0] ?? null,
+            ];
+        });
     }
 
     private function buildSearchFilters(Request $request): array

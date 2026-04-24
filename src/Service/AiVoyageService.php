@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class AiVoyageService
 {
@@ -12,6 +15,8 @@ class AiVoyageService
         private readonly string $apiKey,
         private readonly string $model,
         private readonly bool $enabled,
+        #[Target('cache.ai_responses')]
+        private readonly CacheInterface $cache,
     ) {}
 
     public function generateDescription(string $title, string $destination, int $durationDays, ?string $existing = null): ?string
@@ -20,19 +25,22 @@ class AiVoyageService
             return null;
         }
 
-        $context = $existing ? "Improve this existing description:\n{$existing}\n\n" : '';
+        return $this->cache->get('ai_desc_' . md5($title . $destination . $durationDays), function (ItemInterface $item) use ($title, $destination, $durationDays, $existing): ?string {
+            $item->expiresAfter(172800);
 
-        $payload = [
-            'model' => $this->model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a travel copywriter. Write vivid, engaging voyage descriptions. Keep it under 150 words. No bullet points, plain prose only.'],
-                ['role' => 'user', 'content' => "{$context}Write a description for a {$durationDays}-day voyage titled \"{$title}\" to {$destination}."],
-            ],
-            'temperature' => 0.7,
-            'max_tokens' => 250,
-        ];
+            $context = $existing ? "Improve this existing description:\n{$existing}\n\n" : '';
+            $payload = [
+                'model' => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a travel copywriter. Write vivid, engaging voyage descriptions. Keep it under 150 words. No bullet points, plain prose only.'],
+                    ['role' => 'user', 'content' => "{$context}Write a description for a {$durationDays}-day voyage titled \"{$title}\" to {$destination}."],
+                ],
+                'temperature' => 0.7,
+                'max_tokens' => 250,
+            ];
 
-        return $this->callApi($payload);
+            return $this->callApi($payload);
+        });
     }
 
     public function generateItinerary(string $title, string $destination, int $durationDays): ?string
@@ -41,17 +49,21 @@ class AiVoyageService
             return null;
         }
 
-        $payload = [
-            'model' => $this->model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a travel expert. Create a concise day-by-day itinerary. Each day: one line starting with "Day N:". Keep total under 300 words.'],
-                ['role' => 'user', 'content' => "Create a {$durationDays}-day itinerary for a trip to {$destination} titled \"{$title}\"."],
-            ],
-            'temperature' => 0.6,
-            'max_tokens' => 400,
-        ];
+        return $this->cache->get('ai_itin_' . md5($title . $destination . $durationDays), function (ItemInterface $item) use ($title, $destination, $durationDays): ?string {
+            $item->expiresAfter(172800);
 
-        return $this->callApi($payload);
+            $payload = [
+                'model' => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a travel expert. Create a concise day-by-day itinerary. Each day: one line starting with "Day N:". Keep total under 300 words.'],
+                    ['role' => 'user', 'content' => "Create a {$durationDays}-day itinerary for a trip to {$destination} titled \"{$title}\"."],
+                ],
+                'temperature' => 0.6,
+                'max_tokens' => 400,
+            ];
+
+            return $this->callApi($payload);
+        });
     }
 
     private function callApi(array $payload): ?string

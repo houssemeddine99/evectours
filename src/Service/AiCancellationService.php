@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 class AiCancellationService
 {
@@ -12,6 +15,8 @@ class AiCancellationService
         private readonly string $apiKey,
         private readonly string $model,
         private readonly bool $enabled,
+        #[Target('cache.ai_responses')]
+        private readonly CacheInterface $cache,
     ) {}
 
     /**
@@ -24,45 +29,52 @@ class AiCancellationService
             return null;
         }
 
-        $voyageTitle  = $reservation['voyage_title'] ?? 'your trip';
-        $destination  = $reservation['destination'] ?? 'your destination';
-        $startDate    = $reservation['voyage_start'] ?? 'soon';
-        $price        = number_format((float) ($reservation['total_price'] ?? 0), 2);
-        $people       = $reservation['number_of_people'] ?? 1;
+        $voyageTitle = $reservation['voyage_title'] ?? 'your trip';
+        $destination = $reservation['destination'] ?? 'your destination';
+        $startDate   = $reservation['voyage_start'] ?? 'soon';
+        $people      = $reservation['number_of_people'] ?? 1;
 
-        $daysUntil = '';
-        if (!empty($reservation['voyage_start'])) {
-            try {
-                $start    = new \DateTime($reservation['voyage_start']);
-                $today    = new \DateTime('today');
-                $diff     = (int) $today->diff($start)->days;
-                $daysUntil = $diff > 0 ? "{$diff} days until departure" : 'trip date has passed';
-            } catch (\Throwable) {}
-        }
+        $cacheKey = 'ai_cancel_' . md5($voyageTitle . $destination . $startDate . $people);
 
-        $payload = [
-            'model'    => $this->model,
-            'messages' => [
-                ['role' => 'system', 'content' => 'You are a friendly travel advisor. Write a short, warm, persuasive message (2-3 sentences max) to convince a traveller not to cancel their booking. Focus on what they would miss. No bullet points. End with one emoji.'],
-                ['role' => 'user', 'content' => "The user is about to cancel: \"{$voyageTitle}\" to {$destination}. Booking: {$people} person(s), {$price} TND paid. {$daysUntil}. Write the warning."],
-            ],
-            'temperature' => 0.8,
-            'max_tokens'  => 120,
-        ];
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($reservation, $voyageTitle, $destination, $startDate, $people): ?string {
+            $item->expiresAfter(86400); // 24 hours — same trip = same warning
 
-        $body = json_encode($payload);
-        if (!is_string($body)) {
-            return null;
-        }
+            $price = number_format((float) ($reservation['total_price'] ?? 0), 2);
 
-        [$raw, $code] = $this->sendRequest($body);
-        if (!is_string($raw) || $code >= 400) {
-            return null;
-        }
+            $daysUntil = '';
+            if (!empty($startDate)) {
+                try {
+                    $start     = new \DateTime($startDate);
+                    $today     = new \DateTime('today');
+                    $diff      = (int) $today->diff($start)->days;
+                    $daysUntil = $diff > 0 ? "{$diff} days until departure" : 'trip date has passed';
+                } catch (\Throwable) {}
+            }
 
-        $decoded = json_decode($raw, true);
-        $content = $decoded['choices'][0]['message']['content'] ?? null;
-        return is_string($content) && trim($content) !== '' ? trim($content) : null;
+            $payload = [
+                'model'    => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a friendly travel advisor. Write a short, warm, persuasive message (2-3 sentences max) to convince a traveller not to cancel their booking. Focus on what they would miss. No bullet points. End with one emoji.'],
+                    ['role' => 'user', 'content' => "The user is about to cancel: \"{$voyageTitle}\" to {$destination}. Booking: {$people} person(s), {$price} TND paid. {$daysUntil}. Write the warning."],
+                ],
+                'temperature' => 0.8,
+                'max_tokens'  => 120,
+            ];
+
+            $body = json_encode($payload);
+            if (!is_string($body)) {
+                return null;
+            }
+
+            [$raw, $code] = $this->sendRequest($body);
+            if (!is_string($raw) || $code >= 400) {
+                return null;
+            }
+
+            $decoded = json_decode($raw, true);
+            $content = $decoded['choices'][0]['message']['content'] ?? null;
+            return is_string($content) && trim($content) !== '' ? trim($content) : null;
+        });
     }
 
     /** @return array{0: ?string, 1: int} */

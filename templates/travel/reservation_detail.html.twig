@@ -50,19 +50,11 @@
             </div>
         {% endif %}
 
-        {# Weather Widget — only for CONFIRMED reservations #}
-        {% if reservation.status == 'CONFIRMED' and weather %}
-            <div class="weather-widget">
-                <img src="{{ weather.icon }}" alt="{{ weather.description }}" class="weather-icon">
-                <div class="weather-info">
-                    <div class="weather-city">Weather in {{ weather.city }}</div>
-                    <div class="weather-temp">{{ weather.temp }}°C <span class="weather-desc">{{ weather.description }}</span></div>
-                    <div class="weather-meta">💧 {{ weather.humidity }}% humidity · 💨 {{ weather.wind_speed }} m/s</div>
-                </div>
-            </div>
-        {% elseif reservation.status == 'CONFIRMED' and weather is null %}
-            <div class="weather-widget weather-unavailable">
-                🌍 Weather data unavailable — add your OpenWeatherMap API key in <code>.env</code>
+        {# Weather Widget — loaded async via /api/weather #}
+        {% if reservation.status == 'CONFIRMED' %}
+            <div id="weather-widget-container"
+                 data-city="{{ reservation.destination|default('')|e('html_attr') }}">
+                <div class="weather-widget weather-unavailable">⛅ Loading weather…</div>
             </div>
         {% endif %}
 
@@ -264,5 +256,37 @@
     });
 })();
 {% endif %}
+
+(function () {
+    var container = document.getElementById('weather-widget-container');
+    if (!container) return;
+    var city = container.dataset.city;
+    if (!city) return;
+
+    fetch('/api/weather?city=' + encodeURIComponent(city))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data) {
+                container.innerHTML = '<div class="weather-widget weather-unavailable">🌍 Weather data unavailable</div>';
+                return;
+            }
+            container.innerHTML =
+                '<div class="weather-widget">' +
+                    '<img src="' + escHtml(data.icon) + '" alt="' + escHtml(data.description) + '" class="weather-icon">' +
+                    '<div class="weather-info">' +
+                        '<div class="weather-city">Weather in ' + escHtml(data.city) + '</div>' +
+                        '<div class="weather-temp">' + data.temp + '°C <span class="weather-desc">' + escHtml(data.description) + '</span></div>' +
+                        '<div class="weather-meta">💧 ' + data.humidity + '% humidity · 💨 ' + data.wind_speed + ' m/s</div>' +
+                    '</div>' +
+                '</div>';
+        })
+        .catch(function() {
+            container.innerHTML = '<div class="weather-widget weather-unavailable">🌍 Weather data unavailable</div>';
+        });
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+})();
 </script>
 {% endblock %}

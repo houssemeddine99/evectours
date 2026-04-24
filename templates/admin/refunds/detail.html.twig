@@ -1,139 +1,301 @@
 {% extends 'base.html.twig' %}
+{% block title %}Admin – Refund #{{ refund.id }}{% endblock %}
 
-{% block title %}Admin – Refund Detail{% endblock %}
+{% block stylesheets %}
+<style>
+.rfd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-dark);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.rfd-header h1 {
+    margin: 0 0 8px;
+    font-size: 1.7rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.badge-pill {
+    display: inline-block;
+    padding: 4px 13px;
+    border-radius: 999px;
+    font-size: 0.73em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+.rfd-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 768px) { .rfd-layout { grid-template-columns: 1fr; } }
+.rfd-card {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.rfd-card-title {
+    padding: 12px 18px;
+    background: var(--amazon-navy);
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-dark);
+}
+.rfd-row {
+    display: flex;
+    border-bottom: 1px solid rgba(47,59,77,0.5);
+}
+.rfd-row:last-child { border-bottom: none; }
+.rfd-label {
+    width: 130px;
+    min-width: 130px;
+    padding: 11px 16px;
+    background: rgba(0,0,0,0.12);
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.rfd-value {
+    padding: 11px 16px;
+    font-size: 0.88em;
+    color: var(--text-primary);
+    flex: 1;
+    word-break: break-word;
+}
+.rfd-amount-highlight {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #febd69;
+    letter-spacing: -0.01em;
+}
+.rfd-form-body { padding: 18px; }
+.rfd-field { margin-bottom: 16px; }
+.rfd-field label {
+    display: block;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+.rfd-field label span { text-transform: none; font-weight: 400; color: var(--text-muted); letter-spacing: 0; }
+.rfd-select, .rfd-input {
+    width: 100%;
+    background: #0f1722;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 10px 12px;
+    font-size: 0.88em;
+    box-sizing: border-box;
+    transition: border-color .2s;
+}
+.rfd-select:focus, .rfd-input:focus { border-color: rgba(255,153,0,0.5); outline: none; box-shadow: 0 0 0 3px rgba(255,153,0,0.08); }
+.rfd-ref-row { display: flex; gap: 8px; align-items: stretch; }
+.rfd-ref-row .rfd-input { flex: 1; }
+.rfd-gen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    font-weight: 700;
+    background: rgba(68,121,207,0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(68,121,207,0.3);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s;
+}
+.rfd-gen-btn:hover { background: rgba(68,121,207,0.25); }
+.rfd-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.rfd-status-msg {
+    margin-top: 10px;
+    padding: 9px 13px;
+    border-radius: 8px;
+    font-size: 0.84em;
+    font-weight: 600;
+    display: none;
+}
+.rfd-status-msg.ok { background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.3);color:#86efac; }
+.rfd-status-msg.err { background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);color:#fca5a5; }
+</style>
+{% endblock %}
 
 {% block body %}
-    <h1>Refund Request #{{ refund.id }}</h1>
-    {% for type, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
-        {% endfor %}
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
     {% endfor %}
+{% endfor %}
 
-    {% if refund %}
-        <div class="admin-table-container">
-            <table class="admin-table">
-                <tbody>
-                    <tr><th>ID</th><td>{{ refund.id }}</td></tr>
-                    <tr><th>Requester ID</th><td>{{ refund.requesterId|default('—') }}</td></tr>
-                    <tr>
-                        <th>Amount</th>
-                        <td><strong>{{ refund.amount|default('0.00') }} TND</strong></td>
-                    </tr>
-                    <tr><th>Reason</th><td>{{ refund.reason|default('—') }}</td></tr>
-                    <tr>
-                        <th>Current Status</th>
-                        <td>
-                            {% set s = refund.status %}
-                            <span style="padding:3px 10px;border-radius:12px;font-weight:600;font-size:0.85em;
-                                background:{% if s == 'APPROVED' %}#d4edda;color:#155724{% elseif s == 'REJECTED' %}#f8d7da;color:#721c24{% else %}#fff3cd;color:#856404{% endif %};">
-                                {{ s }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr><th>Reclamation ID</th><td>{{ refund.reclamationId|default('—') }}</td></tr>
-                    <tr><th>Reservation ID</th><td>{{ refund.reservationId|default('—') }}</td></tr>
-                    <tr><th>Created At</th><td>{{ refund.createdAt ? refund.createdAt|date('Y-m-d H:i') : '—' }}</td></tr>
-                </tbody>
-            </table>
+{% if refund %}
+{% set rsStyle =
+    refund.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#86efac;border-color:rgba(22,163,74,0.3)' :
+    refund.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#fca5a5;border-color:rgba(220,38,38,0.3)' :
+    'background:rgba(255,193,7,0.15);color:#fde047;border-color:rgba(255,193,7,0.3)' %}
+
+<div class="rfd-header">
+    <div>
+        <h1>Refund Request #{{ refund.id }}</h1>
+        <span class="badge-pill" style="{{ rsStyle }}">{{ refund.status }}</span>
+    </div>
+    <a href="{{ path('admin_refunds') }}" class="btn btn-secondary" style="font-size:0.85em;">← Back to Refunds</a>
+</div>
+
+<div class="rfd-layout">
+    {# Left: Details #}
+    <div class="rfd-card">
+        <div class="rfd-card-title">Request Details</div>
+        <div class="rfd-row">
+            <div class="rfd-label">Amount</div>
+            <div class="rfd-value"><span class="rfd-amount-highlight">{{ refund.amount|default('0.00') }}</span> <span style="color:var(--text-muted);font-size:0.85em;">TND</span></div>
         </div>
-
-        <h2 style="margin-top:28px;">Update Refund Status</h2>
-        <form method="post" action="{{ path('admin_refund_detail', {'id': refund.id}) }}" style="max-width:520px;">
-            <div class="form-group" style="margin-bottom:14px;">
-                <label for="status">New Status</label>
-                <select id="status" name="status" class="form-control">
-                    <option value="PENDING"  {% if refund.status == 'PENDING'  %}selected{% endif %}>PENDING</option>
-                    <option value="APPROVED" {% if refund.status == 'APPROVED' %}selected{% endif %}>APPROVED</option>
-                    <option value="REJECTED" {% if refund.status == 'REJECTED' %}selected{% endif %}>REJECTED</option>
-                </select>
+        <div class="rfd-row">
+            <div class="rfd-label">Status</div>
+            <div class="rfd-value"><span class="badge-pill" style="{{ rsStyle }}">{{ refund.status }}</span></div>
+        </div>
+        <div class="rfd-row">
+            <div class="rfd-label">Requester</div>
+            <div class="rfd-value">User #{{ refund.requesterId|default('—') }}</div>
+        </div>
+        <div class="rfd-row">
+            <div class="rfd-label">Reservation</div>
+            <div class="rfd-value">#{{ refund.reservationId|default('—') }}</div>
+        </div>
+        <div class="rfd-row">
+            <div class="rfd-label">Reclamation</div>
+            <div class="rfd-value">
+                {% if refund.reclamationId %}
+                    <a href="{{ path('admin_reclamation_detail', {'id': refund.reclamationId}) }}" style="color:#93c5fd;text-decoration:none;font-weight:600;">#{{ refund.reclamationId }} ↗</a>
+                {% else %}
+                    —
+                {% endif %}
             </div>
+        </div>
+        <div class="rfd-row">
+            <div class="rfd-label">Reason</div>
+            <div class="rfd-value" style="color:var(--text-muted);font-size:0.85em;">{{ refund.reason|default('—') }}</div>
+        </div>
+        <div class="rfd-row">
+            <div class="rfd-label">Submitted</div>
+            <div class="rfd-value">{{ refund.createdAt ? refund.createdAt|date('M d, Y · H:i') : '—' }}</div>
+        </div>
+    </div>
 
-            <div class="form-group" style="margin-bottom:6px;">
-                <label for="payment_reference">
-                    Stripe Payment Reference
-                    <span style="color:#888;font-size:0.83em;">(required when approving)</span>
-                </label>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    {# Right: Action form #}
+    <div class="rfd-card">
+        <div class="rfd-card-title">Process Refund</div>
+        <div class="rfd-form-body">
+            <form method="post" action="{{ path('admin_refund_detail', {'id': refund.id}) }}">
+                <div class="rfd-field">
+                    <label>
+                        Approved Amount
+                        <span>(leave blank for full amount of {{ refund.amount }} TND)</span>
+                    </label>
                     <input
-                        type="text"
-                        id="payment_reference"
-                        name="payment_reference"
-                        class="form-control"
-                        placeholder="pi_xxx or ch_xxx"
-                        style="flex:1;min-width:220px;"
-                    />
-                    <button
-                        type="button"
-                        id="btn-generate"
-                        class="btn btn-secondary"
-                        style="white-space:nowrap;"
+                        type="number"
+                        name="approved_amount"
+                        class="rfd-input"
+                        step="0.01"
+                        min="0.01"
+                        max="{{ refund.amount }}"
+                        placeholder="{{ refund.amount }}"
+                        value="{{ refund.approvedAmount ?? '' }}"
                     >
-                        🧪 Generate Test Reference
-                    </button>
+                    {% if refund.approvedAmount is not null and refund.approvedAmount != refund.amount %}
+                        <p style="margin:6px 0 0;font-size:0.78em;color:#fdba74;">
+                            ⚡ Partial refund — {{ refund.approvedAmount }} TND of {{ refund.amount }} TND requested
+                        </p>
+                    {% endif %}
                 </div>
-            </div>
 
-            <div id="generate-status" style="margin:8px 0 12px;padding:8px 12px;border-radius:6px;display:none;font-size:0.9em;"></div>
+                <div class="rfd-field">
+                    <label>New Status</label>
+                    <select id="refund-status" name="status" class="rfd-select">
+                        <option value="PENDING"  {% if refund.status == 'PENDING'  %}selected{% endif %}>PENDING</option>
+                        <option value="APPROVED" {% if refund.status == 'APPROVED' %}selected{% endif %}>APPROVED</option>
+                        <option value="REJECTED" {% if refund.status == 'REJECTED' %}selected{% endif %}>REJECTED</option>
+                    </select>
+                </div>
 
-            <button type="submit" class="btn btn-success">Save Changes</button>
-        </form>
+                <div class="rfd-field">
+                    <label>
+                        Stripe Payment Reference
+                        <span>(required when approving)</span>
+                    </label>
+                    <div class="rfd-ref-row">
+                        <input type="text" id="payment_reference" name="payment_reference" class="rfd-input" placeholder="pi_xxx or ch_xxx">
+                        <button type="button" id="btn-generate" class="rfd-gen-btn">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                            Generate Test
+                        </button>
+                    </div>
+                    <div id="generate-status" class="rfd-status-msg"></div>
+                </div>
 
-        <p style="margin-top:16px;"><a href="{{ path('admin_refunds') }}" class="btn btn-primary">← Back to Refunds</a></p>
-    {% else %}
-        <p>Refund not found.</p>
-    {% endif %}
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
 
-    <script>
-    (function () {
-        var btn       = document.getElementById('btn-generate');
-        var refInput  = document.getElementById('payment_reference');
-        var statusEl  = document.getElementById('generate-status');
-        var generateUrl = '{{ path('admin_refund_generate_test', {'id': refund.id}) }}';
+<script>
+(function(){
+    var btn       = document.getElementById('btn-generate');
+    var refInput  = document.getElementById('payment_reference');
+    var statusEl  = document.getElementById('generate-status');
+    var generateUrl = '{{ path('admin_refund_generate_test', {'id': refund.id}) }}';
 
-        function showStatus(msg, ok) {
-            statusEl.textContent = msg;
-            statusEl.style.display = 'block';
-            statusEl.style.background = ok ? '#d4edda' : '#f8d7da';
-            statusEl.style.color      = ok ? '#155724' : '#721c24';
-            statusEl.style.border     = '1px solid ' + (ok ? '#c3e6cb' : '#f5c6cb');
-        }
+    btn.addEventListener('click', function(){
+        btn.disabled = true;
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Working…';
+        statusEl.style.display = 'none';
 
-        btn.addEventListener('click', function () {
-            btn.disabled = true;
-            btn.textContent = '⏳ Generating…';
-            statusEl.style.display = 'none';
-
-            fetch(generateUrl, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(resp) {
-                return resp.text().then(function(text) {
-                    try {
-                        return JSON.parse(text);
-                    } catch(e) {
-                        throw new Error('Server returned non-JSON: ' + text.substring(0, 200));
-                    }
-                });
-            })
-            .then(function(data) {
-                if (data.success) {
+        fetch(generateUrl, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'} })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success){
                     refInput.value = data.reference;
-                    document.getElementById('status').value = 'APPROVED';
-                    showStatus('✅ Reference generated: ' + data.reference, true);
+                    document.getElementById('refund-status').value = 'APPROVED';
+                    statusEl.textContent = '✓ Reference generated: ' + data.reference;
+                    statusEl.className = 'rfd-status-msg ok';
                 } else {
-                    showStatus('❌ ' + (data.error || 'Unknown error'), false);
+                    statusEl.textContent = '✕ ' + (data.error || 'Unknown error');
+                    statusEl.className = 'rfd-status-msg err';
                 }
+                statusEl.style.display = 'block';
             })
-            .catch(function(e) {
-                showStatus('❌ ' + e.message, false);
+            .catch(e => {
+                statusEl.textContent = '✕ ' + e.message;
+                statusEl.className = 'rfd-status-msg err';
+                statusEl.style.display = 'block';
             })
-            .finally(function() {
+            .finally(() => {
                 btn.disabled = false;
-                btn.textContent = '🧪 Generate Test Reference';
+                btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Generate Test';
             });
-        });
-    })();
-    </script>
+    });
+})();
+</script>
+<style>@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }</style>
+{% else %}
+    <p style="color:var(--text-muted);">Refund request not found.</p>
+{% endif %}
 {% endblock %}
