@@ -42,6 +42,11 @@ services:
         arguments:
             $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
 
+    App\Service\FlouciPaymentService:
+        arguments:
+            $appPublic: '%env(string:FLOUCI_APP_PUBLIC)%'
+            $appSecret: '%env(string:FLOUCI_APP_SECRET)%'
+
     App\Service\CloudinaryService:
         arguments:
         

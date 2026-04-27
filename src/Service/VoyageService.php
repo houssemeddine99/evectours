@@ -14,6 +14,7 @@ class VoyageService
         private readonly VoyageRepository $voyageRepository,
         private readonly VoyageImageRepository $voyageImageRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly DynamicPricingService $dynamicPricingService,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
@@ -227,17 +228,24 @@ class VoyageService
             $imageUrls = $this->extractImageUrls($voyage->getId());
         }
 
+        $basePrice = (float) ($voyage->getPrice() ?? 0);
+        $pricing   = $this->dynamicPricingService->calculate($basePrice, $voyage->getId(), $voyage->getStartDate());
+
         return [
-            'id'          => $voyage->getId(),
-            'slug'        => $slug,
-            'title'       => $voyage->getTitle(),
-            'description' => $voyage->getDescription(),
-            'destination' => $voyage->getDestination(),
-            'start_date'  => $voyage->getStartDate()?->format('Y-m-d'),
-            'end_date'    => $voyage->getEndDate()?->format('Y-m-d'),
-            'price'       => $voyage->getPrice(),
-            'image_url'   => $imageUrls,
-            'tags'        => $tags,
+            'id'              => $voyage->getId(),
+            'slug'            => $slug,
+            'title'           => $voyage->getTitle(),
+            'description'     => $voyage->getDescription(),
+            'destination'     => $voyage->getDestination(),
+            'start_date'      => $voyage->getStartDate()?->format('Y-m-d'),
+            'end_date'        => $voyage->getEndDate()?->format('Y-m-d'),
+            'price'           => (string) $pricing['price'],
+            'base_price'      => (string) $pricing['base_price'],
+            'scarcity_label'  => $pricing['scarcity_label'],
+            'scarcity_level'  => $pricing['scarcity_level'],
+            'booked_people'   => $pricing['booked'],
+            'image_url'       => $imageUrls,
+            'tags'            => $tags,
         ];
     }
 

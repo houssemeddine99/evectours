@@ -120,6 +120,11 @@
                 {% if reservation.status == 'CONFIRMED' %}
                     <button id="btn-cancel-trigger" class="btn btn-danger">Cancel Reservation</button>
                 {% elseif reservation.status == 'PENDING' %}
+                    {% if reservation.payment_status != 'PAID' %}
+                        <form method="post" action="{{ path('reservation_pay_now', {id: reservation.id}) }}" class="inline-form">
+                            <button type="submit" class="btn btn-pay-now">💳 Pay Now</button>
+                        </form>
+                    {% endif %}
                     <form method="post" class="inline-form">
                         <button type="submit" name="action_cancel" class="btn btn-danger">Cancel Reservation</button>
                     </form>
@@ -179,6 +184,8 @@
 .ai-warning-box { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:16px; font-style:italic; color:#fde68a; line-height:1.6; min-height:60px; }
 .spinner-small { width:20px; height:20px; border:2px solid rgba(245,158,11,0.3); border-top-color:#f59e0b; border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.btn-pay-now { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:opacity .2s; }
+.btn-pay-now:hover { opacity:.88; }
 </style>
 
 <script>

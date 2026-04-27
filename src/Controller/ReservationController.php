@@ -7,6 +7,7 @@ use App\Service\AiCancellationService;
 use App\Service\CarbonFootprintService;
 use App\Service\LoyaltyPointsService;
 use App\Service\OfferService;
+use App\Service\FlouciPaymentService;
 use App\Service\ReservationService;
 use App\Message\SendSmsMessage;
 use App\Service\ValidationService;
@@ -22,6 +23,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ReservationController extends AbstractController
 {
@@ -39,6 +41,7 @@ class ReservationController extends AbstractController
         private readonly UserRepository $userRepository,
         private readonly MessageBusInterface $bus,
         private readonly MailerService $mailerService,
+        private readonly FlouciPaymentService $flouciPaymentService,
     ) {}
 
     #[Route('/api/weather', name: 'api_weather', methods: ['GET'])]
@@ -113,8 +116,6 @@ class ReservationController extends AbstractController
                     throw new \Exception('Creation failed sorry');
                 }
 
-                $this->addFlash('success', 'Reservation created successfully!' . ($loyaltyDiscount > 0 ? ' 5% loyalty discount applied.' : ''));
-
                 try {
                     $userEmail = $user['email'] ?? null;
                     if ($userEmail) {
@@ -123,9 +124,32 @@ class ReservationController extends AbstractController
                 } catch (\Throwable $e) {
                     // don't block the user if email fails
                 }
+
+                // Redirect to Flouci payment
+                $successUrl = $this->generateUrl('reservation_payment_success',
+                    ['reservation_id' => $created['id']], UrlGeneratorInterface::ABSOLUTE_URL);
+                $failUrl = $this->generateUrl('reservation_payment_cancel',
+                    ['reservation_id' => $created['id']], UrlGeneratorInterface::ABSOLUTE_URL);
+
+                $payment = $this->flouciPaymentService->createPayment(
+                    $created['id'],
+                    (float) $created['total_price'],
+                    $successUrl,
+                    $failUrl,
+                );
+
+                if ($payment === null || empty($payment['link'])) {
+                    // Flouci unavailable — keep reservation PENDING, manual flow
+                    $this->addFlash('warning', 'Reservation saved! Payment gateway unavailable — our team will contact you to complete payment.' . ($loyaltyDiscount > 0 ? ' 5% loyalty discount applied.' : ''));
+                    return $this->redirectToRoute('account_reservation_detail', ['id' => $created['id']]);
+                }
+
+                $request->getSession()->set('flouci_payment_' . $created['id'], $payment['payment_id']);
+
+                return $this->redirect($payment['link']);
+
             } catch (\Throwable $e) {
                 $this->addFlash('error', 'Error: ' . $e->getMessage());
-                $this->addFlash('error', $e->getMessage());
             }
 
             return $this->redirectToRoute('travel_voyage_reserve', ['id' => $id]);
@@ -144,6 +168,103 @@ class ReservationController extends AbstractController
             'can_redeem'      => $canRedeem,
             'carbon'          => $carbon,
         ]);
+    }
+
+    #[Route('/reservation/payment/success', name: 'reservation_payment_success', methods: ['GET'])]
+    public function paymentSuccess(Request $request): Response
+    {
+        $sessionUser = $request->getSession()->get('auth_user');
+        if (!$sessionUser) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $reservationId = $request->query->getInt('reservation_id');
+        $userId        = (int) $sessionUser['id'];
+
+        $paymentId = $request->getSession()->get('flouci_payment_' . $reservationId);
+        if (!$paymentId) {
+            $this->addFlash('error', 'Payment session expired. If you completed payment, contact support with your reservation ID: ' . $reservationId);
+            return $this->redirectToRoute('account_bookings');
+        }
+
+        $status = $this->flouciPaymentService->verifyPayment($paymentId);
+        if ($status !== 'SUCCESS') {
+            $this->addFlash('error', 'Payment could not be verified (status: ' . ($status ?? 'unknown') . '). If funds were deducted, contact support.');
+            return $this->redirectToRoute('account_reservation_detail', ['id' => $reservationId]);
+        }
+
+        $request->getSession()->remove('flouci_payment_' . $reservationId);
+        $this->reservationService->confirmReservation($reservationId, $userId, $paymentId);
+
+        $this->addFlash('success', 'Payment confirmed! Your booking is now active. 🎉');
+        return $this->redirectToRoute('account_reservation_detail', ['id' => $reservationId]);
+    }
+
+    #[Route('/reservation/{id}/pay-now', name: 'reservation_pay_now', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function payNow(Request $request, int $id): Response
+    {
+        $sessionUser = $request->getSession()->get('auth_user');
+        if (!$sessionUser) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $userId      = (int) $sessionUser['id'];
+        $reservation = $this->reservationService->getReservationById($id, $userId);
+
+        if (!$reservation) {
+            throw $this->createNotFoundException('Reservation not found');
+        }
+
+        if ($reservation['status'] !== 'PENDING' || ($reservation['payment_status'] ?? '') === 'PAID') {
+            $this->addFlash('error', 'This reservation does not require payment.');
+            return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
+        }
+
+        $successUrl = $this->generateUrl('reservation_payment_success',
+            ['reservation_id' => $id], UrlGeneratorInterface::ABSOLUTE_URL);
+        $failUrl = $this->generateUrl('reservation_payment_cancel',
+            ['reservation_id' => $id], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $payment = $this->flouciPaymentService->createPayment(
+            $id,
+            (float) $reservation['total_price'],
+            $successUrl,
+            $failUrl,
+        );
+
+        if ($payment === null || empty($payment['link'])) {
+            $this->addFlash('warning', 'Payment gateway is temporarily unavailable. Please try again later or contact support.');
+            return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
+        }
+
+        $request->getSession()->set('flouci_payment_' . $id, $payment['payment_id']);
+
+        return $this->redirect($payment['link']);
+    }
+
+    #[Route('/reservation/payment/cancel', name: 'reservation_payment_cancel', methods: ['GET'])]
+    public function paymentCancel(Request $request): Response
+    {
+        $sessionUser = $request->getSession()->get('auth_user');
+        if (!$sessionUser) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $reservationId = $request->query->getInt('reservation_id');
+        $userId        = (int) $sessionUser['id'];
+
+        $request->getSession()->remove('flouci_payment_' . $reservationId);
+
+        $this->addFlash('warning', 'Payment was cancelled. Your reservation is saved as pending — you can complete payment anytime.');
+
+        $reservation = $reservationId
+            ? $this->reservationService->getReservationById($reservationId, $userId)
+            : null;
+        $voyageId = $reservation['voyage_id'] ?? null;
+
+        return $voyageId
+            ? $this->redirectToRoute('travel_voyage_reserve', ['id' => $voyageId])
+            : $this->redirectToRoute('travel_voyages');
     }
 
     #[Route('/account/bookings', name: 'account_bookings', methods: ['GET'])]
@@ -367,11 +488,11 @@ class ReservationController extends AbstractController
                     return $this->adminController->ensureIsAdmin($request);
                 }
                 $paymentReference = trim((string) $request->request->get('payment_reference', ''));
-                if ($this->reservationService->confirmReservation($id, $user['id'], $paymentReference !== '' ? $paymentReference : null)) {
-                    $this->addFlash('success', 'Reservation confirmed successfully. Enjoy your trip!');
-                    return $this->redirectToRoute('account_bookings');
+                if ($this->reservationService->confirmReservationAsAdmin($id, $paymentReference !== '' ? $paymentReference : null)) {
+                    $this->addFlash('success', 'Reservation confirmed successfully.');
+                    return $this->redirectToRoute('admin_reservations');
                 } else {
-                    $error = 'Unable to confirm reservation. It may already be confirmed, cancelled, or invalid.';
+                    $error = 'Unable to confirm reservation. It may already be confirmed or cancelled.';
                 }
             }
 

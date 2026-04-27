@@ -65,6 +65,11 @@
                             {% if reservation.status == 'CONFIRMED' %}
                                 <a href="{{ path('account_reservation_ticket', {id: reservation.id}) }}" class="btn btn-ticket" target="_blank">🎫 Ticket</a>
                             {% endif %}
+                            {% if reservation.status == 'PENDING' and (reservation.payment_status is not defined or reservation.payment_status != 'PAID') %}
+                                <form method="post" action="{{ path('reservation_pay_now', {id: reservation.id}) }}" class="inline-form">
+                                    <button type="submit" class="btn btn-pay-now">💳 Pay Now</button>
+                                </form>
+                            {% endif %}
                             {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
                                 <form method="post" action="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="inline-form">
                                     <button type="submit" name="action_cancel" class="btn btn-danger">Cancel</button>
@@ -89,5 +94,7 @@
     .loyalty-hint { font-size:0.84rem; color:var(--text-muted); }
     .loyalty-badge-ready { background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e; border-radius:20px; padding:6px 14px; font-size:0.82rem; font-weight:700; white-space:nowrap; }
     .btn-ticket { background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; }
+    .btn-pay-now { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; font-size:0.88rem; cursor:pointer; transition:opacity .2s; }
+    .btn-pay-now:hover { opacity:.88; }
     </style>
 {% endblock %}

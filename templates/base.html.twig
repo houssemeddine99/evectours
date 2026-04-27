@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Travagir{% endblock %}</title>
     <link rel="icon" href="/favicon.ico">
-    {# Cache-busting query parameter to ensure updated CSS is loaded after changes #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="/styles/app.css">
     <!-- Include component styles for admin tables and other shared components -->
     <link rel="stylesheet" href="/styles/components.css">
@@ -22,6 +24,19 @@
                 <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
                 <a class="{{ active_nav|default('') == 'trip-planner' ? 'active' : '' }}" href="{{ path('trip_planner') }}">🤖 Trip Planner</a>
                 <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+                <div class="lang-picker" id="langPicker">
+                    <button class="lang-toggle" id="langToggle" title="Select language" aria-label="Select language">🌐</button>
+                    <div class="lang-menu" id="langMenu">
+                        <button onclick="setLang('')">🇬🇧 English</button>
+                        <button onclick="setLang('fr')">🇫🇷 Français</button>
+                        <button onclick="setLang('ar')">🇸🇦 العربية</button>
+                        <button onclick="setLang('de')">🇩🇪 Deutsch</button>
+                        <button onclick="setLang('es')">🇪🇸 Español</button>
+                        <button onclick="setLang('it')">🇮🇹 Italiano</button>
+                        <button onclick="setLang('zh-CN')">🇨🇳 中文</button>
+                        <button onclick="setLang('tr')">🇹🇷 Türkçe</button>
+                    </div>
+                </div>
                 {% if app.session.get('auth_user') %}
                     <div class="account-dropdown">
                         <button class="account-btn">👤</button>
@@ -68,7 +83,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© 2026 Travagir Travel Agency — Symfony 6.4 MVC + Doctrine + Twig</p>
+            <p>© 2026 <strong style="color:var(--amazon-orange-soft)">Travagir</strong> — Crafted with Symfony 6.4 &amp; Twig</p>
         </div>
     </footer>
 
@@ -113,5 +128,131 @@
             }
         });
     </script>
+
+    {# Hidden Google Translate widget — must stay in DOM for Google to initialise #}
+    <div id="google_translate_element" style="display:none;position:absolute;"></div>
+    <script>
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                autoDisplay: false
+            }, 'google_translate_element');
+
+            // Hide the Google toolbar banner as soon as it appears, then stop watching
+            var observer = new MutationObserver(function () {
+                var banner = document.querySelector('iframe.goog-te-banner-frame, .goog-te-banner-frame');
+                if (banner) {
+                    banner.style.cssText = 'display:none!important';
+                    document.body.style.top = '0';
+                    document.body.style.marginTop = '0';
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: false });
+        }
+
+        function setLang(lang) {
+            document.getElementById('langMenu').classList.remove('open');
+
+            if (!lang) {
+                // Restore English: wipe the cookie on every possible path/domain and reload
+                var exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+                document.cookie = 'googtrans=; ' + exp;
+                document.cookie = 'googtrans=; ' + exp + '; domain=' + location.hostname;
+                document.cookie = 'googtrans=; ' + exp + '; domain=.' + location.hostname;
+                window.location.reload();
+                return;
+            }
+
+            var sel = document.querySelector('.goog-te-combo');
+            if (sel) {
+                sel.value = lang;
+                sel.dispatchEvent(new Event('change'));
+            } else {
+                document.cookie = 'googtrans=/en/' + lang + '; path=/';
+                window.location.reload();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var toggle = document.getElementById('langToggle');
+            var menu   = document.getElementById('langMenu');
+
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                menu.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!document.getElementById('langPicker').contains(e.target)) {
+                    menu.classList.remove('open');
+                }
+            });
+        });
+    </script>
+    <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <style>
+        /* Kill every piece of Google Translate UI chrome */
+        .goog-te-banner-frame,
+        .goog-te-balloon-frame,
+        iframe.goog-te-banner-frame,
+        #goog-gt-tt,
+        .skiptranslate > iframe,
+        .goog-te-menu-frame { display: none !important; visibility: hidden !important; }
+        body { top: 0 !important; margin-top: 0 !important; }
+
+        /* ── Custom language picker ── */
+        .lang-picker { position: relative; display: flex; align-items: center; }
+
+        .lang-toggle {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color .2s, background .2s;
+            color: inherit;
+        }
+        .lang-toggle:hover { border-color: var(--amazon-orange); background: rgba(255,153,0,.1); }
+
+        .lang-menu {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: #111c2d;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 6px;
+            z-index: 200;
+            min-width: 170px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.55);
+            gap: 2px;
+        }
+        .lang-menu.open { display: flex; }
+
+        .lang-menu button {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            transition: background .15s, color .15s;
+        }
+        .lang-menu button:hover { background: rgba(255,153,0,.15); color: var(--amazon-orange); }
+    </style>
 </body>
 </html>

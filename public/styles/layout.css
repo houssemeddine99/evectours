@@ -19,11 +19,17 @@
 }
 
 .logo {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: var(--amazon-orange);
-  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+  transition: opacity .2s;
 }
+
+.logo:hover { opacity: .85; }
 
 /* Navigation */
 nav {
@@ -179,14 +185,26 @@ nav a.active, nav a:hover {
 
 /* Site Footer */
 .site-footer {
-  background: var(--amazon-dark);
-  color: var(--amazon-light);
-  padding: 20px 0;
+  background: #0a0f1c;
+  border-top: 1px solid var(--border-dark);
+  padding: 32px 0 24px;
+  margin-top: 60px;
 }
 
 .site-footer p {
   margin: 0;
   text-align: center;
+  color: var(--text-muted);
+  font-size: .88rem;
+}
+
+.site-footer p a {
+  color: var(--amazon-orange-soft);
+  text-decoration: none;
+}
+
+.site-footer p a:hover {
+  color: var(--amazon-orange);
 }
 
 /* Mobile Navigation Toggle */

@@ -51,4 +51,31 @@ class ReviewRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /** @return array<int, array{id:int,user_id:int,voyage_id:int,rating:int,comment:?string,created_at:string}> */
+    public function findAllWithVoyage(): array
+    {
+        $reviews = $this->createQueryBuilder('r')
+            ->orderBy('r.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn(Review $r) => [
+            'id'         => $r->getId(),
+            'user_id'    => $r->getUserId(),
+            'voyage_id'  => $r->getVoyageId(),
+            'rating'     => $r->getRating(),
+            'comment'    => $r->getComment(),
+            'created_at' => $r->getCreatedAt()->format('Y-m-d H:i'),
+        ], $reviews);
+    }
+
+    public function deleteById(int $id): void
+    {
+        $review = $this->find($id);
+        if ($review) {
+            $this->getEntityManager()->remove($review);
+            $this->getEntityManager()->flush();
+        }
+    }
 }

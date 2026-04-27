@@ -104,16 +104,11 @@ class VoyageRepository extends ServiceEntityRepository
                 ->setParameter('tagName', $filters['tag']);
         }
 
-        // Search by destination (partial match)
-        if (!empty($filters['destination'])) {
-            $qb->andWhere('v.destination LIKE :destination')
-                ->setParameter('destination', '%' . $filters['destination'] . '%');
-        }
-
-        // Search by title (partial match)
-        if (!empty($filters['title'])) {
-            $qb->andWhere('v.title LIKE :title')
-                ->setParameter('title', '%' . $filters['title'] . '%');
+        // Keyword search — case-insensitive OR across title and destination
+        $keyword = $filters['search'] ?? $filters['destination'] ?? null;
+        if (!empty($keyword)) {
+            $qb->andWhere('LOWER(v.destination) LIKE :kw OR LOWER(v.title) LIKE :kw')
+                ->setParameter('kw', '%' . strtolower($keyword) . '%');
         }
 
         // Filter by price range

@@ -11,6 +11,8 @@ use App\Service\SearchHistoryService;
 use App\Service\VoyageVisitService;
 use App\Service\TagService;
 use App\Service\AiVoyageService;
+use App\Service\ReviewService;
+use App\Repository\ReviewRepository;
 use App\Repository\VoyageRepository;
 
 use Psr\Log\LoggerInterface;
@@ -37,6 +39,8 @@ class VoyageController extends AbstractController
         private readonly AdminController $adminController,
         private readonly TagService $tagService,
         private readonly AiVoyageService $aiVoyageService,
+        private readonly ReviewService $reviewService,
+        private readonly ReviewRepository $reviewRepository,
         #[Target('cache.api_external')]
         private readonly CacheInterface $cache,
         private readonly ?LoggerInterface $logger = null,
@@ -72,8 +76,7 @@ class VoyageController extends AbstractController
         ];
 
         if (!empty($search)) {
-            $filters['destination'] = $search;
-            $filters['title'] = $search;
+            $filters['search'] = $search;
         }
         if (!empty($minPrice)) {
             $filters['min_price'] = $minPrice;
@@ -164,6 +167,10 @@ class VoyageController extends AbstractController
             'compare_list' => $compareList,
             'duration_days' => $durationDays,
             'user_id' => $userId,
+            'reviews' => $this->reviewService->getReviewsForVoyage($voyage['id']),
+            'review_avg' => $this->reviewService->getAverageRating($voyage['id']),
+            'review_count' => $this->reviewService->getReviewCount($voyage['id']),
+            'user_review' => $userId > 1 ? $this->reviewService->getUserReview($userId, $voyage['id']) : null,
         ]);
     }
 
@@ -222,6 +229,77 @@ class VoyageController extends AbstractController
         }
 
         return $this->json(['itinerary' => $itinerary]);
+    }
+
+    #[Route('/voyages/{id}/review', name: 'voyage_submit_review', methods: ['POST'])]
+    public function submitReview(Request $request, int $id): Response
+    {
+        $sessionUser = $request->getSession()->get('auth_user');
+        if (!$sessionUser || empty($sessionUser['id'])) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $userId = (int) $sessionUser['id'];
+        $rating = (int) $request->request->get('rating', 5);
+        $comment = trim((string) $request->request->get('comment', ''));
+
+        $this->reviewService->submitReview($userId, $id, $rating, $comment ?: null);
+
+        $voyage = $this->voyageRepository->find($id);
+        $slug = $voyage?->getSlug() ?? (string) $id;
+
+        $this->addFlash('success', 'Your review has been saved. Thank you!');
+        return $this->redirectToRoute('travel_voyage_detail', ['slug' => $slug]);
+    }
+
+    #[Route('/api/voyages/{id}/reviews', name: 'api_voyage_reviews', methods: ['GET'])]
+    public function apiVoyageReviews(int $id): JsonResponse
+    {
+        return $this->json([
+            'reviews'      => $this->reviewService->getReviewsForVoyage($id),
+            'average'      => $this->reviewService->getAverageRating($id),
+            'count'        => $this->reviewService->getReviewCount($id),
+        ]);
+    }
+
+    // ==================== ADMIN REVIEWS ====================
+
+    #[Route('/admin/reviews', name: 'admin_reviews', methods: ['GET'])]
+    public function adminReviews(Request $request): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $voyageId = $request->query->getInt('voyage_id', 0);
+
+        if ($voyageId > 0) {
+            $reviews = $this->reviewService->getReviewsForVoyage($voyageId);
+            $voyage  = $this->voyageRepository->find($voyageId);
+        } else {
+            $reviews = $this->reviewRepository->findAllWithVoyage();
+            $voyage  = null;
+        }
+
+        return $this->render('admin/reviews.html.twig', [
+            'reviews'    => $reviews,
+            'voyage'     => $voyage,
+            'voyage_id'  => $voyageId ?: null,
+        ]);
+    }
+
+    #[Route('/admin/reviews/{id}/delete', name: 'admin_review_delete', methods: ['POST'])]
+    public function adminDeleteReview(Request $request, int $id): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $this->reviewRepository->deleteById($id);
+        $this->addFlash('success', 'Review deleted.');
+
+        $referer = $request->headers->get('referer', $this->generateUrl('admin_reviews'));
+        return $this->redirect($referer);
     }
 
     // ==================== ADMIN VOYAGES ====================

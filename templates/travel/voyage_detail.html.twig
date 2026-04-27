@@ -70,7 +70,10 @@
                             <span class="info-icon">💰</span>
                             <div class="info-content">
                                 <p class="info-label">Starting Price</p>
-                                <p class="info-value">{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Contact us' }}</p>
+                                <p class="info-value">{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Contact us' }}</p>
+                                {% if voyage.scarcity_label is defined and voyage.scarcity_label %}
+                                    <span class="scarcity-badge scarcity-{{ voyage.scarcity_level }}">{{ voyage.scarcity_label }}</span>
+                                {% endif %}
                                 {% if offer is defined and offer %}
                                     <p class="offer-badge">🎉 {{ offer.discount_percentage }}% OFF</p>
                                 {% endif %}
@@ -178,6 +181,109 @@
             </div>
         </div>
     </section>
+
+    {# ======================== REVIEWS SECTION ======================== #}
+    <section class="reviews-section">
+        <div class="reviews-container">
+            <div class="reviews-header">
+                <h2 class="section-title">⭐ Traveller Reviews</h2>
+                {% if review_count > 0 %}
+                <div class="reviews-summary">
+                    <span class="avg-rating">{{ review_avg|number_format(1) }}</span>
+                    <span class="avg-stars">
+                        {% for i in 1..5 %}
+                            <span class="star {{ i <= review_avg|round ? 'star-filled' : (i - 0.5 <= review_avg ? 'star-half' : '') }}">★</span>
+                        {% endfor %}
+                    </span>
+                    <span class="review-count">{{ review_count }} review{{ review_count != 1 ? 's' : '' }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Review form #}
+            {% if user_id > 1 %}
+            <div class="review-form-card">
+                <h3>{{ user_review ? 'Update Your Review' : 'Leave a Review' }}</h3>
+                <form method="post" action="{{ path('voyage_submit_review', {id: voyage.id}) }}" class="review-form">
+                    <div class="star-picker" id="starPicker">
+                        {% for i in 1..5 %}
+                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if user_review and user_review.rating == i %}checked{% elseif not user_review and i == 5 %}checked{% endif %} class="star-radio">
+                        <label for="star{{ i }}" title="{{ i }} star{{ i != 1 ? 's' : '' }}">★</label>
+                        {% endfor %}
+                    </div>
+                    <textarea name="comment" class="review-textarea" placeholder="Share your experience (optional)" rows="3" maxlength="1000">{{ user_review ? user_review.comment : '' }}</textarea>
+                    <button type="submit" class="btn btn-primary btn-review-submit">{{ user_review ? 'Update Review' : 'Submit Review' }}</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="review-login-cta"><a href="{{ path('auth_login') }}">Log in</a> to leave a review.</p>
+            {% endif %}
+
+            {# Review list #}
+            {% if reviews is not empty %}
+            <div class="review-list">
+                {% for review in reviews %}
+                <div class="review-card {% if user_review and review.user_id == user_id %}review-card--own{% endif %}">
+                    <div class="review-meta">
+                        <span class="review-stars">
+                            {% for i in 1..5 %}
+                                <span class="{{ i <= review.rating ? 'star-filled' : 'star-empty' }}">★</span>
+                            {% endfor %}
+                        </span>
+                        <span class="review-date">{{ review.created_at }}</span>
+                        {% if user_review and review.user_id == user_id %}
+                            <span class="review-own-badge">Your review</span>
+                        {% endif %}
+                    </div>
+                    {% if review.comment %}
+                    <p class="review-comment">{{ review.comment }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-reviews">No reviews yet. Be the first!</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <style>
+        .reviews-section { background: rgba(255,255,255,.02); border-top: 1px solid var(--border-dark); padding: 40px 0; }
+        .reviews-container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .reviews-header { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+        .reviews-summary { display: flex; align-items: center; gap: 8px; }
+        .avg-rating { font-size: 2rem; font-weight: 800; color: #f59e0b; }
+        .avg-stars .star-filled { color: #f59e0b; }
+        .avg-stars .star-half { color: #f59e0b; opacity: .5; }
+        .avg-stars span:not(.star-filled):not(.star-half) { color: rgba(255,255,255,.2); }
+        .review-count { color: var(--text-muted); font-size: .9rem; }
+
+        .review-form-card { background: rgba(255,255,255,.04); border: 1px solid var(--border-dark); border-radius: 12px; padding: 24px; margin-bottom: 28px; }
+        .review-form-card h3 { margin: 0 0 16px; font-size: 1.05rem; }
+        .review-form { display: flex; flex-direction: column; gap: 14px; }
+        .star-picker { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+        .star-radio { display: none; }
+        .star-picker label { font-size: 2rem; cursor: pointer; color: rgba(255,255,255,.2); transition: color .15s; }
+        .star-picker input:checked ~ label,
+        .star-picker label:hover,
+        .star-picker label:hover ~ label { color: #f59e0b; }
+        .review-textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border-dark); border-radius: 8px; color: inherit; font-size: .95rem; padding: 10px 14px; resize: vertical; font-family: inherit; }
+        .review-textarea:focus { outline: none; border-color: #6366f1; }
+        .btn-review-submit { align-self: flex-start; padding: 10px 22px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .review-login-cta { color: var(--text-muted); margin-bottom: 24px; }
+        .review-login-cta a { color: #6366f1; }
+
+        .review-list { display: flex; flex-direction: column; gap: 16px; }
+        .review-card { background: rgba(255,255,255,.04); border: 1px solid var(--border-dark); border-radius: 10px; padding: 16px 20px; }
+        .review-card--own { border-color: #6366f1; }
+        .review-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .review-stars .star-filled { color: #f59e0b; }
+        .review-stars .star-empty { color: rgba(255,255,255,.2); }
+        .review-date { color: var(--text-muted); font-size: .82rem; }
+        .review-own-badge { background: #6366f1; color: #fff; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .review-comment { margin: 0; font-size: .95rem; line-height: 1.6; color: var(--text-muted); }
+        .no-reviews { color: var(--text-muted); text-align: center; padding: 24px 0; }
+    </style>
 
     <script>
         const images = {{ voyage.image_url is iterable ? voyage.image_url|json_encode|raw : '[]' }};
