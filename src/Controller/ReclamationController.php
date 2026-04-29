@@ -101,12 +101,9 @@ class ReclamationController extends AbstractController
             }
 
             if (!isset($error)) {
-                $reclamation = $this->reclamationService->createReclamation($data);
-                if ($reclamation) {
-                    $this->addFlash('success', 'Reclamation submitted successfully.');
-                    return $this->redirectToRoute('user_reclamations');
-                }
-                $error = ['general' => ['Unable to create reclamation.']];
+                $this->reclamationService->createReclamation($data);
+                $this->addFlash('success', 'Reclamation submitted successfully.');
+                return $this->redirectToRoute('user_reclamations');
             }
         }
 
@@ -264,8 +261,7 @@ class ReclamationController extends AbstractController
                 $friendly = match (strtoupper($status)) {
                     'IN_PROGRESS' => 'is now being reviewed',
                     'RESOLVED'    => 'has been resolved',
-                    'CLOSED'      => 'has been closed',
-                    default       => 'has been updated to ' . $status,
+                    default       => 'has been closed',
                 };
                 $this->bus->dispatch(new SendSmsMessage(
                     $user->getTel(),

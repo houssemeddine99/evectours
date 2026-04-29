@@ -48,7 +48,7 @@ class TripPlannerController extends AbstractController
         $offerMap  = array_column($offers, null, 'id');
 
         $enriched = [];
-        foreach ($result['recommendations'] ?? [] as $rec) {
+        foreach ($result['recommendations'] as $rec) {
             $vid   = (int) ($rec['voyage_id'] ?? 0);
             $oid   = isset($rec['offer_id']) ? (int) $rec['offer_id'] : null;
             $voyage = $voyageMap[$vid] ?? null;
@@ -65,7 +65,7 @@ class TripPlannerController extends AbstractController
         return $this->json([
             'success'         => true,
             'recommendations' => $enriched,
-            'explanation'     => $result['explanation'] ?? '',
+            'explanation'     => $result['explanation'],
         ]);
     }
 }

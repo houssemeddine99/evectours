@@ -120,9 +120,6 @@ public function createVoyageImage(array $data): ?VoyageImage
         );
 
         return array_map(function ($image) {
-            if (is_array($image)) {
-                return $image;
-            }
             return [
                 'id' => $image->getId(),
                 'image_url' => $image->getImageUrl(),

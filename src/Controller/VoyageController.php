@@ -102,7 +102,7 @@ class VoyageController extends AbstractController
         if (!empty($search)) {
             $sessionUser = $request->getSession()->get('auth_user');
             $userId = $sessionUser['id'] ?? 0;
-            $resultsFound = is_array($voyages) ? count($voyages) : 0;
+            $resultsFound = count($voyages);
             $this->searchHistoryService->recordSearch($userId, $search, 'voyage', $resultsFound);
         }
 
@@ -121,7 +121,6 @@ class VoyageController extends AbstractController
             'all_tags' => $this->tagService->getAllTags(),
             'active_tag' => $tagFilter,
             'user_id' => $userId,
-            'compare_list' => $request->getSession()->get('compare_list', []),
         ]);
     }
 
@@ -354,15 +353,11 @@ class VoyageController extends AbstractController
 
             $this->logger?->info('Creating new voyage', ['title' => $data['title'] ?? '']);
             $voyage = $this->voyageService->createVoyage($data);
-            if ($voyage) {
-                $tagIds = $data['tags'] ?? [];
-                if (!empty($tagIds)) {
-                    $this->tagService->syncVoyageTags($voyage, $tagIds);
-                }
-                $this->addFlash('success', 'Voyage created successfully!');
-            } else {
-                $this->addFlash('error', 'Failed to create voyage.');
+            $tagIds = $data['tags'] ?? [];
+            if (!empty($tagIds)) {
+                $this->tagService->syncVoyageTags($voyage, $tagIds);
             }
+            $this->addFlash('success', 'Voyage created successfully!');
             return $this->redirectToRoute('admin_voyages');
         }
 
@@ -487,7 +482,7 @@ class VoyageController extends AbstractController
             return null;
         }
 
-        return $this->cache->get('country_' . md5($destination), function (ItemInterface $item) use ($country, $destination): ?array {
+        return $this->cache->get('country_' . md5($destination), function (ItemInterface $item) use ($country): ?array {
             $item->expiresAfter(86400); // 24 hours
 
             $url = 'https://restcountries.com/v3.1/name/' . urlencode($country) . '?fields=name,flags,languages,currencies,timezones,capital,flag';

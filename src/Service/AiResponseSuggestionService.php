@@ -135,8 +135,8 @@ PROMPT,
         ]);
 
         $raw = @file_get_contents($this->apiUrl, false, $context);
-        $headers = $http_response_header ?? [];
-        $statusLine = is_array($headers) && isset($headers[0]) ? (string) $headers[0] : '';
+        $headers = $http_response_header;
+        $statusLine = isset($headers[0]) ? (string) $headers[0] : '';
         preg_match('/\s(\d{3})\s/', $statusLine, $matches);
         $httpCode = isset($matches[1]) ? (int) $matches[1] : 0;
 

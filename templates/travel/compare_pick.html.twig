@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Compare {{ anchor.title }} | Travagir{% endblock %}
+
+{% block body %}
+<section class="pick-page">
+
+    <div class="pick-header">
+        <a href="{{ path('travel_voyages') }}" class="btn btn-back">← Back to Voyages</a>
+        <h1>Compare <span class="pick-accent">{{ anchor.title }}</span> with…</h1>
+        <p class="lead">Pick any voyage below to compare it side-by-side</p>
+    </div>
+
+    {# Anchor voyage banner #}
+    <div class="anchor-banner">
+        <img src="{{ anchor.image_url is iterable and anchor.image_url|length > 0 ? anchor.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80' }}" alt="{{ anchor.title }}" class="anchor-img">
+        <div class="anchor-info">
+            <p class="anchor-label">Selected voyage</p>
+            <h2>{{ anchor.title }}</h2>
+            <p class="anchor-meta">{{ anchor.destination }} &bull; {{ anchor.start_date ? anchor.start_date|date('d M Y') : 'TBD' }} → {{ anchor.end_date ? anchor.end_date|date('d M Y') : 'TBD' }}</p>
+            <p class="anchor-price">{{ anchor.price is not empty ? anchor.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</p>
+        </div>
+        <div class="anchor-vs">VS</div>
+    </div>
+
+    {% if others|length == 0 %}
+        <div class="empty-pick">
+            <p>No other voyages available to compare with.</p>
+            <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Browse Voyages</a>
+        </div>
+    {% else %}
+        <p class="pick-instruction">Click any voyage to compare:</p>
+        <div class="pick-grid">
+            {% for voyage in others %}
+                <a href="{{ path('compare_instant', {a: anchor.id, b: voyage.id}) }}" class="pick-card">
+                    <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80' }}" alt="{{ voyage.title }}" class="pick-card-img">
+                    <div class="pick-card-body">
+                        <h3>{{ voyage.title }}</h3>
+                        <p class="pick-dest">🌍 {{ voyage.destination }}</p>
+                        <p class="pick-dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }}</p>
+                        <p class="pick-price">{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'On request' }}</p>
+                        <span class="pick-cta">Compare →</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</section>
+
+<style>
+.pick-page{padding:40px 20px;max-width:1200px;margin:0 auto}
+.pick-header{margin-bottom:28px}
+.pick-header h1{font-size:1.8rem;margin:12px 0 4px}
+.pick-accent{color:var(--amazon-orange)}
+.lead{color:var(--text-muted);margin:0}
+.btn{padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-dark);cursor:pointer;font-size:.9rem}
+.btn-back{color:var(--text-muted);background:transparent}
+.btn-back:hover{color:var(--text-primary)}
+.btn-primary{background:var(--amazon-orange);color:#000;border-color:var(--amazon-orange)}
+
+/* Anchor banner */
+.anchor-banner{display:flex;align-items:center;gap:20px;background:rgba(255,153,0,.07);border:1px solid rgba(255,153,0,.3);border-radius:12px;padding:20px 24px;margin-bottom:32px;position:relative}
+.anchor-img{width:110px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0}
+.anchor-info{flex:1}
+.anchor-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--amazon-orange);margin:0 0 4px}
+.anchor-info h2{margin:0 0 4px;font-size:1.2rem}
+.anchor-meta{color:var(--text-muted);font-size:.88rem;margin:0 0 4px}
+.anchor-price{font-weight:700;color:var(--amazon-orange);margin:0;font-size:1rem}
+.anchor-vs{width:48px;height:48px;border-radius:50%;background:var(--amazon-orange);color:#000;font-weight:900;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+
+/* Pick grid */
+.pick-instruction{color:var(--text-muted);margin-bottom:16px;font-size:.95rem}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.pick-card{text-decoration:none;color:inherit;border:2px solid var(--border-dark);border-radius:12px;overflow:hidden;background:var(--amazon-white);transition:border-color .18s,transform .18s,box-shadow .18s;display:flex;flex-direction:column}
+.pick-card:hover{border-color:var(--amazon-orange);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,153,0,.18)}
+.pick-card-img{width:100%;height:130px;object-fit:cover}
+.pick-card-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:4px}
+.pick-card-body h3{margin:0;font-size:.95rem;font-weight:700}
+.pick-dest{color:var(--text-muted);font-size:.82rem;margin:0}
+.pick-dates{color:var(--text-muted);font-size:.8rem;margin:0}
+.pick-price{font-weight:700;color:var(--amazon-orange);font-size:.92rem;margin:0}
+.pick-cta{margin-top:auto;padding-top:8px;font-size:.82rem;font-weight:700;color:var(--amazon-orange)}
+.empty-pick{text-align:center;padding:60px 20px;color:var(--text-muted)}
+</style>
+{% endblock %}

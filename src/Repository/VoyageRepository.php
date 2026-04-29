@@ -28,11 +28,37 @@ class VoyageRepository extends ServiceEntityRepository
     public function findFeatured(int $limit = 3): array
     {
         return $this->createQueryBuilder('v')
+            ->where('v.startDate IS NULL OR v.startDate >= :today')
+            ->setParameter('today', new \DateTime('today'))
             ->orderBy('v.createdAt', 'DESC')
             ->addOrderBy('v.id', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    /** @return Voyage[] */
+    public function findPublicPaginated(int $limit, int $offset): array
+    {
+        return $this->createQueryBuilder('v')
+            ->where('v.startDate IS NULL OR v.startDate >= :today')
+            ->setParameter('today', new \DateTime('today'))
+            ->orderBy('v.createdAt', 'DESC')
+            ->addOrderBy('v.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countPublic(): int
+    {
+        return (int) $this->createQueryBuilder('v')
+            ->select('COUNT(v.id)')
+            ->where('v.startDate IS NULL OR v.startDate >= :today')
+            ->setParameter('today', new \DateTime('today'))
+            ->getQuery()
+            ->getSingleScalarResult();
     }
     public function findById(int $id): ?Voyage
     {
@@ -92,11 +118,27 @@ class VoyageRepository extends ServiceEntityRepository
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
+    /** @return Voyage[] All upcoming (not yet departed) voyages for pick lists */
+    public function findAllActive(): array
+    {
+        return $this->createQueryBuilder('v')
+            ->where('v.startDate IS NULL OR v.startDate >= :today')
+            ->setParameter('today', new \DateTime('today'))
+            ->orderBy('v.startDate', 'ASC')
+            ->addOrderBy('v.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /**
      * Apply search and filter conditions to the query builder
      */
     private function applyFilters(QueryBuilder $qb, array $filters): void
     {
+        // Hide voyages that have already departed from public search
+        $qb->andWhere('v.startDate IS NULL OR v.startDate >= :filterToday')
+            ->setParameter('filterToday', new \DateTime('today'));
+
         // Filter by tag
         if (!empty($filters['tag'])) {
             $qb->join('v.tags', 'ft')

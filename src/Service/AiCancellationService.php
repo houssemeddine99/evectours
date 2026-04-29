@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -10,7 +9,6 @@ use Symfony\Contracts\Cache\ItemInterface;
 class AiCancellationService
 {
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly string $apiUrl,
         private readonly string $apiKey,
         private readonly string $model,
@@ -102,7 +100,7 @@ class AiCancellationService
             'content' => $body, 'timeout' => 12, 'ignore_errors' => true,
         ]]);
         $raw     = @file_get_contents($this->apiUrl, false, $ctx);
-        $headers = $http_response_header ?? [];
+        $headers = $http_response_header;
         preg_match('/\s(\d{3})\s/', (string) ($headers[0] ?? ''), $match);
         return [is_string($raw) ? $raw : null, isset($match[1]) ? (int) $match[1] : 0];
     }

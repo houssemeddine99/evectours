@@ -13,7 +13,7 @@ class VoyageImage
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;// @phpstan-ignore property.unusedType
+    private ?int $id = null;
 
     #[ORM\Column(name: 'voyage_id')]
     private int $voyageId = 0;

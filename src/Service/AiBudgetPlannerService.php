@@ -111,7 +111,7 @@ class AiBudgetPlannerService
             'content' => $body, 'timeout' => 20, 'ignore_errors' => true,
         ]]);
         $raw     = @file_get_contents($this->apiUrl, false, $ctx);
-        $headers = $http_response_header ?? [];
+        $headers = $http_response_header;
         preg_match('/\s(\d{3})\s/', (string) ($headers[0] ?? ''), $match);
         return [is_string($raw) ? $raw : null, isset($match[1]) ? (int) $match[1] : 0];
     }

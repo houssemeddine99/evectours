@@ -116,7 +116,7 @@ class AiVoyageService
             'ignore_errors' => true,
         ]]);
         $raw = @file_get_contents($this->apiUrl, false, $ctx);
-        $headers = $http_response_header ?? [];
+        $headers = $http_response_header;
         preg_match('/\s(\d{3})\s/', (string) ($headers[0] ?? ''), $m);
         return [is_string($raw) ? $raw : null, isset($m[1]) ? (int) $m[1] : 0, $raw === false ? 'failed' : null];
     }

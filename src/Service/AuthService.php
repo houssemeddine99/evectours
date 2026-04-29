@@ -4,13 +4,15 @@ namespace App\Service;
 
 use App\Repository\UserRepository;
 use App\Repository\AdminRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class AuthService
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-         private readonly AdminRepository $adminRepository, 
+        private readonly AdminRepository $adminRepository,
+        private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -137,7 +139,7 @@ class AuthService
         $user->setPassword($plainPassword); // setPassword() now hashes automatically
         $user->setCreatedAt(new \DateTime());
 
-            $entityManager = $this->userRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->persist($user);
             $entityManager->flush();
 
@@ -243,7 +245,7 @@ public function getUserByEmail(string $email): ?array
     }
 
         try {
-            $entityManager = $this->userRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->flush();
 
             return [
@@ -283,7 +285,7 @@ public function getUserByEmail(string $email): ?array
         }
 
         try {
-            $entityManager = $this->userRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->remove($user);
             $entityManager->flush();
             return true;

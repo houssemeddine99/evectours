@@ -42,12 +42,12 @@ class ReservationService
         }
 
         $paymentStatus = strtoupper((string) $reservation->getPaymentStatus());
-        if ($paymentStatus !== 'PAID') {
-            return ['eligible' => false, 'reason' => 'Only paid reservations are refundable.'];
-        }
-
         if ($paymentStatus === 'REFUNDED') {
             return ['eligible' => false, 'reason' => 'Reservation is already refunded.'];
+        }
+
+        if ($paymentStatus !== 'PAID') {
+            return ['eligible' => false, 'reason' => 'Only paid reservations are refundable.'];
         }
 
         $pendingCount = (int) $this->entityManager->createQueryBuilder()
@@ -110,7 +110,7 @@ class ReservationService
             $reservation->setReservationDate(new \DateTime());
             $reservation->setUpdatedAt(new \DateTime());
 
-            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->persist($reservation);
             $entityManager->flush();
 
@@ -179,7 +179,7 @@ class ReservationService
             $reservation->setStatus('CANCELLED');
             $reservation->setUpdatedAt(new \DateTime());
 
-            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->flush();
 
             return true;
@@ -205,7 +205,7 @@ class ReservationService
             }
             $reservation->setUpdatedAt(new \DateTime());
 
-            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->flush();
 
             // Award loyalty points: 1 point per TND spent
@@ -234,7 +234,7 @@ class ReservationService
             $reservation->setStatus('CANCELLED');
             $reservation->setUpdatedAt(new \DateTime());
 
-            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->flush();
 
             return true;
@@ -314,7 +314,7 @@ class ReservationService
             }
             $reservation->setUpdatedAt(new \DateTime());
 
-            $entityManager = $this->reservationRepository->getEntityManager();
+            $entityManager = $this->entityManager;
             $entityManager->flush();
 
             // Award loyalty points: 1 point per TND spent
@@ -367,12 +367,7 @@ class ReservationService
         'amount' => $reservation->getTotalPrice(),
         'reason' => $reason,
     ]);
-            if (!$refundRequest) {
-                $this->logger->error('Failed to create refund request', ['reservation_id' => $reservationId, 'user_id' => $userId]);
-                return false;
-            }
-
-              return $refundRequest !== null;
+            return true;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to request refund', ['error' => $e->getMessage(), 'reservation_id' => $reservationId, 'user_id' => $userId]);
             return false;

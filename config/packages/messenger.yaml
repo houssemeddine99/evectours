@@ -9,8 +9,8 @@ framework:
                     delay: 1000
                     multiplier: 2
 
-            # Scheduler transport: fires EscalateReclamationsMessage every hour
-            scheduler_default: 'symfony://default'
+            scheduler_default:
+                dsn: 'doctrine://default'
 
         routing:
             App\Message\SendSmsMessage: async

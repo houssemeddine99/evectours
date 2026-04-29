@@ -18,6 +18,31 @@ class VoyageComparisonController extends AbstractController
         private readonly VoyageService $voyageService,
     ) {}
 
+    #[Route('/voyages/{id}/compare-pick', name: 'compare_pick', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function pick(Request $request, int $id): Response
+    {
+        $anchor = $this->voyageService->getVoyageById($id);
+        if ($anchor === null) {
+            throw $this->createNotFoundException('Voyage not found');
+        }
+
+        $all = $this->voyageService->getAllActiveVoyages();
+        $others = array_values(array_filter($all, fn($v) => (int) $v['id'] !== $id));
+
+        return $this->render('travel/compare_pick.html.twig', [
+            'active_nav' => 'voyages',
+            'anchor'     => $anchor,
+            'others'     => $others,
+        ]);
+    }
+
+    #[Route('/compare/instant/{a}/{b}', name: 'compare_instant', requirements: ['a' => '\\d+', 'b' => '\\d+'], methods: ['GET'])]
+    public function instant(Request $request, int $a, int $b): Response
+    {
+        $request->getSession()->set('compare_list', [$a, $b]);
+        return $this->redirectToRoute('compare_show');
+    }
+
     #[Route('/compare/add/{id}', name: 'compare_add', methods: ['POST'])]
     public function add(Request $request, int $id): JsonResponse
     {

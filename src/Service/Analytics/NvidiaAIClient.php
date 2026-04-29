@@ -7,7 +7,6 @@ class NvidiaAIClient
 {
     private HttpClientInterface $httpClient;
     private string $apiKeyNvidia;
-    private string $endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
     public function __construct(string $apiKeyNvidia)
     {

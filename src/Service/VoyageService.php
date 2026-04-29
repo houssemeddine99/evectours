@@ -173,7 +173,7 @@ class VoyageService
 
     public function getVoyages(int $page = 1, int $limit = 12): array
     {
-        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findBy([], ['createdAt' => 'DESC'], $limit, ($page - 1) * $limit));
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findPublicPaginated($limit, ($page - 1) * $limit));
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
 
@@ -182,7 +182,16 @@ class VoyageService
 
     public function getTotalVoyages(): int
     {
-        return $this->safeExecute(fn () => $this->voyageRepository->count([]), 0);
+        return $this->safeExecute(fn () => $this->voyageRepository->countPublic(), 0);
+    }
+
+    public function getAllActiveVoyages(): array
+    {
+        $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllActive());
+        $ids = array_map(fn ($v) => $v->getId(), $voyages);
+        $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
     }
 
     public function getVoyageById(int $id): ?array
@@ -282,12 +291,7 @@ class VoyageService
     {
         $images = $this->safeExecute(fn () => $this->voyageImageRepository->findByVoyageId($voyageId), []);
 
-        return array_map(function ($image) {
-            if (is_array($image)) {
-                return $image['imageUrl'] ?? '';
-            }
-            return $image->getImageUrl();
-        }, $images);
+        return array_map(fn ($image) => $image->getImageUrl(), $images);
     }
 
     /**

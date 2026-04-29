@@ -67,6 +67,12 @@ class ReservationController extends AbstractController
             throw $this->createNotFoundException('Voyage not found');
         }
 
+        // Block booking of voyages that have already departed
+        if (!empty($voyage['start_date']) && new \DateTime($voyage['start_date']) < new \DateTime('today')) {
+            $this->addFlash('error', 'This voyage has already departed and is no longer available for booking.');
+            return $this->redirectToRoute('travel_voyages');
+        }
+
         $offers = array_filter($this->offerService->getActiveOffers(), fn($o) => (int) $o['voyage_id'] === $id);
         $activeOffer = $offers ? array_values($offers)[0] : null;
 
@@ -512,7 +518,7 @@ class ReservationController extends AbstractController
                                 $waitlistUser->getTel(),
                                 sprintf(
                                     'Good news, %s! A spot just opened up for "%s". Log in now to secure your reservation before it\'s gone! – TravelAgency',
-                                    $waitlistUser->getUsername() ?? 'Traveller',
+                                    $waitlistUser->getUsername() ?: 'Traveller',
                                     $reservation['voyage_title'] ?? 'your trip'
                                 )
                             ));

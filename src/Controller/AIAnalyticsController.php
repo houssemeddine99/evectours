@@ -260,7 +260,7 @@ PROMPT;
             if (!$choice) {
                 return $this->json(['error' => 'No response from AI'], 500);
             }
-            if ($choice && !isset($choice['tool_calls']) && isset($choice['content'])) {
+            if (!isset($choice['tool_calls']) && isset($choice['content'])) {
     $fakeToolCalls = $this->extractToolCallFromContent($choice['content']);
     if ($fakeToolCalls) {
         // Replace content with empty string and inject tool_calls

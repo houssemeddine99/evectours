@@ -13,7 +13,7 @@ class RefundRequest
     #[ORM\GeneratedValue]
     #[ORM\Column]
 
-    private ?int $id = null;// @phpstan-ignore property.unusedType
+    private ?int $id = null;
 
     #[ORM\Column(name: 'reclamation_id')]
     private int $reclamationId;

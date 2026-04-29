@@ -61,20 +61,13 @@
     </form>
 </div>
 
-{# Compare bar #}
-<div id="compareBar" class="compare-bar" style="display:none">
-    <span id="compareBarText">0 selected</span>
-    <a href="{{ path('compare_show') }}" class="btn-compare-go" id="compareGoBtn">Compare Now →</a>
-    <button onclick="clearCompare()" class="btn-compare-clear">✕ Clear</button>
-</div>
-
 <div class="grid">
 {% for voyage in voyages %}
     <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
         <div class="card-image-wrap" style="position:relative">
             <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
             <button class="fav-btn {% if user_id > 0 %}active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="Add to favorites">♥</button>
-            <button class="cmp-btn" data-voyage-id="{{ voyage.id }}" onclick="toggleCompare(event, {{ voyage.id }})" title="Add to comparison">⊕</button>
+            <a href="{{ path('compare_pick', {id: voyage.id}) }}" class="cmp-btn" title="Compare this voyage">⊕</a>
         </div>
         <div class="card-body">
             <div class="voyage-badges">
@@ -106,47 +99,6 @@
 </section>
 
 <script>
-const compareList = new Set({{ compare_list is defined ? compare_list|json_encode|raw : '[]' }});
-
-function updateCompareBar() {
-    const bar = document.getElementById('compareBar');
-    const text = document.getElementById('compareBarText');
-    if (compareList.size > 0) {
-        bar.style.display = 'flex';
-        text.textContent = compareList.size + ' voyage' + (compareList.size > 1 ? 's' : '') + ' selected';
-    } else {
-        bar.style.display = 'none';
-    }
-    document.querySelectorAll('.cmp-btn').forEach(btn => {
-        const id = parseInt(btn.dataset.voyageId);
-        btn.classList.toggle('cmp-active', compareList.has(id));
-    });
-}
-
-async function toggleCompare(e, voyageId) {
-    e.preventDefault();
-    const inList = compareList.has(voyageId);
-    const url = inList ? '/compare/remove/' + voyageId : '/compare/add/' + voyageId;
-    try {
-        const res = await fetch(url, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
-        const data = await res.json();
-        if (res.ok) {
-            if (inList) compareList.delete(voyageId); else compareList.add(voyageId);
-            updateCompareBar();
-        } else {
-            alert(data.status === 'max_reached' ? 'Max 3 voyages can be compared at once.' : 'Error');
-        }
-    } catch(err) { console.error(err); }
-}
-
-async function clearCompare() {
-    try {
-        await fetch('/compare/clear', { method: 'POST' });
-        compareList.clear();
-        updateCompareBar();
-    } catch(err) { console.error(err); }
-}
-
 async function toggleFavorite(e, voyageId) {
     e.preventDefault();
     const btn = e.currentTarget;
@@ -157,8 +109,6 @@ async function toggleFavorite(e, voyageId) {
         btn.classList.toggle('fav-active', data.added);
     } catch(err) { console.error(err); }
 }
-
-updateCompareBar();
 </script>
 
 <style>
@@ -171,10 +121,7 @@ updateCompareBar();
 .fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
 .fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
 .fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
-.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff}
-.cmp-btn:hover,.cmp-btn.cmp-active{background:var(--amazon-orange);color:#000}
-.compare-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--amazon-white);border:1px solid var(--border-dark);border-radius:50px;padding:12px 24px;display:flex;gap:16px;align-items:center;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:1000;white-space:nowrap}
-.btn-compare-go{background:var(--amazon-orange);color:#000;padding:8px 20px;border-radius:20px;text-decoration:none;font-weight:700;font-size:.9rem}
-.btn-compare-clear{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:4px 8px}
+.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s}
+.cmp-btn:hover{background:var(--amazon-orange);color:#000}
 </style>
 {% endblock %}
