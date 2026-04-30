@@ -24,5 +24,10 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    App\Service\BookingComService:
+        arguments:
+            $apiKey:  '%env(string:RAPIDAPI_KEY)%'
+            $apiHost: '%env(string:RAPIDAPI_BOOKING_HOST)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
