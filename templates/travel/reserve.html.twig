@@ -29,14 +29,6 @@
         <p><strong>Base price per person</strong>: {{ voyage.price|number_format(2, '.', ',') }} TND</p>
         {% if offer %}<p><strong>Active offer</strong>: {{ offer.title }} (–{{ offer.discount_percentage }}% off)</p>{% endif %}
 
-        {# Carbon badge #}
-        {% if carbon %}
-            <p style="margin-top:8px;">
-                <span class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;padding:4px 12px;border-radius:12px;font-size:0.84rem;font-weight:600;">
-                    {{ carbon.badge }} {{ carbon.label }} · ~{{ carbon.co2_per_person }} kg CO₂/person ({{ carbon.distance_km }} km from Tunis)
-                </span>
-            </p>
-        {% endif %}
     </div>
 
     {# Waitlist mode — show join/leave button instead of reservation form #}

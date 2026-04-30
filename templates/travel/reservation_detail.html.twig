@@ -38,18 +38,6 @@
             </div>
         </div>
 
-        {# Carbon Footprint Badge #}
-        {% if carbon %}
-            <div class="carbon-section">
-                <span class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;">
-                    {{ carbon.badge }} <strong>{{ carbon.label }}</strong>
-                    · {{ carbon.co2_per_person }} kg CO₂/person
-                    · {{ carbon.total_co2 }} kg total
-                    · {{ carbon.distance_km }} km from Tunis
-                </span>
-            </div>
-        {% endif %}
-
         {# Weather Widget — loaded async via /api/weather #}
         {% if reservation.status == 'CONFIRMED' %}
             <div id="weather-widget-container"
@@ -161,8 +149,6 @@
 {% endif %}
 
 <style>
-.carbon-section { margin: 16px 0; }
-.carbon-badge { display:inline-block; padding:6px 14px; border-radius:12px; font-size:0.88rem; }
 .weather-widget { display:flex; align-items:center; gap:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:14px 18px; margin:16px 0; }
 .weather-widget.weather-unavailable { color:var(--text-muted); font-size:0.85rem; }
 .weather-icon { width:64px; height:64px; }

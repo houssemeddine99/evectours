@@ -30,7 +30,6 @@
         .price-section .price { font-size: 2rem; font-weight: 800; color: #0f3460; }
         .price-section small { color: #64748b; display: block; margin-top: 4px; }
 
-        .carbon-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; margin-top: 12px; }
 
         .ticket-barcode { text-align: center; padding: 16px 40px; background: white; border-top: 1px solid #e2e8f0; letter-spacing: 6px; font-family: monospace; font-size: 0.8rem; color: #94a3b8; }
 
@@ -91,14 +90,6 @@
                 {% set pdf_url = base_url ~ path('account_reservation_ticket_pdf', {id: reservation.id}) %}
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ pdf_url|url_encode }}" alt="QR Code">
                 <small>Scan to open PDF</small>
-            </div>
-
-            <div style="text-align:center;">
-                {% if carbon %}
-                    <div class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;">
-                        {{ carbon.badge }} {{ carbon.label }} · {{ carbon.co2_per_person }} kg CO₂/person
-                    </div>
-                {% endif %}
             </div>
 
             <div class="price-section">

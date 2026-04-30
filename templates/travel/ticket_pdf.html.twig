@@ -32,7 +32,6 @@
         .qr-img { width: 100px; height: 100px; border: 2px solid #e2e8f0; border-radius: 6px; }
         .qr-label { font-size: 9px; color: #64748b; margin-top: 4px; }
 
-        .carbon-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; }
 
         .price-label { font-size: 10px; color: #64748b; margin-bottom: 4px; }
         .price-value { font-size: 24px; font-weight: bold; color: #0f3460; }
@@ -94,13 +93,7 @@
             <img class="qr-img" src="{{ qr_url }}" alt="QR">
             <div class="qr-label">Scan to verify</div>
         </div>
-        <div class="footer-center">
-            {% if carbon %}
-                <div class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}66;">
-                    {{ carbon.badge }} {{ carbon.label }} · {{ carbon.co2_per_person }} kg CO₂/person
-                </div>
-            {% endif %}
-        </div>
+        <div class="footer-center"></div>
         <div class="footer-right">
             <div class="price-label">Total Amount Paid</div>
             <div class="price-value">{{ reservation.total_price|number_format(2, '.', ',') }} TND</div>

@@ -51,30 +51,6 @@
                         </h3>
                         <p class="offer-desc">{{ offer.description|default('Explore the unknown with future-forward comfort.') }}</p>
 
-                        {# Carbon footprint badge #}
-                        {% set dest = offer.destination|default('') %}
-                        {% if dest %}
-                            {% set carbon_distances = {
-                                'paris': 1820, 'london': 2100, 'rome': 1700, 'dubai': 4900,
-                                'istanbul': 2100, 'cairo': 2300, 'barcelona': 1590, 'madrid': 1700,
-                                'casablanca': 1700, 'marrakech': 1600, 'algiers': 900, 'tripoli': 650,
-                                'new york': 7900, 'tokyo': 9600, 'bangkok': 8200, 'berlin': 2300
-                            } %}
-                            {% set dest_lower = dest|lower %}
-                            {% set dist_km = 2500 %}
-                            {% for key, km in carbon_distances %}
-                                {% if key in dest_lower %}{% set dist_km = km %}{% endif %}
-                            {% endfor %}
-                            {% set co2 = (dist_km * 0.255)|round %}
-                            {% if co2 <= 400 %}
-                                <span class="carbon-badge eco">🌿 Eco-friendly · {{ co2 }} kg CO₂</span>
-                            {% elseif co2 <= 900 %}
-                                <span class="carbon-badge moderate">🍂 Moderate · {{ co2 }} kg CO₂</span>
-                            {% else %}
-                                <span class="carbon-badge high">🔥 High impact · {{ co2 }} kg CO₂</span>
-                            {% endif %}
-                        {% endif %}
-
                         <div class="offer-meta">
                             <small>Destination: {{ offer.destination|default('Unknown') }}</small>
                             <small>Valid: {{ offer.start_date ? offer.start_date|date('d M Y') : 'TBD' }} – {{ offer.end_date ? offer.end_date|date('d M Y') : 'TBD' }}</small>
@@ -110,10 +86,6 @@
     .flash-banner { background: linear-gradient(90deg,#b45309,#f59e0b); color:#fff; text-align:center; padding:8px 12px; font-size:0.88rem; font-weight:700; letter-spacing:0.5px; }
     .urgency-banner { background: linear-gradient(90deg,#991b1b,#ef4444); color:#fff; text-align:center; padding:6px 12px; font-size:0.84rem; font-weight:600; }
     .flash-extra { background:#f59e0b; color:#000; border-radius:4px; padding:2px 6px; font-size:0.72em; margin-left:4px; }
-    .carbon-badge { display:inline-block; border-radius:14px; padding:3px 10px; font-size:0.78rem; font-weight:600; margin:6px 0 4px; }
-    .carbon-badge.eco { background:rgba(34,197,94,0.15); color:#22c55e; }
-    .carbon-badge.moderate { background:rgba(245,158,11,0.15); color:#f59e0b; }
-    .carbon-badge.high { background:rgba(239,68,68,0.15); color:#ef4444; }
     </style>
 
     <script>
