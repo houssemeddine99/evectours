@@ -288,8 +288,6 @@
         pointer-events: none;
         z-index: 9998;
         background: transparent;
-        will-change: contents;
-        transform: translateZ(0);
       }
 
       /* ── wrapper ── */
@@ -302,8 +300,6 @@
         animation: gb-float 3.2s ease-in-out infinite;
         transition: filter .2s;
         width: 110px;
-        will-change: transform;
-        transform: translateZ(0);
         contain: layout style;
       }
       #globe-bot:active { cursor: grabbing; }
