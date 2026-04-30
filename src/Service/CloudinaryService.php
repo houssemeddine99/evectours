@@ -39,7 +39,7 @@ class CloudinaryService
         $params['signature'] = $this->buildSignature($params);
 
         $postFields = [
-            'file' => curl_file_create($file->getPathname(), $file->getClientMimeType() ?? 'application/octet-stream', $file->getClientOriginalName()),
+            'file' => curl_file_create($file->getPathname(), $file->getClientMimeType() ?: 'application/octet-stream', $file->getClientOriginalName()),
             'timestamp' => $params['timestamp'],
             'api_key' => $this->apiKey,
             'signature' => $params['signature'],

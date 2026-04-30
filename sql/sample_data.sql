@@ -4,7 +4,32 @@
 -- This file contains sample data for all 17 tables
 -- Order of insertion respects foreign key constraints
 -- =====================================================
+-- Drop if exists
+DROP VIEW IF EXISTS public.unified_events;
 
+-- Recreate with schema-qualified table names
+CREATE VIEW public.unified_events AS
+SELECT 
+    id, user_id, 'voyage_visits' AS type, 
+    visit_time AS created_at, 
+    jsonb_build_object('voyage_id', voyage_id, 'source', source, 'duration', view_duration_seconds) AS data
+FROM public.voyage_visits
+
+UNION ALL
+
+SELECT 
+    id, user_id, 'search' AS type, 
+    search_time AS created_at,
+    jsonb_build_object('query', search_query, 'type', search_type, 'results', results_found) AS data
+FROM public.search_history
+
+UNION ALL
+
+SELECT 
+    id, user_id, 'login' AS type, 
+    login_time AS created_at,
+    jsonb_build_object('method', login_method, 'ip', ip_address) AS data
+FROM public.user_logins;
 -- =====================================================
 -- 1. ASSOCIATIONS (no dependencies)
 -- =====================================================
@@ -126,10 +151,10 @@ INSERT INTO user_documents (user_id, first_name, last_name, date_of_birth, natio
 (8, 'David', 'Miller', '1987-09-25', 'Italian', 'P33221100', '2028-09-25', 'CIN332211', '2017-11-30', '2024-07-22 10:45:00', '2024-07-22 10:45:00');
 
 -- =====================================================
--- 10. REFUND REQUESTS (depends on reclamations, users)
+-- 10. REFUND REQUESTS (depends on reclamations, users, reservations)
 -- =====================================================
-INSERT INTO refund_requests (reclamation_id, requester_id, amount, reason, status, created_at) VALUES
-(2, 2, 720.00, 'Trip cancelled due to unexpected work commitment - force majeure', 'APPROVED', '2024-09-13 08:30:00');
+INSERT INTO refund_requests (reclamation_id, requester_id, reservation_id, amount, reason, status, created_at) VALUES
+(2, 2, NULL, 720.00, 'Trip cancelled due to unexpected work commitment - force majeure', 'APPROVED', '2024-09-13 08:30:00');
 
 -- =====================================================
 -- 11. USER OFFERS (depends on users, offers)

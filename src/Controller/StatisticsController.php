@@ -3,10 +3,8 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
-use App\Service\ActivityService;
 use App\Service\SearchHistoryService;
 use App\Service\UserLoginService;
-use App\Service\ValidationService;
 use App\Service\VoyageVisitService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,10 +24,8 @@ class StatisticsController extends AbstractController
 {
     public function __construct(
         private readonly AuthService $authService,
-        private readonly ActivityService $activityService,
         private readonly SearchHistoryService $searchHistoryService,
         private readonly UserLoginService $userLoginService,
-        private readonly ValidationService $validationService,
         private readonly VoyageVisitService $voyageVisitService,
         private readonly LoggerInterface $logger,
     ) {}

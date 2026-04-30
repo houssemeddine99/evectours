@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Offer;
+use App\Repository\OfferRepository;
 use App\Service\OfferService;
 use App\Service\ValidationService;
 use App\Repository\VoyageRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +19,9 @@ class OfferController extends AbstractController
         private readonly OfferService $offerService,
         private readonly VoyageRepository $voyageRepository,
         private readonly AdminController $adminController,
-        private readonly ValidationService $validationService
+        private readonly ValidationService $validationService,
+        private readonly OfferRepository $offerRepository,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
     // ==================== uSER CAN ONLY SEE OFFERS  ====================
     #[Route('/offers', name: 'travel_offers', methods: ['GET'])]
@@ -128,6 +133,47 @@ class OfferController extends AbstractController
 
         $this->offerService->deleteOffer($id);
         $this->addFlash('success', 'Offer deleted successfully!');
+        return $this->redirectToRoute('admin_offers');
+    }
+
+    #[Route('/admin/offers/{id}/flash-sale/activate', name: 'admin_offer_flash_sale_activate', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function activateFlashSale(Request $request, int $id): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $offer = $this->offerRepository->find($id);
+        if (!$offer) {
+            throw $this->createNotFoundException('Offer not found');
+        }
+
+        $extraDiscount = max(0.0, min(50.0, (float) $request->request->get('flash_discount', 10)));
+        $offer->setFlashSaleEndsAt(new \DateTime('+24 hours'));
+        $offer->setFlashSaleDiscount((string) $extraDiscount);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', sprintf('⚡ Flash sale activated on "%s" for 24 hours! Extra %s%% off.', $offer->getTitle(), $extraDiscount));
+        return $this->redirectToRoute('admin_offers');
+    }
+
+    #[Route('/admin/offers/{id}/flash-sale/deactivate', name: 'admin_offer_flash_sale_deactivate', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function deactivateFlashSale(Request $request, int $id): Response
+    {
+        if ($this->adminController->ensureIsAdmin($request) !== null) {
+            return $this->adminController->ensureIsAdmin($request);
+        }
+
+        $offer = $this->offerRepository->find($id);
+        if (!$offer) {
+            throw $this->createNotFoundException('Offer not found');
+        }
+
+        $offer->setFlashSaleEndsAt(null);
+        $offer->setFlashSaleDiscount(null);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Flash sale deactivated.');
         return $this->redirectToRoute('admin_offers');
     }
 }

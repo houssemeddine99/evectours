@@ -13,7 +13,7 @@ class Activity
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;// @phpstan-ignore property.unusedType
+    private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'activities')]
     #[ORM\JoinColumn(name: 'voyage_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]

@@ -4,11 +4,36 @@
 
 /* Site Header */
 .site-header {
-  background: #0f1722;
   border-bottom: 1px solid var(--border-dark);
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 9000;
+  background: rgba(15, 23, 34, 0.88);
+}
+
+/* menus are portalled to <body> by JS — these rules position them */
+.account-menu.portalled,
+.lang-menu.portalled {
+  position: fixed !important;
+  z-index: 99999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  display: none;
+}
+.account-menu.portalled.open,
+.lang-menu.portalled.open {
+  display: block;
+}
+
+/* blur via pseudo-element so the header doesn't create a stacking context */
+.site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(14px) saturate(1.5);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  z-index: -1;
 }
 
 .nav-wrap {
@@ -19,11 +44,17 @@
 }
 
 .logo {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: var(--amazon-orange);
-  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+  transition: opacity .2s;
 }
+
+.logo:hover { opacity: .85; }
 
 /* Navigation */
 nav {
@@ -114,15 +145,11 @@ nav a.active, nav a:hover {
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease;
-  z-index: 1000;
+  z-index: 99999;
   margin-top: 8px;
 }
 
-.account-dropdown:hover .account-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
+/* dropdown open state handled by JS portal */
 
 .account-info {
   padding: 16px;
@@ -179,233 +206,131 @@ nav a.active, nav a:hover {
 
 /* Site Footer */
 .site-footer {
-  background: var(--amazon-dark);
-  color: var(--amazon-light);
-  padding: 20px 0;
+  background: #0a0f1c;
+  border-top: 1px solid var(--border-dark);
+  padding: 32px 0 24px;
+  margin-top: 60px;
 }
 
 .site-footer p {
   margin: 0;
   text-align: center;
+  color: var(--text-muted);
+  font-size: .88rem;
+}
+
+.site-footer p a {
+  color: var(--amazon-orange-soft);
+  text-decoration: none;
+}
+
+.site-footer p a:hover {
+  color: var(--amazon-orange);
 }
 
 /* Mobile Navigation Toggle */
 .mobile-nav-toggle {
   display: none;
   background: transparent;
-  border: none;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px 10px;
+  min-width: 44px; min-height: 44px;
+  align-items: center; justify-content: center;
+  transition: background .2s;
 }
+.mobile-nav-toggle:hover { background: rgba(255,255,255,.08); }
 
-/* Responsive Layout */
+/* ── Mobile ── */
 @media (max-width: 768px) {
   .nav-wrap {
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 10px 0;
+    position: relative;
   }
-  
-  nav {
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .btn-login, .btn-register {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .account-dropdown {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .account-btn {
-    width: 100%;
-    justify-content: flex-start;
-    padding-left: 12px;
-  }
-  
-  .account-menu {
-    right: 0;
-    left: 0;
-    min-width: auto;
-  }
-  
+
   .mobile-nav-toggle {
-    display: block;
-    align-self: flex-end;
+    display: flex;
+    margin-left: auto;
   }
-  
+
   .site-header nav {
     display: none;
     position: absolute;
     top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--amazon-white);
+    left: 0; right: 0;
+    background: rgba(10,15,28,.97);
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-dark);
-    padding: 16px 0;
-  }
-  
-  .site-header nav.active {
-    display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 16px;
+    gap: 0;
+    padding: 8px 0 14px;
+    z-index: 10001; /* above mascot z-index 9999 */
+    animation: navSlide .22s ease;
   }
-  
+  @keyframes navSlide {
+    from { opacity:0; transform: translateY(-8px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .site-header nav.active { display: flex; }
+
   .site-header nav a {
-    color: var(--text-primary);
-    padding: 10px 16px;
+    padding: 13px 20px;
     border-bottom: none;
-    text-align: left;
+    border-left: 3px solid transparent;
+    font-size: .95rem;
   }
-  
-  .site-header nav a.active, .site-header nav a:hover {
-    background: var(--amazon-slate);
+  .site-header nav a.active,
+  .site-header nav a:hover {
+    background: rgba(255,153,0,.07);
+    border-left-color: var(--amazon-orange);
     color: var(--amazon-orange);
-    border-color: transparent;
   }
-  
-  .hero {
-    padding: 40px 20px;
-    text-align: center;
-  }
-  
-  .hero h1 {
-    font-size: 2rem;
-  }
-  
-  .hero-actions {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .hero-actions .btn {
+
+  /* lang picker + account inside mobile nav */
+  .lang-picker { padding: 10px 20px; }
+  .account-dropdown { margin: 4px 16px 0; width: calc(100% - 32px); position: static; }
+  .account-btn {
     width: 100%;
+    border-radius: 10px;
+    justify-content: flex-start;
+    padding-left: 14px;
+    gap: 8px;
+    background: rgba(255,255,255,.05);
+    border-color: var(--border-dark);
+    height: auto;
+    min-height: 44px;
+    font-size: .95rem;
+    color: var(--text-primary);
   }
-  
-  .section-title-row {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
+  .account-btn:hover {
+    background: rgba(255,153,0,.1);
+    box-shadow: none;
+    transform: none;
   }
-  
-  .grid, .offers-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 0 20px;
-  }
-  
-  .card, .offer {
-    margin: 0;
-  }
-  
-  .detail, .contact-box {
-    grid-template-columns: 1fr;
-    padding: 0 20px;
-  }
-  
-  .detail-content {
-    padding: 20px;
-  }
-  
-  .detail-image {
-    min-height: 200px;
-  }
-  
-  .activity-list {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .activity-list li {
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border-dark);
-  }
-  
-  .activity-list li:last-child {
-    border-bottom: none;
-  }
-  
-  .contact-form, .contact-info {
-    margin: 0;
-  }
-  
-  .contact-info {
-    margin-top: 24px;
-  }
+  .account-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 1px solid var(--border-dark); margin-top: 8px; }
+  .btn-login, .btn-register { margin: 4px 20px 0; width: calc(100% - 40px); display: block; text-align: center; }
 }
 
-/* Tablet and Small Desktop */
+/* ── Tablet ── */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .container {
-    width: 95%;
-  }
-  
-  .grid, .offers-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    padding: 0 20px;
-  }
-  
-  .detail, .contact-box {
-    grid-template-columns: 1fr;
-    padding: 0 20px;
-  }
-  
-  .detail-content {
-    padding: 20px;
-  }
-  
-  .detail-image {
-    min-height: 250px;
-  }
-  
-  .auth-section {
-    padding: 60px 40px;
-  }
-  
-  .auth-container {
-    max-width: 500px;
-  }
+  .container { width: 95%; }
+  .grid, .offers-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .detail, .contact-box { grid-template-columns: 1fr; }
+  .auth-section { padding: 60px 40px; }
+  .auth-container { max-width: 500px; }
 }
 
-/* Large Desktop */
+/* ── Desktop ── */
 @media (min-width: 1025px) {
-  .container {
-    width: 90%;
-  }
-  
-  .grid, .offers-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    padding: 0 40px;
-  }
-  
-  .detail, .contact-box {
-    grid-template-columns: 1.25fr 1fr;
-    padding: 0 40px;
-  }
-  
-  .detail-content {
-    padding: 32px;
-  }
-  
-  .detail-image {
-    min-height: 300px;
-  }
-  
-  .auth-section {
-    padding: 80px 0;
-  }
-  
-  .auth-container {
-    max-width: 600px;
-  }
+  .container { width: 90%; }
+  .grid, .offers-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .detail, .contact-box { grid-template-columns: 1.25fr 1fr; }
+  .auth-section { padding: 80px 0; }
+  .auth-container { max-width: 600px; }
 }

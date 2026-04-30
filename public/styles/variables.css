@@ -2,9 +2,30 @@
    CSS VARIABLES & BASE STYLES
    ======================================== */
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
+  /* GPU-accelerate nothing by default — only opt-in below */
 }
+
+/* Promote animated elements to their own compositor layers */
+.card, .offer, .btn, .btn-login, .btn-register,
+nav a, .account-dropdown, .logo {
+  will-change: transform;
+}
+
+/* Contain layout thrash on isolated components */
+.card, .offer {
+  contain: layout style;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0f1c; }
+::-webkit-scrollbar-thumb { background: #2f3b4d; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--amazon-orange); }
+
+/* Text selection */
+::selection { background: rgba(255,153,0,.25); color: #fff; }
 
 :root {
   /* Amazon-inspired Colors */
@@ -44,15 +65,35 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-primary);
   background: var(--amazon-light);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+  animation: pageFadeIn .25s ease both;
+  /* prevent layout shift on scroll */
+  overflow-x: hidden;
+  /* smoother scrolling */
+  scroll-behavior: smooth;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 a {
   color: var(--amazon-orange-soft);
   text-decoration: none;
+}
+
+/* lazy-load images — decode off main thread */
+img {
+  loading: lazy;
+  decoding: async;
+  content-visibility: auto;
 }
 
 .container {
@@ -97,16 +138,45 @@ h1 {
   font-weight: 600;
 }
 
-.alert-error {
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: .93rem;
+  animation: slideDown .25s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.alert-error, .flash-error {
   background: #301f24;
   border: 1px solid #8b3b45;
   color: #f8d7da;
 }
 
-.alert-success {
+.alert-success, .flash-success {
   background: #1b2f2f;
   border: 1px solid #39856d;
   color: #b7f4da;
+}
+
+.alert-warning, .flash-warning {
+  background: #2e2310;
+  border: 1px solid #92600a;
+  color: #fde68a;
+}
+
+.alert-info, .flash-info {
+  background: #0f1f35;
+  border: 1px solid #1e4e8c;
+  color: #bfdbfe;
 }
 
 /* Buttons */
@@ -182,12 +252,29 @@ input, textarea, select {
   margin-bottom: 6px;
 }
 
-.form-group input {
+.form-group input,
+.form-group select,
+.form-group textarea {
   border: 1px solid var(--border-dark);
   border-radius: 8px;
-  padding: 10px;
+  padding: 10px 14px;
   background: #0f1722;
   color: var(--text-primary);
+  font-family: inherit;
+  font-size: .95rem;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--amazon-orange);
+  box-shadow: 0 0 0 3px rgba(255,153,0,.15);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
 }
 
 /* Badges */

@@ -1,94 +1,299 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Reservation Detail | Travagir
-{% endblock %}
+{% block title %}Reservation Detail | Travagir{% endblock %}
 
 {% block body %}
-	<section>
-		<h1>Reservation Details</h1>
+<section>
+    <h1>Reservation Details</h1>
 
-		{% if error %}
-			<div class="alert alert-error">{{ error }}</div>
-		{% endif %}
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
 
-		{% if success %}
-			<div class="alert alert-success">{{ success }}</div>
-		{% endif %}
+    <div class="reservation-card">
+        <div class="reservation-header">
+            <div>
+                <h2>Reservation #{{ reservation.id }}</h2>
+                <p class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</p>
+            </div>
+            <div class="reservation-meta">
+                <p><strong>Reserved On:</strong> {{ reservation.reservation_date ? reservation.reservation_date|date('d M Y H:i') : 'Unknown' }}</p>
+                <p><strong>Updated:</strong> {{ reservation.updated_at ? reservation.updated_at|date('d M Y H:i') : 'Unknown' }}</p>
+            </div>
+        </div>
 
-		<div class="reservation-card">
-			<div class="reservation-header">
-				<div>
-					<h2>Number of reservations: #{{ reservation.id }}</h2>
-					<p class="status status-{{ reservation.status|lower }}">{{ reservation.status }}</p>
-				</div>
-				<div class="reservation-meta">
-					<p>
-						<strong>Reserved On:</strong>
-						{{ reservation.reservation_date ? reservation.reservation_date|date('d M Y H:i') : 'Unknown' }}</p>
-					<p>
-						<strong>Updated:</strong>
-						{{ reservation.updated_at ? reservation.updated_at|date('d M Y H:i') : 'Unknown' }}</p>
-				</div>
-			</div>
+        <div class="reservation-info-grid">
+            {% if is_admin_view %}
+                <div><strong>User</strong><br>{{ reservation.user_name }}<br><small>{{ reservation.user_email }}</small></div>
+            {% endif %}
+            <div><strong>Voyage</strong><br>{{ reservation.voyage_title }}</div>
+            <div><strong>Destination</strong><br>{{ reservation.destination }}</div>
+            <div><strong>Dates</strong><br>
+                {{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}
+                → {{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}
+            </div>
+            <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
+            <div>
+                <strong>Total Price</strong><br>
+                <span style="font-size:1.2rem;font-weight:700;">{{ reservation.total_price|number_format(2, '.', ',') }} TND</span>
+            </div>
+        </div>
 
-			<div class="reservation-info-grid">
-				{% if is_admin_view %}
-					<div>
-						<strong>User</strong><br>{{ reservation.user_name }}<br><small>{{ reservation.user_email }}</small>
-					</div>
-				{% endif %}
-				<div>
-					<strong>Voyage</strong><br>{{ reservation.voyage_title}}</div>
-				 <div>
-					<strong>Destination</strong><br>{{ reservation.destination }}</div> 
-				<div>
-					<strong>Dates</strong><br>{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}
-					→
-					{{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div> 
-				<div>
-					<strong>People</strong><br>{{ reservation.number_of_people }}</div>
-				<div>
-					<strong>Total Price</strong><br>${{ reservation.total_price|number_format(2, '.', ',') }}</div>
-			</div>
+        {# Carbon Footprint Badge #}
+        {% if carbon %}
+            <div class="carbon-section">
+                <span class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;">
+                    {{ carbon.badge }} <strong>{{ carbon.label }}</strong>
+                    · {{ carbon.co2_per_person }} kg CO₂/person
+                    · {{ carbon.total_co2 }} kg total
+                    · {{ carbon.distance_km }} km from Tunis
+                </span>
+            </div>
+        {% endif %}
 
-			<div class="reservation-actions">
-				{% if is_admin_view %}
-					{% if reservation.status == 'PENDING' %}
-						<form method="post" class="inline-form">
-							<button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
-						</form>
-					{% endif %}
+        {# Weather Widget — loaded async via /api/weather #}
+        {% if reservation.status == 'CONFIRMED' %}
+            <div id="weather-widget-container"
+                 data-city="{{ reservation.destination|default('')|e('html_attr') }}">
+                <div class="weather-widget weather-unavailable">⛅ Loading weather…</div>
+            </div>
+        {% endif %}
 
-					{% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
-						<form method="post" class="inline-form">
-							<button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
-						</form>
-					{% endif %}
+        {# Map — always show for confirmed reservations #}
+        {% if reservation.status == 'CONFIRMED' and reservation.destination is defined and reservation.destination %}
+            <div class="map-section">
+                <h3>📍 {{ reservation.destination }}</h3>
+                <div id="destination-map" style="height:220px;border-radius:10px;overflow:hidden;border:1px solid var(--border-dark);"></div>
+            </div>
+        {% endif %}
 
+        {# QR Code Ticket — confirmed reservations #}
+        {% if reservation.status == 'CONFIRMED' %}
+            <div class="ticket-section">
+                {% set pdf_url = base_url ~ path('account_reservation_ticket_pdf', {id: reservation.id}) %}
+                <div class="qr-box">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ pdf_url|url_encode }}" alt="QR Code" class="qr-img">
+                    <div>
+                        <div class="qr-label">Scan QR to open PDF ticket</div>
+                        <p class="qr-hint">Scan with your phone to download the PDF, or click the button below.</p>
+                        <a href="{{ path('account_reservation_ticket_pdf', {id: reservation.id}) }}" target="_blank" class="btn btn-ticket">📄 Download PDF Ticket</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
-					{% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
-						<form method="post" class="refund-form">
-							<div class="form-group">
-								<label for="refund_reason">Refund reason</label>
-								<textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
-							</div>
-							<button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
-						</form>
-					{% endif %}
-				{% endif %}
-				{# Add link for users to create a reclamation related to this reservation #}
-				{% if not is_admin_view %}
-					<a href="{{ path('user_reclamation_new') }}?reservation_id={{ reservation.id }}" class="btn btn-primary mt-2">Add Reclamation</a>
-				{% endif %}
-			</div>
+        <div class="reservation-actions">
+            {% if is_admin_view %}
+                {% if reservation.status == 'PENDING' %}
+                    <form method="post" class="inline-form">
+                        <div class="form-group" style="margin-bottom:8px;">
+                            <label for="payment_reference">Payment Reference (optional)</label>
+                            <input type="text" id="payment_reference" name="payment_reference" placeholder="pi_xxx or ch_xxx"/>
+                        </div>
+                        <button type="submit" name="action_confirm" class="btn btn-success">Confirm Reservation</button>
+                    </form>
+                {% endif %}
 
-			<p class="back-link">
-				{% if is_admin_view %}
-					<a href="{{ path('admin_reservations') }}">← Back to All Reservations</a>
-				{% else %}
-					<a href="{{ path('account_bookings') }}">← Back to My Bookings</a>
-				{% endif %}
-			</p>
-		</div>
-	</section>
+                {% if reservation.status not in ['CANCELLED', 'COMPLETED'] %}
+                    {% if reservation.status == 'CONFIRMED' %}
+                        <button id="btn-cancel-trigger" class="btn btn-danger">Cancel Reservation</button>
+                    {% else %}
+                        <form method="post" class="inline-form">
+                            <button type="submit" name="action_cancel" class="btn btn-register btn-danger">Cancel Reservation</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+
+                {% if reservation.status in ['CONFIRMED', 'CANCELLED', 'COMPLETED'] %}
+                    <form method="post" class="refund-form">
+                        <div class="form-group">
+                            <label for="refund_reason">Refund reason</label>
+                            <textarea id="refund_reason" name="refund_reason" rows="3" placeholder="Explain why you are requesting a refund" required></textarea>
+                        </div>
+                        <button type="submit" name="action_refund" class="btn btn-register">Request refund</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            {% if not is_admin_view %}
+                <a href="{{ path('user_reclamation_new') }}?reservation_id={{ reservation.id }}" class="btn btn-primary mt-2">Add Reclamation</a>
+
+                {% if reservation.status == 'CONFIRMED' %}
+                    <button id="btn-cancel-trigger" class="btn btn-danger">Cancel Reservation</button>
+                {% elseif reservation.status == 'PENDING' %}
+                    {% if reservation.payment_status != 'PAID' %}
+                        <form method="post" action="{{ path('reservation_pay_now', {id: reservation.id}) }}" class="inline-form">
+                            <button type="submit" class="btn btn-pay-now">💳 Pay Now</button>
+                        </form>
+                    {% endif %}
+                    <form method="post" class="inline-form">
+                        <button type="submit" name="action_cancel" class="btn btn-danger">Cancel Reservation</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <p class="back-link">
+            {% if is_admin_view %}
+                <a href="{{ path('admin_reservations') }}">← Back to All Reservations</a>
+            {% else %}
+                <a href="{{ path('account_bookings') }}">← Back to My Bookings</a>
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+{# AI Cancellation Warning Modal #}
+{% if reservation.status == 'CONFIRMED' %}
+<div id="cancel-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <h2>⚠️ Are you sure?</h2>
+        <div id="ai-warning-text" class="ai-warning-box">
+            <div class="spinner-small"></div> Loading AI insight…
+        </div>
+        <form method="post" action="{{ path('account_reservation_detail', {id: reservation.id}) }}" id="cancel-confirm-form">
+            <div style="display:flex;gap:12px;margin-top:20px;">
+                <button type="submit" name="action_cancel" class="btn btn-danger" style="flex:1;">Yes, Cancel Reservation</button>
+                <button type="button" id="btn-cancel-modal-close" class="btn btn-secondary" style="flex:1;">Keep My Trip</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.carbon-section { margin: 16px 0; }
+.carbon-badge { display:inline-block; padding:6px 14px; border-radius:12px; font-size:0.88rem; }
+.weather-widget { display:flex; align-items:center; gap:16px; background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:14px 18px; margin:16px 0; }
+.weather-widget.weather-unavailable { color:var(--text-muted); font-size:0.85rem; }
+.weather-icon { width:64px; height:64px; }
+.weather-city { font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); }
+.weather-temp { font-size:1.3rem; font-weight:700; }
+.weather-desc { font-size:0.88rem; font-weight:400; color:var(--text-muted); }
+.weather-meta { font-size:0.82rem; color:var(--text-muted); margin-top:4px; }
+.map-section { margin:16px 0; }
+.map-section h3 { margin-bottom:10px; font-size:1rem; }
+.ticket-section { background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.2); border-radius:12px; padding:18px 20px; margin:16px 0; }
+.qr-box { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.qr-img { border:3px solid rgba(255,255,255,0.15); border-radius:8px; }
+.qr-label { font-weight:700; margin-bottom:4px; }
+.qr-hint { font-size:0.85rem; color:var(--text-muted); margin-bottom:10px; }
+.btn-ticket { background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); padding:8px 18px; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; display:inline-block; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal-box { background:var(--amazon-dark,#1a1a2e); border:1px solid var(--border-dark); border-radius:16px; padding:32px; max-width:480px; width:90%; }
+.modal-box h2 { margin-bottom:16px; }
+.ai-warning-box { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:16px; font-style:italic; color:#fde68a; line-height:1.6; min-height:60px; }
+.spinner-small { width:20px; height:20px; border:2px solid rgba(245,158,11,0.3); border-top-color:#f59e0b; border-radius:50%; animation:spin 0.8s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.btn-pay-now { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:700; font-size:0.95rem; cursor:pointer; transition:opacity .2s; }
+.btn-pay-now:hover { opacity:.88; }
+</style>
+
+<script>
+// Map with Leaflet + OpenStreetMap + Nominatim geocoding
+{% if reservation.status == 'CONFIRMED' and reservation.destination is defined and reservation.destination %}
+(function () {
+    var dest = {{ reservation.destination|json_encode|raw }};
+
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    var script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = function () {
+        fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(dest) + '&format=json&limit=1', {
+            headers: { 'User-Agent': 'TravagirApp/1.0' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var lat = data[0] ? parseFloat(data[0].lat) : 48.8566;
+            var lon = data[0] ? parseFloat(data[0].lon) : 2.3522;
+
+            var map = L.map('destination-map').setView([lat, lon], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 18
+            }).addTo(map);
+            L.marker([lat, lon]).addTo(map)
+                .bindPopup('<b>' + dest + '</b>').openPopup();
+        })
+        .catch(function () {
+            document.getElementById('destination-map').innerHTML = '<p style="padding:16px;color:#94a3b8;">Map unavailable</p>';
+        });
+    };
+    document.head.appendChild(script);
+})();
+{% endif %}
+
+// AI Cancellation Warning Modal
+{% if reservation.status == 'CONFIRMED' %}
+(function () {
+    var trigger  = document.getElementById('btn-cancel-trigger');
+    var modal    = document.getElementById('cancel-modal');
+    var closeBtn = document.getElementById('btn-cancel-modal-close');
+    var warningEl = document.getElementById('ai-warning-text');
+    var warningLoaded = false;
+
+    trigger.addEventListener('click', function () {
+        modal.style.display = 'flex';
+        if (!warningLoaded) {
+            fetch('{{ path('account_reservation_cancel_warning', {id: reservation.id}) }}')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    warningLoaded = true;
+                    if (data.warning) {
+                        warningEl.textContent = data.warning;
+                    } else {
+                        warningEl.textContent = 'Are you sure you want to cancel? This action cannot be undone.';
+                    }
+                })
+                .catch(function () {
+                    warningEl.textContent = 'Are you sure you want to cancel? This action cannot be undone.';
+                });
+        }
+    });
+
+    closeBtn.addEventListener('click', function () {
+        modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+})();
+{% endif %}
+
+(function () {
+    var container = document.getElementById('weather-widget-container');
+    if (!container) return;
+    var city = container.dataset.city;
+    if (!city) return;
+
+    fetch('/api/weather?city=' + encodeURIComponent(city))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data) {
+                container.innerHTML = '<div class="weather-widget weather-unavailable">🌍 Weather data unavailable</div>';
+                return;
+            }
+            container.innerHTML =
+                '<div class="weather-widget">' +
+                    '<img src="' + escHtml(data.icon) + '" alt="' + escHtml(data.description) + '" class="weather-icon">' +
+                    '<div class="weather-info">' +
+                        '<div class="weather-city">Weather in ' + escHtml(data.city) + '</div>' +
+                        '<div class="weather-temp">' + data.temp + '°C <span class="weather-desc">' + escHtml(data.description) + '</span></div>' +
+                        '<div class="weather-meta">💧 ' + data.humidity + '% humidity · 💨 ' + data.wind_speed + ' m/s</div>' +
+                    '</div>' +
+                '</div>';
+        })
+        .catch(function() {
+            container.innerHTML = '<div class="weather-widget weather-unavailable">🌍 Weather data unavailable</div>';
+        });
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+})();
+</script>
 {% endblock %}

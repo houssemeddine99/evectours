@@ -4,37 +4,158 @@
 
 {% block body %}
 <section>
-        <h1>Reserve: {{ voyage.title }}</h1>
-        <p class="lead">Submit your reservation; it will be pending until admin approval.</p>
+    <h1>Reserve: {{ voyage.title }}</h1>
+    <p class="lead">Submit your reservation; it will be pending until admin approval.</p>
 
-        {% if error is defined and error %}
-            <div class="alert alert-error">{{ error }}</div>
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if error is defined and error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    {% if success is defined and success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+
+    {# High demand banner #}
+    {% if is_high_demand %}
+        <div class="demand-warning">
+            🔥 <strong>High Demand!</strong> {{ active_count }} people already booked this voyage. Secure your spot now.
+        </div>
+    {% endif %}
+
+    <div class="card settings-card">
+        <p><strong>Destination</strong>: {{ voyage.destination }}</p>
+        <p><strong>Dates</strong>: {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} – {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
+        <p><strong>Base price per person</strong>: {{ voyage.price|number_format(2, '.', ',') }} TND</p>
+        {% if offer %}<p><strong>Active offer</strong>: {{ offer.title }} (–{{ offer.discount_percentage }}% off)</p>{% endif %}
+
+        {# Carbon badge #}
+        {% if carbon %}
+            <p style="margin-top:8px;">
+                <span class="carbon-badge" style="background:{{ carbon.color }}22;color:{{ carbon.color }};border:1px solid {{ carbon.color }}44;padding:4px 12px;border-radius:12px;font-size:0.84rem;font-weight:600;">
+                    {{ carbon.badge }} {{ carbon.label }} · ~{{ carbon.co2_per_person }} kg CO₂/person ({{ carbon.distance_km }} km from Tunis)
+                </span>
+            </p>
         {% endif %}
+    </div>
 
-        {% if success is defined and success %}
-            <div class="alert alert-success">{{ success }}</div>
-        {% endif %}
+    {# Waitlist mode — show join/leave button instead of reservation form #}
+    {% if is_high_demand %}
+        <div class="waitlist-section">
+            <h3>🧾 Voyage is at high demand capacity</h3>
+            <p>This voyage is very popular. You can join the waitlist and we'll notify you by SMS when a spot opens up.</p>
+            {% if is_on_waitlist %}
+                <p class="waitlist-position">
+                    ✅ You are on the waitlist.
+                    {% set position = waitlist_position|default(null) %}
+                    {% if position %}Position: #{{ position }}{% endif %}
+                </p>
+                <form method="post" action="{{ path('waitlist_leave', {id: voyage.id}) }}">
+                    <button type="submit" class="btn btn-secondary">Leave Waitlist</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('waitlist_join', {id: voyage.id}) }}">
+                    <button type="submit" class="btn btn-primary">Join Waitlist</button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        {# Normal reservation form #}
+        <form method="post" id="reserve-form" data-autosave="reserve-{{ voyage.id }}">
+            <span class="tg-autosave">✅ Draft saved</span>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="number_of_people">Number of people</label>
+                <input type="number" id="number_of_people" name="number_of_people" value="1" min="1" max="20" required
+                    onchange="updatePriceBreakdown()" oninput="updatePriceBreakdown()">
+            </div>
 
-        <div class="card settings-card">
-            <p><strong>Destination</strong>: {{ voyage.destination }}</p>
-            <p><strong>Dates</strong>: {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} - {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
-            <p><strong>Base price per person</strong>: ${{ voyage.price|number_format(2, '.', ',') }}</p>
-            {% if offer %}
-                <p><strong>Offer</strong>: {{ offer.title }} ({{ offer.discount_percentage }}% off)</p>
+            {# Loyalty points redemption #}
+            {% if loyalty_balance > 0 %}
+                <div class="loyalty-box">
+                    <div class="loyalty-pts">⭐ {{ loyalty_balance }} loyalty pts</div>
+                    {% if can_redeem %}
+                        <label class="loyalty-redeem-label">
+                            <input type="checkbox" name="use_loyalty_points" value="1" id="use-points" onchange="updatePriceBreakdown()">
+                            Use 100 pts for an extra <strong>5% discount</strong> on this booking
+                        </label>
+                    {% else %}
+                        <p class="loyalty-hint">{{ 100 - loyalty_balance }} more pts for a 5% discount (earn 1 pt per TND spent)</p>
+                    {% endif %}
+                </div>
             {% endif %}
 
-         
-
-           
-        </div>
-           <form method="post" >
-                <div class="form-group">
-                    <label for="number_of_people">Number of people</label>
-                    <input type="number" id="number_of_people" name="number_of_people" value="1" required>
+            {# Live price breakdown #}
+            <div class="price-breakdown" id="price-breakdown">
+                <div class="breakdown-row">
+                    <span>Base price (1 person)</span>
+                    <span id="base-price">{{ voyage.price|number_format(2, '.', ',') }} TND</span>
                 </div>
+                {% if offer %}
+                <div class="breakdown-row discount">
+                    <span>Offer discount (–{{ offer.discount_percentage }}%)</span>
+                    <span id="offer-discount">–{{ ((voyage.price * offer.discount_percentage / 100))|number_format(2, '.', ',') }} TND</span>
+                </div>
+                {% endif %}
+                <div class="breakdown-row loyalty-discount-row" id="loyalty-row" style="display:none;">
+                    <span>Loyalty discount (–5%)</span>
+                    <span id="loyalty-discount-amount">–0.00 TND</span>
+                </div>
+                <div class="breakdown-row total">
+                    <span><strong>Estimated Total</strong></span>
+                    <strong id="total-price">{{ voyage.price|number_format(2, '.', ',') }} TND</strong>
+                </div>
+            </div>
 
-            
-                <button type="submit">Reserve</button>
-            </form>
-    </section>
+            <button type="submit" class="btn btn-success" style="margin-top:16px;">Reserve Now &amp; Pay</button>
+            <p style="margin-top:10px;font-size:.85rem;color:var(--text-muted);">🔒 You'll be redirected to Flouci's secure payment page to complete your booking.</p>
+        </form>
+    {% endif %}
+</section>
+
+<style>
+.demand-warning { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; border-radius:10px; padding:14px 18px; margin-bottom:18px; font-size:0.95rem; }
+.waitlist-section { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:24px; margin-top:20px; }
+.waitlist-section h3 { margin:0 0 8px; }
+.waitlist-position { color:#22c55e; font-weight:600; margin:10px 0; }
+.loyalty-box { background:rgba(255,165,0,0.08); border:1px solid rgba(255,165,0,0.25); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
+.loyalty-pts { font-size:1rem; font-weight:700; color:var(--amazon-orange); margin-bottom:6px; }
+.loyalty-redeem-label { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.93rem; }
+.loyalty-hint { font-size:0.83rem; color:var(--text-muted); margin:4px 0 0; }
+.price-breakdown { background:rgba(0,0,0,0.2); border:1px solid var(--border-dark); border-radius:10px; padding:16px 18px; margin-top:8px; }
+.breakdown-row { display:flex; justify-content:space-between; padding:5px 0; font-size:0.92rem; }
+.breakdown-row.discount { color:#22c55e; }
+.breakdown-row.loyalty-discount-row { color:#f59e0b; }
+.breakdown-row.total { border-top:1px solid var(--border-dark); margin-top:6px; padding-top:10px; font-size:1rem; }
+</style>
+
+<script>
+var basePrice  = {{ voyage.price|default(0) }};
+var offerDiscount = {{ offer ? offer.discount_percentage : 0 }} / 100;
+
+function updatePriceBreakdown() {
+    var n = parseInt(document.getElementById('number_of_people').value) || 1;
+    var usePoints = document.getElementById('use-points') ? document.getElementById('use-points').checked : false;
+    var loyaltyDiscount = usePoints ? 0.05 : 0;
+
+    var base  = basePrice * n;
+    var after = base * (1 - offerDiscount) * (1 - loyaltyDiscount);
+
+    document.getElementById('base-price').textContent = base.toFixed(2) + ' TND';
+
+    if (offerDiscount > 0) {
+        document.getElementById('offer-discount').textContent = '–' + (base * offerDiscount).toFixed(2) + ' TND';
+    }
+
+    var loyaltyRow = document.getElementById('loyalty-row');
+    if (loyaltyRow) {
+        loyaltyRow.style.display = usePoints ? 'flex' : 'none';
+        var afterOffer = base * (1 - offerDiscount);
+        document.getElementById('loyalty-discount-amount').textContent = '–' + (afterOffer * 0.05).toFixed(2) + ' TND';
+    }
+
+    document.getElementById('total-price').textContent = after.toFixed(2) + ' TND';
+}
+
+updatePriceBreakdown();
+</script>
 {% endblock %}

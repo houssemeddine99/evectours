@@ -1,36 +1,498 @@
 {% extends 'base.html.twig' %}
+{% block title %}Admin – Reclamation #{{ reclamation.id }}{% endblock %}
 
-{% block title %}Admin – Reclamation Detail{% endblock %}
+{% block stylesheets %}
+<style>
+/* ── Page ──────────────────────────────────────────────────── */
+.ard-page {
+    padding: 32px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.ard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-dark);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.ard-header h1 {
+    margin: 0 0 10px;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.ard-badges { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+
+/* ── Badge Pills ───────────────────────────────────────────── */
+.badge-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid;
+}
+.badge-s-open        { background:rgba(255,153,0,0.15);  color:#febd69;  border-color:rgba(255,153,0,0.3); }
+.badge-s-in-progress { background:rgba(68,121,207,0.15); color:#93c5fd;  border-color:rgba(68,121,207,0.3); }
+.badge-s-resolved    { background:rgba(22,163,74,0.15);  color:#86efac;  border-color:rgba(22,163,74,0.3); }
+.badge-s-closed      { background:rgba(100,116,139,0.15);color:#94a3b8;  border-color:rgba(100,116,139,0.3); }
+.badge-p-urgent { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
+.badge-p-high   { background:rgba(234,88,12,0.15);  color:#fdba74; border-color:rgba(234,88,12,0.3); }
+.badge-p-medium { background:rgba(68,121,207,0.15); color:#93c5fd; border-color:rgba(68,121,207,0.3); }
+.badge-p-low    { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
+.badge-r-approved { background:rgba(22,163,74,0.15);  color:#86efac; border-color:rgba(22,163,74,0.3); }
+.badge-r-rejected { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
+.badge-r-pending  { background:rgba(255,193,7,0.15);  color:#fde047; border-color:rgba(255,193,7,0.3); }
+
+/* ── Cards ─────────────────────────────────────────────────── */
+.ard-card {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.ard-card-title {
+    padding: 12px 18px;
+    background: var(--amazon-navy);
+    font-size: 0.73em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-dark);
+}
+.ard-row {
+    display: flex;
+    border-bottom: 1px solid rgba(47,59,77,0.6);
+}
+.ard-row:last-child { border-bottom: none; }
+.ard-label {
+    width: 160px;
+    min-width: 160px;
+    padding: 11px 18px;
+    background: rgba(0,0,0,0.12);
+    font-size: 0.81em;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+}
+.ard-value {
+    padding: 11px 18px;
+    font-size: 0.88em;
+    color: var(--text-primary);
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.ard-value-meta { color: var(--text-muted); margin-left: 6px; }
+.ard-value-resolved { color: #86efac; }
+
+/* ── Sections ──────────────────────────────────────────────── */
+.ard-section { margin-bottom: 28px; }
+.ard-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.ard-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-dark);
+}
+
+/* ── Existing admin response ───────────────────────────────── */
+.ard-response-sent {
+    background: rgba(22,163,74,0.07);
+    border: 1px solid rgba(22,163,74,0.25);
+    border-radius: 12px;
+    padding: 18px 20px;
+    max-width: 640px;
+}
+.ard-response-sent p {
+    margin: 0 0 10px;
+    color: #d1fae5;
+    font-size: 0.9em;
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+.ard-response-sent small { color: var(--text-muted); font-size: 0.75em; }
+
+/* ── AI suggestion card ────────────────────────────────────── */
+@keyframes borderSpin {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 8px 2px rgba(124,58,237,0.3); }
+    50%       { box-shadow: 0 0 22px 6px rgba(168,85,247,0.5); }
+}
+@keyframes dotBlink {
+    0%, 80%, 100% { opacity: 0; }
+    40%           { opacity: 1; }
+}
+.ai-card-wrap {
+    position: relative;
+    max-width: 640px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    padding: 2px;
+    background: linear-gradient(270deg, #7c3aed, #a855f7, #06b6d4, #7c3aed);
+    background-size: 300% 300%;
+    animation: borderSpin 4s ease infinite, pulseGlow 3s ease-in-out infinite;
+}
+.ai-card-inner { border-radius: 12px; background: #12121f; overflow: hidden; }
+.ai-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border-bottom: 1px solid rgba(124,58,237,0.25);
+    background: rgba(124,58,237,0.08);
+}
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(90deg,#7c3aed,#a855f7);
+    color: #fff;
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 3px 11px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+.ai-dot { width:6px;height:6px;border-radius:50%;background:#a3e635;display:inline-block;animation:dotBlink 1.4s infinite; }
+.ai-dot:nth-child(2) { animation-delay:.2s; }
+.ai-dot:nth-child(3) { animation-delay:.4s; }
+.ai-review-label { color:#6b6b88; font-size:0.78em; margin-left:auto; }
+#ai-suggestion-text { margin:0 0 14px;color:#c4c4d8;font-size:.9em;line-height:1.7;white-space:pre-wrap;min-height:40px; }
+.ai-card-body { padding:16px 18px; }
+.ai-use-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(90deg,#7c3aed,#a855f7);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+}
+.ai-use-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(124,58,237,0.45); }
+.ai-use-btn:active { transform: scale(.97); }
+.ai-use-btn.copied { background: linear-gradient(90deg,#059669,#10b981); }
+
+/* ── Response form card ────────────────────────────────────── */
+.ard-form-card {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+    max-width: 640px;
+}
+.ard-form-body { padding: 18px; }
+.ard-textarea {
+    width: 100%;
+    background: #0f1722;
+    border: 1px solid var(--border-dark);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.9em;
+    line-height: 1.6;
+    padding: 12px 14px;
+    resize: vertical;
+    margin-bottom: 12px;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+}
+.ard-textarea:focus { border-color: rgba(255,153,0,0.5); outline: none; box-shadow: 0 0 0 3px rgba(255,153,0,0.08); }
+
+/* ── Status update ─────────────────────────────────────────── */
+.ard-status-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 400px;
+}
+.ard-select {
+    flex: 1;
+    background: #0f1722;
+    border: 1px solid var(--border-dark);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 9px 12px;
+    font-size: 0.88em;
+    cursor: pointer;
+}
+.ard-select:focus { border-color: rgba(255,153,0,0.5); outline: none; }
+
+/* ── Refund table ──────────────────────────────────────────── */
+.ard-refund-wrap {
+    background: var(--amazon-white);
+    border: 1px solid var(--border-dark);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.ard-refund-table { width: 100%; border-collapse: collapse; }
+.ard-refund-table th {
+    background: var(--amazon-navy);
+    color: var(--text-muted);
+    font-size: 0.73em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-dark);
+}
+.ard-refund-table td {
+    padding: 12px 16px;
+    font-size: 0.86em;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(47,59,77,0.5);
+    vertical-align: middle;
+}
+.ard-refund-table tr:last-child td { border-bottom: none; }
+.ard-refund-table tr:hover td { background: rgba(255,153,0,0.04); }
+.td-id-primary { color: var(--text-primary) !important; font-weight: 600; }
+.td-amount     { color: #febd69 !important; font-weight: 700; }
+
+.ard-manage-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 11px;
+    border-radius: 7px;
+    font-size: 0.78em;
+    font-weight: 700;
+    background: rgba(255,153,0,0.12);
+    color: var(--amazon-orange);
+    border: 1px solid rgba(255,153,0,0.25);
+    text-decoration: none;
+    transition: background .18s;
+}
+.ard-manage-btn:hover { background: var(--amazon-orange); color: #000; }
+
+.ard-no-refunds { color: var(--text-muted); font-size: 0.87em; margin: 0; }
+
+/* ── Danger Zone ───────────────────────────────────────────── */
+.ard-danger {
+    margin-top: 36px;
+    padding: 20px;
+    border: 1px solid rgba(220,38,38,0.3);
+    border-radius: 12px;
+    background: rgba(220,38,38,0.05);
+}
+.ard-danger h3 { color: #fca5a5; margin: 0 0 12px; font-size: 0.95rem; font-weight: 700; }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .ard-page { padding: 20px 14px; }
+    .ard-header { flex-direction: column; }
+    .ard-label { width: 120px; min-width: 120px; }
+    .ai-card-wrap, .ard-form-card { max-width: 100%; }
+}
+</style>
+{% endblock %}
 
 {% block body %}
-    <h1>Reclamation: {{ reclamation.title }}</h1>
-    <p>Status: {{ reclamation.status }}</p>
-    <p>Priority: {{ reclamation.priority }}</p>
-    <p>Description: {{ reclamation.description }}</p>
-    <p>Created at: {{ reclamation.createdAt ? reclamation.createdAt|date('Y-m-d H:i') : 'N/A' }}</p>
+<div class="ard-page">
 
-    <h2>Admin Response</h2>
-    {% if reclamation.adminResponse %}
-        <p>{{ reclamation.adminResponse }}</p>
-    {% else %}
-        <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}">
-            <textarea name="response" class="form-control" required></textarea>
-            <button type="submit" class="btn btn-primary mt-2">Add Response</button>
-        </form>
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
+    {% endfor %}
+{% endfor %}
+
+<!-- Header -->
+<div class="ard-header">
+    <div>
+        <h1>Reclamation #{{ reclamation.id }}</h1>
+        <div class="ard-badges">
+            <span class="badge-pill badge-s-{{ reclamation.status|lower|replace({'_': '-'}) }}">{{ reclamation.status }}</span>
+            <span class="badge-pill badge-p-{{ reclamation.priority|lower }}">{{ reclamation.priority }}</span>
+        </div>
+    </div>
+    <a href="{{ path('admin_reclamations') }}" class="btn btn-secondary" style="font-size:0.85em;">← Back to List</a>
+</div>
+
+<!-- Complaint Details -->
+<div class="ard-card">
+    <div class="ard-card-title">Complaint Details</div>
+    <div class="ard-row">
+        <div class="ard-label">Customer</div>
+        <div class="ard-value">
+            {% if user %}
+                <strong>{{ user.username }}</strong>
+                <span class="ard-value-meta">{{ user.email }}</span>
+                {% if user.tel %}<span class="ard-value-meta">· {{ user.tel }}</span>{% endif %}
+            {% else %}
+                User #{{ reclamation.userId }}
+            {% endif %}
+        </div>
+    </div>
+    <div class="ard-row">
+        <div class="ard-label">Reservation</div>
+        <div class="ard-value">#{{ reclamation.reservationId }}</div>
+    </div>
+    <div class="ard-row">
+        <div class="ard-label">Title</div>
+        <div class="ard-value"><strong>{{ reclamation.title }}</strong></div>
+    </div>
+    <div class="ard-row">
+        <div class="ard-label">Description</div>
+        <div class="ard-value">{{ reclamation.description }}</div>
+    </div>
+    <div class="ard-row">
+        <div class="ard-label">Filed At</div>
+        <div class="ard-value">{{ reclamation.createdAt ? reclamation.createdAt|date('M d, Y · H:i') : '—' }}</div>
+    </div>
+    {% if reclamation.resolutionDate %}
+    <div class="ard-row">
+        <div class="ard-label">Resolved At</div>
+        <div class="ard-value ard-value-resolved">{{ reclamation.resolutionDate|date('M d, Y · H:i') }}</div>
+    </div>
     {% endif %}
+</div>
 
-    <h2>Update Status</h2>
-    <form method="post" action="{{ path('admin_reclamation_status', {'id': reclamation.id}) }}">
-        <select name="status" class="form-control">
-            <option value="OPEN" {% if reclamation.status == 'OPEN' %}selected{% endif %}>OPEN</option>
-            <option value="IN_PROGRESS" {% if reclamation.status == 'IN_PROGRESS' %}selected{% endif %}>IN_PROGRESS</option>
-            <option value="RESOLVED" {% if reclamation.status == 'RESOLVED' %}selected{% endif %}>RESOLVED</option>
-            <option value="CLOSED" {% if reclamation.status == 'CLOSED' %}selected{% endif %}>CLOSED</option>
+<!-- Admin Response -->
+<div class="ard-section">
+    <div class="ard-section-title">Admin Response</div>
+
+    {% if reclamation.adminResponse %}
+        <div class="ard-response-sent">
+            <p>{{ reclamation.adminResponse }}</p>
+            <small>Sent {{ reclamation.responseDate ? reclamation.responseDate|date('M d, Y · H:i') : '?' }}</small>
+        </div>
+    {% else %}
+        {% if suggestedResponse %}
+        <div class="ai-card-wrap">
+            <div class="ai-card-inner">
+                <div class="ai-card-header">
+                    <span class="ai-badge">✦ AI Suggestion</span>
+                    <span style="display:flex;gap:3px;align-items:center;">
+                        <span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span>
+                    </span>
+                    <span class="ai-review-label">Review before sending</span>
+                </div>
+                <div class="ai-card-body">
+                    <p id="ai-suggestion-text"></p>
+                    <button type="button" class="ai-use-btn" id="ai-use-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span id="ai-btn-label">Use this response</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+        (function(){
+            var raw = {{ suggestedResponse|json_encode|raw }};
+            var el  = document.getElementById('ai-suggestion-text');
+            var i   = 0;
+            function type(){ if(i < raw.length){ el.textContent += raw[i++]; setTimeout(type, 14); } }
+            type();
+            document.getElementById('ai-use-btn').addEventListener('click', function(){
+                var ta  = document.getElementById('response-textarea');
+                var lbl = document.getElementById('ai-btn-label');
+                ta.value = raw; ta.focus();
+                this.classList.add('copied'); lbl.textContent = 'Copied to editor ✓';
+                setTimeout(() => { this.classList.remove('copied'); lbl.textContent = 'Use this response'; }, 2200);
+            });
+        })();
+        </script>
+        {% endif %}
+
+        <div class="ard-form-card">
+            <div class="ard-card-title">Write Response</div>
+            <div class="ard-form-body">
+                <form method="post" action="{{ path('admin_reclamation_response', {'id': reclamation.id}) }}">
+                    <textarea id="response-textarea" name="response" class="ard-textarea" rows="5" required placeholder="Type your response to the customer…"></textarea>
+                    <button type="submit" class="btn btn-primary">Send Response</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Update Status -->
+<div class="ard-section">
+    <div class="ard-section-title">Update Status</div>
+    <form method="post" action="{{ path('admin_reclamation_status', {'id': reclamation.id}) }}" class="ard-status-form">
+        <select name="status" class="ard-select">
+            <option value="OPEN"        {% if reclamation.status == 'OPEN'        %}selected{% endif %}>OPEN</option>
+            <option value="IN_PROGRESS" {% if reclamation.status == 'IN_PROGRESS' %}selected{% endif %}>IN PROGRESS</option>
+            <option value="RESOLVED"    {% if reclamation.status == 'RESOLVED'    %}selected{% endif %}>RESOLVED</option>
+            <option value="CLOSED"      {% if reclamation.status == 'CLOSED'      %}selected{% endif %}>CLOSED</option>
         </select>
-        <button type="submit" class="btn btn-success mt-2">Update Status</button>
+        <button type="submit" class="btn btn-primary">Update</button>
     </form>
+</div>
 
-    <form method="post" action="{{ path('admin_reclamation_delete', {'id': reclamation.id}) }}" onsubmit="return confirm('Delete this reclamation?');" class="mt-3">
-        <button type="submit" class="btn btn-danger">Delete</button>
+<!-- Refund Requests -->
+<div class="ard-section">
+    <div class="ard-section-title">Refund Requests</div>
+    {% if refundRequests|length > 0 %}
+        <div class="ard-refund-wrap">
+            <table class="ard-refund-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rr in refundRequests %}
+                    <tr>
+                        <td class="td-id-primary">#{{ rr.id }}</td>
+                        <td class="td-amount">{{ rr.amount }} TND</td>
+                        <td><span class="badge-pill badge-r-{{ rr.status|lower }}">{{ rr.status }}</span></td>
+                        <td>{{ rr.createdAt ? rr.createdAt|date('M d, Y · H:i') : '—' }}</td>
+                        <td><a href="{{ path('admin_refund_detail', {'id': rr.id}) }}" class="ard-manage-btn">Manage →</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="ard-no-refunds">No refund requests for this reclamation yet.</p>
+    {% endif %}
+</div>
+
+<!-- Danger Zone -->
+<div class="ard-danger">
+    <h3>Danger Zone</h3>
+    <form method="post" action="{{ path('admin_reclamation_delete', {'id': reclamation.id}) }}" onsubmit="return confirm('Permanently delete this reclamation? This cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Delete Reclamation</button>
     </form>
+</div>
+
+</div>
 {% endblock %}

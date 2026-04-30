@@ -51,9 +51,12 @@
   color: var(--text-muted);
 }
 
-/* Offer hover effect */
+/* Offer hover effect — compositor-only (no layout/paint) */
+.offer, .card {
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .28s ease, border-color .2s ease;
+}
 .offer:hover, .card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) translateZ(0);
   box-shadow: 0 26px 46px rgba(0, 0, 0, 0.45);
   border-color: var(--amazon-orange);
 }
@@ -431,6 +434,124 @@
     font-size: 0.9rem;
   }
 }
+
+/* ========================================
+   GLOBAL POLISH
+   ======================================== */
+
+/* Section titles */
+.section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border-dark), transparent);
+  margin-left: 12px;
+}
+
+/* Page header used in admin and user pages */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.page-header h1 { margin-bottom: 4px; }
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Smooth focus ring for all interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--amazon-orange);
+  outline-offset: 2px;
+}
+
+/* Voyage separator */
+.voyage-separator {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-dark), transparent);
+  margin: 28px 0;
+}
+
+/* Scarcity indicators */
+.scarcity-badge {
+  display: inline-block;
+  font-size: .76rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 5px;
+  letter-spacing: .2px;
+  animation: scarcityPulse 2.5s ease-in-out infinite;
+}
+
+.scarcity-low {
+  background: rgba(234,179,8,.12);
+  color: #fbbf24;
+  border: 1px solid rgba(234,179,8,.3);
+}
+
+.scarcity-medium {
+  background: rgba(249,115,22,.12);
+  color: #fb923c;
+  border: 1px solid rgba(249,115,22,.3);
+}
+
+.scarcity-high {
+  background: rgba(220,38,38,.12);
+  color: #f87171;
+  border: 1px solid rgba(220,38,38,.3);
+}
+
+.scarcity-urgent {
+  background: rgba(220,38,38,.18);
+  color: #fca5a5;
+  border: 1px solid rgba(220,38,38,.5);
+}
+
+@keyframes scarcityPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .7; }
+}
+
+.card-price-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-muted);
+}
+
+.empty-state p { font-size: 1.05rem; }
 
 /* Print styles */
 @media print {

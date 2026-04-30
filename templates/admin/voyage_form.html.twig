@@ -10,22 +10,22 @@
             <p class="lead">{% if voyage %}Update voyage details{% else %}Add a new travel package{% endif %}</p>
         </div>
         <div class="header-actions">
-            <a href="{{ path('admin_voyages') }}" class="btn btn-secondary">
-                ← Back to Voyages
-            </a>
+            <a href="{{ path('admin_voyages') }}" class="btn btn-secondary">← Back to Voyages</a>
+            <a href="{{ path('admin_tags') }}" class="btn btn-secondary">🏷 Manage Tags</a>
         </div>
     </div>
 
     <div class="form-container">
-        <form method="post" class="admin-form">
-            <div class="form-group">
-                <label for="title">Title *</label>
-                <input type="text" id="title" name="title" value="{{ voyage.title|default('') }}" required class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="destination">Destination *</label>
-                <input type="text" id="destination" name="destination" value="{{ voyage.destination|default('') }}" required class="form-control">
+        <form method="post" class="admin-form" id="voyageForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" value="{{ voyage.title|default('') }}" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="destination">Destination *</label>
+                    <input type="text" id="destination" name="destination" value="{{ voyage.destination|default('') }}" required class="form-control" placeholder="e.g. Paris, France">
+                </div>
             </div>
 
             <div class="form-row">
@@ -33,12 +33,10 @@
                     <label for="price">Price ($)</label>
                     <input type="number" id="price" name="price" value="{{ voyage.price|default('') }}" step="0.01" min="0" class="form-control">
                 </div>
-
                 <div class="form-group">
                     <label for="start_date">Start Date</label>
                     <input type="date" id="start_date" name="start_date" value="{{ voyage.start_date|default('') }}" class="form-control">
                 </div>
-
                 <div class="form-group">
                     <label for="end_date">End Date</label>
                     <input type="date" id="end_date" name="end_date" value="{{ voyage.end_date|default('') }}" class="form-control">
@@ -46,9 +44,32 @@
             </div>
 
             <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="5" class="form-control">{{ voyage.description|default('') }}</textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <label for="description" style="margin:0">Description</label>
+                    <button type="button" id="aiDescBtn" class="btn btn-ai" onclick="generateAiDescription()">
+                        <span id="aiDescBtnText">✨ Generate with AI</span>
+                    </button>
+                </div>
+                <textarea id="description" name="description" rows="6" class="form-control">{{ voyage.description|default('') }}</textarea>
+                <div id="aiDescStatus" class="ai-status"></div>
             </div>
+
+            {% if all_tags is defined and all_tags|length > 0 %}
+            <div class="form-group">
+                <label>Tags / Categories</label>
+                <div class="tags-grid">
+                    {% for tag in all_tags %}
+                        <label class="tag-checkbox">
+                            <input type="checkbox" name="tags[]" value="{{ tag.id }}"
+                                {% if voyage and voyage.tags is defined %}
+                                    {% for vt in voyage.tags %}{% set vtId = vt.id is defined ? vt.id : vt %}{% if vtId == tag.id %}checked{% endif %}{% endfor %}
+                                {% endif %}>
+                            <span class="tag-label" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <div class="form-group">
                 <label for="image_url">Image URLs (one per line)</label>
@@ -66,132 +87,91 @@
     </div>
 </div>
 
+<script>
+async function generateAiDescription() {
+    const btn = document.getElementById('aiDescBtn');
+    const btnText = document.getElementById('aiDescBtnText');
+    const status = document.getElementById('aiDescStatus');
+    const title = document.getElementById('title').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+    const description = document.getElementById('description').value.trim();
+
+    if (!title || !destination) {
+        status.textContent = 'Please fill in Title and Destination first.';
+        status.className = 'ai-status ai-error';
+        return;
+    }
+
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    let durationDays = 5;
+    if (startDate && endDate) {
+        const diff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+        if (diff > 0) durationDays = Math.round(diff);
+    }
+
+    btnText.textContent = '⏳ Generating...';
+    btn.disabled = true;
+    status.textContent = '';
+    status.className = 'ai-status';
+
+    try {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('destination', destination);
+        formData.append('description', description);
+        formData.append('duration_days', durationDays);
+
+        const res = await fetch('{{ path('admin_voyage_ai_description') }}', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.description) {
+            document.getElementById('description').value = data.description;
+            status.textContent = '✅ Description generated!';
+            status.className = 'ai-status ai-success';
+        } else {
+            status.textContent = '❌ ' + (data.error ?? 'Failed to generate');
+            status.className = 'ai-status ai-error';
+        }
+    } catch (e) {
+        status.textContent = '❌ Network error';
+        status.className = 'ai-status ai-error';
+    } finally {
+        btnText.textContent = '✨ Generate with AI';
+        btn.disabled = false;
+    }
+}
+</script>
+
 <style>
-.admin-page {
-    padding: 30px 20px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.page-header h1 {
-    margin: 0 0 8px 0;
-    font-size: 2rem;
-}
-
-.page-header .lead {
-    margin: 0;
-    color: var(--text-muted);
-}
-
-.header-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-}
-
-.btn-primary {
-    background: var(--amazon-orange);
-    color: #000;
-}
-
-.btn-primary:hover {
-    background: #e68a00;
-}
-
-.btn-secondary {
-    background: var(--amazon-white);
-    color: var(--text-primary);
-    border: 1px solid var(--border-dark);
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.form-container {
-    background: var(--amazon-white);
-    border-radius: 12px;
-    padding: 30px;
-    border: 1px solid var(--border-dark);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--border-dark);
-    border-radius: 8px;
-    background: rgba(15, 23, 34, 0.5);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--amazon-orange);
-    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15);
-}
-
-.form-control::placeholder {
-    color: var(--text-muted);
-}
-
-textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.form-hint {
-    display: block;
-    margin-top: 6px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-}
-
-.form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-dark);
-}
+.admin-page{padding:30px 20px;max-width:860px;margin:0 auto}
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:20px}
+.page-header h1{margin:0 0 8px 0;font-size:2rem}
+.header-actions{display:flex;gap:12px}
+.btn{padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-size:.95rem}
+.btn-primary{background:var(--amazon-orange);color:#000}
+.btn-primary:hover{background:#e68a00}
+.btn-secondary{background:var(--amazon-white);color:var(--text-primary);border:1px solid var(--border-dark)}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+.btn-ai{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;padding:8px 16px;font-size:.9rem}
+.btn-ai:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+.btn-ai:disabled{opacity:.6;cursor:not-allowed}
+.form-container{background:var(--amazon-white);border-radius:12px;padding:30px;border:1px solid var(--border-dark)}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary)}
+.form-control{width:100%;padding:12px 16px;border:1px solid var(--border-dark);border-radius:8px;background:rgba(15,23,34,.5);color:var(--text-primary);font-size:1rem;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+.form-control:focus{outline:none;border-color:var(--amazon-orange);box-shadow:0 0 0 3px rgba(255,153,0,.15)}
+textarea.form-control{resize:vertical;min-height:100px}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.form-hint{display:block;margin-top:6px;color:var(--text-muted);font-size:.85rem}
+.form-actions{display:flex;gap:12px;margin-top:30px;padding-top:20px;border-top:1px solid var(--border-dark)}
+.tags-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.tag-checkbox{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.tag-checkbox input[type=checkbox]{display:none}
+.tag-label{padding:6px 14px;border-radius:20px;border:2px solid;font-weight:600;font-size:.88rem;transition:all .15s;opacity:.55}
+.tag-checkbox input[type=checkbox]:checked+.tag-label{opacity:1;box-shadow:0 0 0 2px currentColor}
+.ai-status{margin-top:8px;font-size:.9rem;min-height:20px}
+.ai-success{color:#22c55e}
+.ai-error{color:#ef4444}
 </style>
 {% endblock %}

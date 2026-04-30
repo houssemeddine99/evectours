@@ -946,3 +946,76 @@ COMPONENT STYLES
         padding: 4px 10px;
     }
 }
+/* ========================================
+   MOBILE & TOUCH — comprehensive pass
+   ======================================== */
+@media (max-width: 768px) {
+
+  /* Hero */
+  .hero { padding: 40px 16px 36px; }
+  .hero h1 { font-size: 2rem; line-height: 1.22; }
+  .hero p  { font-size: 1rem; margin-bottom: 24px; }
+  .hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .hero-actions .btn { width: 100%; padding: 13px 20px; font-size: .95rem; }
+
+  /* Voyages / Offers grid → single column */
+  .voyages-section { padding: 32px 16px; }
+  .grid, .offers-grid, .recommendations-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+    padding: 0;
+  }
+
+  /* Voyage card */
+  .voyage-card .card-body { padding: 18px; gap: 8px; }
+  .voyage-card h3 { font-size: 1.15rem; }
+  .voyage-footer { flex-direction: column; gap: 10px; }
+  .voyage-footer .btn { width: 100%; text-align: center; }
+
+  /* Offer card */
+  .offer { border-radius: 14px; }
+  .offer-image { height: 180px; }
+
+  /* Section headers */
+  .section-title-row {
+    flex-direction: column; gap: 10px; text-align: center;
+  }
+  .section-title { font-size: 1.4rem; }
+
+  /* Buttons — bigger tap targets */
+  .btn { min-height: 44px; padding: 11px 18px; }
+
+  /* Forms */
+  .form-group { margin-bottom: 14px; }
+  .form-control { font-size: 16px; } /* prevent iOS zoom */
+  input, select, textarea { font-size: 16px !important; }
+
+  /* Auth */
+  .auth-section { padding: 32px 16px; }
+  .auth-container { max-width: 100%; padding: 24px 18px; }
+
+  /* Contact */
+  .contact-hero { padding: 40px 16px 32px; }
+  .contact-box  { grid-template-columns: 1fr; gap: 24px; padding: 0; }
+  .contact-form, .contact-info { padding: 0; }
+
+  /* Detail page */
+  .detail { grid-template-columns: 1fr; padding: 0; gap: 0; }
+  .detail-image  { min-height: 220px; border-radius: 14px 14px 0 0; }
+  .detail-content { padding: 18px 16px; }
+
+  /* Tables → scrollable */
+  .admin-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Flash messages */
+  .flash-success, .flash-error, .flash-info, .alert {
+    margin: 8px 16px; font-size: .9rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero h1 { font-size: 2.4rem; }
+  .grid, .offers-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .voyages-section { padding: 48px 24px; }
+}

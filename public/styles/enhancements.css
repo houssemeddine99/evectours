@@ -1,0 +1,246 @@
+/* =============================================
+   TRAVAGIR — UI ENHANCEMENTS
+   ============================================= */
+
+/* ── Page transition — animate #pg wrapper, NOT body, so fixed mascot/canvas are unaffected ── */
+#pg { animation: tg-page-in .28s ease both; }
+@keyframes tg-page-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+body.tg-leaving #pg { opacity: 0; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease; }
+
+/* ── Toast notifications ── */
+#tg-toast-rack {
+  position: fixed;
+  bottom: 24px; left: 24px;
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 99996;
+  pointer-events: none;
+}
+.tg-toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-family: Inter, sans-serif; font-size: 13.5px; font-weight: 600;
+  color: #f1f5f9;
+  background: rgba(15,23,42,.96);
+  border: 1px solid rgba(99,140,255,.2);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(99,140,255,.08);
+  pointer-events: auto;
+  max-width: 320px;
+  animation: tg-toast-in .32s cubic-bezier(.34,1.56,.64,1) both;
+}
+.tg-toast.out { animation: tg-toast-out .22s ease forwards; }
+@keyframes tg-toast-in {
+  from { opacity:0; transform: translateX(-24px) scale(.94); }
+  to   { opacity:1; transform: translateX(0) scale(1); }
+}
+@keyframes tg-toast-out {
+  to { opacity:0; transform: translateX(-16px) scale(.94); max-height:0; padding:0; margin:0; }
+}
+.tg-toast-icon { font-size: 16px; flex-shrink: 0; }
+.tg-toast-msg  { flex: 1; }
+.tg-toast-close {
+  background: none; border: none; color: #64748b;
+  font-size: 14px; cursor: pointer; padding: 0 0 0 4px;
+  transition: color .15s;
+}
+.tg-toast-close:hover { color: #f1f5f9; }
+.tg-toast.success { border-color: rgba(34,197,94,.3);  background: rgba(10,30,20,.96); }
+.tg-toast.error   { border-color: rgba(239,68,68,.3);  background: rgba(30,10,10,.96); }
+.tg-toast.info    { border-color: rgba(99,140,255,.3); }
+.tg-toast.warning { border-color: rgba(251,191,36,.3); background: rgba(30,25,5,.96); }
+/* progress bar */
+.tg-toast::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0;
+  height: 2px; border-radius: 0 0 14px 14px;
+  background: currentColor; opacity: .35;
+  animation: tg-toast-bar var(--dur, 4s) linear forwards;
+}
+.tg-toast { position: relative; overflow: hidden; }
+@keyframes tg-toast-bar { from { width:100%; } to { width:0; } }
+
+/* ── Back to top ── */
+#tg-top {
+  position: fixed; bottom: 88px; right: 24px;
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: rgba(15,23,42,.92);
+  border: 1px solid rgba(99,140,255,.25);
+  color: #94a3b8;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 9990;
+  opacity: 0; pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity .25s, transform .25s cubic-bezier(.34,1.56,.64,1), background .18s, color .18s;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+#tg-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+#tg-top:hover { background: rgba(79,110,247,.85); color: #fff; border-color: transparent; }
+#tg-top svg { width: 18px; height: 18px; }
+
+/* ── Skeleton loaders ── */
+.tg-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 75%);
+  background-size: 200% 100%;
+  animation: tg-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes tg-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.tg-skeleton-card {
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.06);
+  overflow: hidden;
+  background: rgba(255,255,255,.02);
+}
+.tg-skeleton-img  { height: 200px; }
+.tg-skeleton-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.tg-skeleton-line { height: 14px; border-radius: 6px; }
+.tg-skeleton-line.w-80 { width: 80%; }
+.tg-skeleton-line.w-60 { width: 60%; }
+.tg-skeleton-line.w-40 { width: 40%; }
+.tg-skeleton-btn  { height: 38px; border-radius: 10px; margin-top: 6px; }
+
+/* ── Empty state ── */
+.tg-empty {
+  text-align: center;
+  padding: 64px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.tg-empty-icon {
+  font-size: 52px;
+  filter: grayscale(1) opacity(.4);
+  animation: tg-empty-float 3s ease-in-out infinite;
+}
+@keyframes tg-empty-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.tg-empty h3 { color: #e2e8f0; font-size: 1.2rem; font-weight: 700; margin: 0; }
+.tg-empty p  { color: #64748b; font-size: .9rem; margin: 0; max-width: 300px; line-height: 1.6; }
+.tg-empty .btn { margin-top: 6px; }
+
+/* ── Image blur-up ── */
+.tg-img-wrap { position: relative; overflow: hidden; background: rgba(255,255,255,.04); }
+.tg-img-wrap img {
+  transition: opacity .4s ease, filter .4s ease;
+}
+.tg-img-wrap img.loading {
+  opacity: 0; filter: blur(12px) scale(1.04);
+}
+.tg-img-wrap img.loaded {
+  opacity: 1; filter: blur(0) scale(1);
+}
+
+/* ── Confirm dialog ── */
+#tg-confirm-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+  z-index: 99995;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+#tg-confirm-overlay.open { opacity: 1; pointer-events: auto; }
+#tg-confirm-box {
+  background: #0f172a;
+  border: 1px solid rgba(99,140,255,.2);
+  border-radius: 20px;
+  padding: 28px 28px 22px;
+  width: min(360px, calc(100vw - 32px));
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  transform: scale(.94) translateY(10px);
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1);
+}
+#tg-confirm-overlay.open #tg-confirm-box { transform: scale(1) translateY(0); }
+#tg-confirm-icon { font-size: 32px; margin-bottom: 10px; }
+#tg-confirm-title { font-family: Inter,sans-serif; font-size: 16px; font-weight: 800; color: #f1f5f9; margin: 0 0 6px; }
+#tg-confirm-msg   { font-family: Inter,sans-serif; font-size: 13px; color: #64748b; margin: 0 0 22px; line-height: 1.6; }
+.tg-confirm-btns  { display: flex; gap: 10px; justify-content: flex-end; }
+.tg-confirm-btns button {
+  padding: 9px 20px; border-radius: 10px; border: none;
+  font-family: Inter,sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: transform .15s, opacity .15s;
+}
+.tg-confirm-btns button:hover { transform: scale(1.04); }
+.tg-confirm-cancel { background: rgba(255,255,255,.07); color: #94a3b8; }
+.tg-confirm-ok     { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
+.tg-confirm-ok.safe { background: linear-gradient(135deg,#4f6ef7,#6366f1); }
+
+/* ── Share button ── */
+.tg-share-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(99,140,255,.2);
+  background: rgba(99,140,255,.08); color: #93c5fd;
+  font-family: Inter,sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background .18s, border-color .18s, transform .18s;
+}
+.tg-share-btn:hover { background: rgba(99,140,255,.18); border-color: rgba(99,140,255,.4); transform: scale(1.04); }
+.tg-share-btn svg { width: 13px; height: 13px; }
+
+/* ── Recently viewed ── */
+.tg-recent-section { margin: 40px 0 0; }
+.tg-recent-section h3 {
+  font-family: Inter,sans-serif; font-size: 1rem; font-weight: 700;
+  color: #94a3b8; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .6px;
+}
+.tg-recent-row {
+  display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.tg-recent-row::-webkit-scrollbar { display: none; }
+.tg-recent-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; border-radius: 14px; flex-shrink: 0;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(99,140,255,.15);
+  text-decoration: none; color: #e2e8f0;
+  font-family: Inter,sans-serif; font-size: 13px; font-weight: 600;
+  transition: background .18s, border-color .18s, transform .2s;
+  max-width: 180px;
+}
+.tg-recent-chip:hover { background: rgba(99,140,255,.12); border-color: rgba(99,140,255,.35); transform: translateY(-2px); color: #f1f5f9; }
+.tg-recent-thumb {
+  width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
+}
+.tg-recent-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Countdown timer ── */
+.tg-countdown {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: Inter,sans-serif; font-size: 12px; font-weight: 700;
+  color: #fbbf24; background: rgba(251,191,36,.1);
+  border: 1px solid rgba(251,191,36,.25);
+  border-radius: 8px; padding: 4px 10px;
+  margin-top: 6px;
+}
+.tg-countdown.urgent { color: #f87171; background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.3); animation: tg-urgency 1s ease-in-out infinite; }
+@keyframes tg-urgency { 0%,100%{opacity:1} 50%{opacity:.6} }
+.tg-countdown-icon { font-size: 13px; }
+
+/* ── Form autosave indicator ── */
+.tg-autosave {
+  font-family: Inter,sans-serif; font-size: 11px; font-weight: 600;
+  color: #22c55e; opacity: 0;
+  transition: opacity .3s;
+  display: flex; align-items: center; gap: 4px;
+}
+.tg-autosave.visible { opacity: 1; }
+
+/* ── Button loading spinner ── */
+@keyframes tg-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  #tg-toast-rack { bottom: 16px; left: 16px; right: 16px; }
+  .tg-toast { max-width: 100%; }
+  #tg-top { bottom: 80px; right: 16px; }
+}

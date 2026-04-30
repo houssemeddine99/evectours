@@ -1,0 +1,17 @@
+framework:
+    messenger:
+        transports:
+            # Async transport: SMS notifications queued here, processed by the worker
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+
+            scheduler_default:
+                dsn: 'doctrine://default'
+
+        routing:
+            App\Message\SendSmsMessage: async
+            App\Message\EscalateReclamationsMessage: async

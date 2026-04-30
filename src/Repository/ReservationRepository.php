@@ -115,6 +115,20 @@ class ReservationRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function sumBookedPeopleByVoyageId(int $voyageId): int
+    {
+        $result = $this->createQueryBuilder('r')
+            ->select('SUM(r.numberOfPeople)')
+            ->where('r.voyageId = :vid')
+            ->andWhere('r.status IN (:statuses)')
+            ->setParameter('vid', $voyageId)
+            ->setParameter('statuses', ['CONFIRMED', 'PENDING'])
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) ($result ?? 0);
+    }
+
     /**
      * Get total revenue from confirmed reservations
      */

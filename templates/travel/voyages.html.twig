@@ -7,25 +7,37 @@
 <h1>Available Voyages</h1>
 <p class="lead">Choose your next destination from our curated travel collection.</p>
 
+{# Tag filter strip #}
+{% if all_tags is defined and all_tags|length > 0 %}
+<div class="tag-filter-strip">
+    <a href="{{ path('travel_voyages') }}" class="tag-btn {% if not active_tag %}tag-btn-active{% endif %}">All</a>
+    {% for tag in all_tags %}
+        <a href="{{ path('travel_voyages', {tag: tag.name}) }}"
+           class="tag-btn {% if active_tag == tag.name %}tag-btn-active{% endif %}"
+           style="--tag-color:{{ tag.color ?? '#ff9900' }}">
+            {{ tag.name }}
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+
 {# Filter Section #}
 <div class="filter-bar">
     <form method="get" action="{{ path('travel_voyages') }}" class="filter-form">
+        {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
         <div class="filter-row">
             <div class="filter-field">
                 <label for="search">Search</label>
                 <input type="text" id="search" name="search" value="{{ app.request.query.get('search', '') }}" placeholder="Search destinations...">
             </div>
-            
             <div class="filter-field">
                 <label for="min_price">Min Price</label>
                 <input type="number" id="min_price" name="min_price" value="{{ app.request.query.get('min_price', '') }}" placeholder="Min" min="0" step="0.01">
             </div>
-            
             <div class="filter-field">
                 <label for="max_price">Max Price</label>
                 <input type="number" id="max_price" name="max_price" value="{{ app.request.query.get('max_price', '') }}" placeholder="Max" min="0" step="0.01">
             </div>
-            
             <div class="filter-field">
                 <label for="sort_by">Sort By</label>
                 <select id="sort_by" name="sort_by">
@@ -34,7 +46,6 @@
                     <option value="title" {{ app.request.query.get('sort_by') == 'title' ? 'selected' : '' }}>Name</option>
                 </select>
             </div>
-            
             <div class="filter-field">
                 <label for="sort_order">Order</label>
                 <select id="sort_order" name="sort_order">
@@ -42,7 +53,6 @@
                     <option value="DESC" {{ app.request.query.get('sort_order') == 'DESC' ? 'selected' : '' }}>Descending</option>
                 </select>
             </div>
-            
             <div class="filter-buttons">
                 <button type="submit" class="btn-filter">Apply</button>
                 <a href="{{ path('travel_voyages') }}" class="btn-filter btn-filter-clear">Clear</a>
@@ -51,24 +61,228 @@
     </form>
 </div>
 
-<div class="grid">
-{% for voyage in voyages %}
-                <article class="card voyage-card">
-                    <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
-                    <div class="card-body">
-                        <div class="voyage-badges">
-                            <span class="badge destination">{{ voyage.destination }}</span>
-                            <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
-                        </div>
-                        <h3>{{ voyage.title }}</h3>
-                        <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
-                        <div class="card-footer">
-                            <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
-                            <a href="{{ path('travel_voyage_detail', {id: voyage.id}) }}" class="btn btn-primary">Read more</a>
-                        </div>
-                    </div>
-                </article>
-            {% endfor %}
+{# ── Skeleton loaders (shown instantly, hidden once grid renders) ── #}
+<div class="grid" id="voyage-skeleton" aria-hidden="true">
+    {% for i in 1..6 %}
+    <div class="tg-skeleton-card">
+        <div class="tg-skeleton tg-skeleton-img"></div>
+        <div class="tg-skeleton-body">
+            <div class="tg-skeleton tg-skeleton-line w-80"></div>
+            <div class="tg-skeleton tg-skeleton-line w-60"></div>
+            <div class="tg-skeleton tg-skeleton-line w-40"></div>
+            <div class="tg-skeleton tg-skeleton-btn"></div>
         </div>
-    </section>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="grid" id="voyage-grid" style="display:none">
+{% for voyage in voyages %}
+    {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' %}
+    <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
+        <div class="tg-img-wrap card-image-wrap" style="position:relative">
+            <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
+            <button class="fav-btn {% if voyage.id in favorite_ids %}fav-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="{% if voyage.id in favorite_ids %}Remove from favorites{% else %}Add to favorites{% endif %}">♥</button>
+            <button class="cmp-btn" data-voyage-id="{{ voyage.id }}" onclick="openComparePicker({{ voyage.id }})" title="Compare this voyage">⊕</button>
+        </div>
+        <div class="card-body">
+            <div class="voyage-badges">
+                <span class="badge destination">{{ voyage.destination }}</span>
+                <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
+            </div>
+            {% if voyage.tags is defined and voyage.tags|length > 0 %}
+                <div class="card-tags">
+                    {% for tag in voyage.tags %}
+                        <span class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <h3>{{ voyage.title }}</h3>
+            <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
+            <div class="card-footer">
+                <div class="card-price-wrap">
+                    <strong>{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</strong>
+                    {% if voyage.scarcity_label is defined and voyage.scarcity_label %}
+                        <span class="scarcity-badge scarcity-{{ voyage.scarcity_level }}">{{ voyage.scarcity_label }}</span>
+                    {% endif %}
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button class="tg-share-btn" onclick="tgShare('{{ voyage.title|e('js') }}', '{{ url('travel_voyage_detail', {slug: voyage.slug}) }}')" title="Share">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        Share
+                    </button>
+                    <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-primary"
+                       onclick="tgTrackVoyage({{ voyage.id }}, '{{ voyage.title|e('js') }}', '{{ thumb }}', this.href)">Read more</a>
+                </div>
+            </div>
+        </div>
+    </article>
+{% else %}
+    <div style="grid-column:1/-1">
+        <div class="tg-empty">
+            <div class="tg-empty-icon">🗺️</div>
+            <h3>No voyages found</h3>
+            <p>Try adjusting your filters or search terms to discover more destinations.</p>
+            <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Clear filters</a>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{# Pagination #}
+{% if total_pages is defined and total_pages > 1 %}
+<nav class="tg-pagination" aria-label="Voyage pages">
+    {% if current_page > 1 %}
+        <a href="{{ path('travel_voyages', app.request.query.all|merge({page: current_page - 1})) }}" class="tg-page-btn" aria-label="Previous">‹</a>
+    {% else %}
+        <span class="tg-page-btn disabled" aria-disabled="true">‹</span>
+    {% endif %}
+
+    {% for p in 1..total_pages %}
+        {% if p == current_page %}
+            <span class="tg-page-btn active" aria-current="page">{{ p }}</span>
+        {% elseif p == 1 or p == total_pages or (p >= current_page - 2 and p <= current_page + 2) %}
+            <a href="{{ path('travel_voyages', app.request.query.all|merge({page: p})) }}" class="tg-page-btn">{{ p }}</a>
+        {% elseif p == current_page - 3 or p == current_page + 3 %}
+            <span class="tg-page-btn ellipsis">…</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if current_page < total_pages %}
+        <a href="{{ path('travel_voyages', app.request.query.all|merge({page: current_page + 1})) }}" class="tg-page-btn" aria-label="Next">›</a>
+    {% else %}
+        <span class="tg-page-btn disabled" aria-disabled="true">›</span>
+    {% endif %}
+</nav>
+{% endif %}
+
+{# Recently viewed ── rendered by JS from localStorage #}
+<div id="tg-recent-anchor"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Swap skeleton → real grid
+    document.getElementById('voyage-skeleton').style.display = 'none';
+    document.getElementById('voyage-grid').style.display = '';
+    // Render recently viewed
+    tgRenderRecent('#tg-recent-anchor');
+});
+</script>
+</section>
+
+{# Embed all voyage data for the compare picker modal #}
+<script>
+const ALL_VOYAGES = [
+{% for voyage in voyages %}
+    {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80' %}
+    {id:{{ voyage.id }},title:{{ voyage.title|json_encode|raw }},destination:{{ voyage.destination|json_encode|raw }},price:{{ voyage.price is not empty ? voyage.price|json_encode|raw : 'null' }},img:{{ thumb|json_encode|raw }},slug:{{ voyage.slug|json_encode|raw }}}{% if not loop.last %},{% endif %}
+{% endfor %}
+];
+
+async function toggleFavorite(e, voyageId) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    try {
+        const res = await fetch('/favorites/toggle/' + voyageId, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        btn.classList.toggle('fav-active', data.added);
+        btn.title = data.added ? 'Remove from favorites' : 'Add to favorites';
+    } catch(err) { console.error(err); }
+}
+
+let _anchorId = null;
+function openComparePicker(anchorId) {
+    _anchorId = anchorId;
+    const anchor = ALL_VOYAGES.find(v => v.id === anchorId);
+    const others = ALL_VOYAGES.filter(v => v.id !== anchorId);
+    const overlay = document.getElementById('cmp-overlay');
+    const title = document.getElementById('cmp-anchor-title');
+    const grid = document.getElementById('cmp-picker-grid');
+
+    title.textContent = anchor ? anchor.title : '';
+
+    grid.innerHTML = others.length === 0
+        ? '<p style="color:#94a3b8;grid-column:1/-1;text-align:center;padding:24px">No other voyages available.</p>'
+        : others.map(v => `
+            <button class="cmp-pick-card" onclick="goCompare(${anchorId}, ${v.id})">
+                <img src="${v.img}" alt="${v.title}" class="cmp-pick-img">
+                <div class="cmp-pick-body">
+                    <div class="cmp-pick-name">${v.title}</div>
+                    <div class="cmp-pick-dest">🌍 ${v.destination}</div>
+                    <div class="cmp-pick-price">${v.price ? Number(v.price).toLocaleString('en', {minimumFractionDigits:2}) + ' TND' : 'On request'}</div>
+                    <span class="cmp-pick-cta">Compare →</span>
+                </div>
+            </button>`).join('');
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeComparePicker() {
+    document.getElementById('cmp-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function goCompare(a, b) {
+    window.location.href = '/compare/instant/' + a + '/' + b;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeComparePicker();
+});
+</script>
+
+{# Compare picker modal #}
+<div id="cmp-overlay" onclick="if(event.target===this)closeComparePicker()">
+    <div id="cmp-modal">
+        <div id="cmp-modal-head">
+            <div>
+                <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--amazon-orange);margin-bottom:4px">Comparing with</div>
+                <div id="cmp-anchor-title" style="font-weight:800;font-size:1.1rem;color:#f1f5f9"></div>
+            </div>
+            <button onclick="closeComparePicker()" style="background:rgba(255,255,255,.07);border:none;color:#94a3b8;width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        </div>
+        <p style="color:#64748b;font-size:.88rem;margin:0 0 18px">Pick a voyage to compare side-by-side:</p>
+        <div id="cmp-picker-grid"></div>
+    </div>
+</div>
+
+<style>
+.tag-filter-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.tag-btn{padding:6px 16px;border-radius:20px;text-decoration:none;font-weight:600;font-size:.88rem;border:2px solid var(--border-dark);color:var(--text-muted);transition:all .15s}
+.tag-btn:hover,.tag-btn-active{border-color:var(--tag-color,var(--amazon-orange));color:var(--tag-color,var(--amazon-orange));background:color-mix(in srgb,var(--tag-color,var(--amazon-orange)) 12%,transparent)}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.tag-pill{display:inline-block;padding:2px 10px;border-radius:12px;border:1px solid;font-size:.78rem;font-weight:600}
+.card-image-wrap{position:relative;overflow:hidden}
+.fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
+.fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
+.fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
+.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
+.cmp-btn:hover{background:var(--amazon-orange);color:#000}
+
+/* Compare picker modal */
+#cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s}
+#cmp-overlay.open{opacity:1;pointer-events:auto}
+#cmp-modal{background:#0f172a;border:1px solid rgba(99,140,255,.2);border-radius:20px;width:min(700px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);transform:scale(.95) translateY(10px);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+#cmp-overlay.open #cmp-modal{transform:scale(1) translateY(0)}
+#cmp-modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0;flex-shrink:0}
+#cmp-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;overflow-y:auto;padding:0 24px 24px;scrollbar-width:thin}
+.cmp-pick-card{background:rgba(255,255,255,.04);border:2px solid rgba(99,140,255,.15);border-radius:14px;overflow:hidden;cursor:pointer;text-align:left;transition:border-color .18s,transform .18s,box-shadow .18s;padding:0;display:flex;flex-direction:column}
+.cmp-pick-card:hover{border-color:var(--amazon-orange);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,153,0,.2)}
+.cmp-pick-img{width:100%;height:110px;object-fit:cover}
+.cmp-pick-body{padding:10px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
+.cmp-pick-name{font-weight:700;font-size:.88rem;color:#f1f5f9;line-height:1.3}
+.cmp-pick-dest{font-size:.78rem;color:#94a3b8}
+.cmp-pick-price{font-size:.82rem;font-weight:700;color:var(--amazon-orange)}
+.cmp-pick-cta{margin-top:auto;padding-top:6px;font-size:.78rem;font-weight:700;color:var(--amazon-orange)}
+
+/* Pagination */
+.tg-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:32px 0 8px;flex-wrap:wrap}
+.tg-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;font-family:Inter,sans-serif;font-size:.88rem;font-weight:700;text-decoration:none;border:1px solid rgba(99,140,255,.2);background:rgba(255,255,255,.03);color:#94a3b8;transition:background .15s,border-color .15s,color .15s}
+.tg-page-btn:hover{background:rgba(99,140,255,.12);border-color:rgba(99,140,255,.4);color:#f1f5f9}
+.tg-page-btn.active{background:linear-gradient(135deg,#4f6ef7,#6366f1);border-color:transparent;color:#fff;cursor:default}
+.tg-page-btn.disabled{opacity:.35;cursor:default;pointer-events:none}
+.tg-page-btn.ellipsis{border-color:transparent;background:transparent;cursor:default}
+</style>
 {% endblock %}

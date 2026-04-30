@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error {{ status_code }} · Travagir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="/styles/app.css">
+  <link rel="stylesheet" href="/styles/enhancements.css">
+  <style>
+    .err-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(99,140,255,0.10) 0%, transparent 60%),
+                  var(--amazon-light, #111827);
+    }
+    .err-code {
+      font-size: clamp(6rem, 20vw, 10rem);
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, #4f6ef7, #febd69);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+    }
+    .err-icon { font-size: 4rem; margin: 16px 0 0; }
+    .err-title { font-size: 1.6rem; font-weight: 800; color: #f1f5f9; margin: 12px 0 8px; }
+    .err-msg { color: #64748b; font-size: 1rem; max-width: 400px; line-height: 1.6; margin: 0 auto 28px; }
+    .err-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .err-divider { width: 60px; height: 3px; background: linear-gradient(to right, #4f6ef7, #febd69); border-radius: 999px; margin: 16px auto; }
+  </style>
+</head>
+<body>
+  <div class="err-page">
+    <p class="err-code">{{ status_code }}</p>
+    <div class="err-icon">✈️</div>
+    <div class="err-divider"></div>
+    <h1 class="err-title">{{ status_text }}</h1>
+    <p class="err-msg">Something unexpected happened. Head back home and try again.</p>
+    <div class="err-actions">
+      <a href="/" class="btn btn-primary">← Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

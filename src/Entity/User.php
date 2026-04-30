@@ -15,7 +15,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;// @phpstan-ignore property.unusedType
+    private ?int $id = null;
 
     #[ORM\Column(length: 50)]
     private string $username = '';

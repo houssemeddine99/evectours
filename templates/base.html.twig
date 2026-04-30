@@ -3,15 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Travagir{% endblock %}</title>
+    <title>{% block title %}Travagir — Discover the World{% endblock %}</title>
+
+    {# ── SEO & Social meta ── #}
+    <meta name="description" content="{% block meta_description %}Travagir — curated travel voyages, exclusive offers, and AI-powered trip planning. Discover your next adventure.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
+
+    {# Open Graph #}
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Travagir">
+    <meta property="og:title"       content="{% block og_title %}{% block _title %}Travagir — Discover the World{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Curated travel voyages, exclusive offers, and AI-powered trip planning.{% endblock %}">
+    <meta property="og:image"       content="{% block og_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+    <meta property="og:url"         content="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
+
+    {# Twitter Card #}
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{% block twitter_title %}Travagir — Discover the World{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Curated voyages, exclusive deals, AI trip planner.{% endblock %}">
+    <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+
+    <meta name="theme-color" content="#0f1722">
     <link rel="icon" href="/favicon.ico">
-    {# Cache-busting query parameter to ensure updated CSS is loaded after changes #}
-    <link rel="stylesheet" href="/styles/app.css">
-    <!-- Include component styles for admin tables and other shared components -->
-    <link rel="stylesheet" href="/styles/components.css">
+
+    {# ── Resource hints ── #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://translate.google.com">
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+
+    {# ── Critical CSS (single request) ── #}
+    <link rel="preload" href="/styles/bundle.css?v=4" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=4"></noscript>
+    <link rel="stylesheet" href="/styles/bundle.css?v=4">
+
+    {# ── Fonts — non-blocking via media trick ── #}
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"></noscript>
+
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
+<div id="pg">
     <header class="site-header">
         <div class="container nav-wrap">
             <a href="{{ path('travel_home') }}" class="logo">Travagir</a>
@@ -22,6 +56,20 @@
                 <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
                 <a class="{{ active_nav|default('') == 'search' ? 'active' : '' }}" href="{{ path('travel_search') }}">Flights & Hotels</a>
                 <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+<a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+                <div class="lang-picker" id="langPicker">
+                    <button class="lang-toggle" id="langToggle" title="Select language" aria-label="Select language">🌐</button>
+                    <div class="lang-menu" id="langMenu">
+                        <button onclick="setLang('')">🇬🇧 English</button>
+                        <button onclick="setLang('fr')">🇫🇷 Français</button>
+                        <button onclick="setLang('ar')">🇸🇦 العربية</button>
+                        <button onclick="setLang('de')">🇩🇪 Deutsch</button>
+                        <button onclick="setLang('es')">🇪🇸 Español</button>
+                        <button onclick="setLang('it')">🇮🇹 Italiano</button>
+                        <button onclick="setLang('zh-CN')">🇨🇳 中文</button>
+                        <button onclick="setLang('tr')">🇹🇷 Türkçe</button>
+                    </div>
+                </div>
                 {% if app.session.get('auth_user') %}
                     <div class="account-dropdown">
                         <button class="account-btn">👤</button>
@@ -39,6 +87,7 @@
                             {% if authUser is defined and authUser is not empty and authUser.is_admin|default(false) %}
                                 <a href="{{ path('admin_dashboard') }}" class="account-link">Admin Dashboard</a>
                                 <a href="{{ path('admin_users') }}" class="account-link">Manage Users</a>
+                                <a href="{{ path('admin_ai_assistant') }}" class="account-link">🤖 AI Assistant</a>
                                 <a href="{{ path('admin_reservations') }}" class="account-link">Manage Reservations</a>
                             {% endif %}
                             <hr>
@@ -56,9 +105,10 @@
     </header>
 
     <main class="container">
+        {# Flash messages → converted to toasts via JS below #}
         {% for label, messages in app.flashes %}
             {% for message in messages %}
-                <div class="flash-{{ label }} alert">{{ message }}</div>
+                <div class="tg-flash-data" data-type="{{ label }}" data-msg="{{ message|e('html_attr') }}" hidden></div>
             {% endfor %}
         {% endfor %}
 
@@ -67,50 +117,834 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© 2026 Travagir Travel Agency — Symfony 6.4 MVC + Doctrine + Twig</p>
+            <p>© 2026 <strong style="color:var(--amazon-orange-soft)">Travagir</strong> — Crafted with Symfony 6.4 &amp; Twig</p>
         </div>
     </footer>
 
 <script>
+        // Lazy-load & async-decode all images that don't already specify loading
+        document.querySelectorAll('img:not([loading])').forEach(img => {
+          img.loading = 'lazy';
+          img.decoding = 'async';
+        });
         // Mobile Navigation Toggle
         function toggleMobileNav() {
             const nav = document.getElementById('mainNav');
             nav.classList.toggle('active');
-        }
-
-        // Account Menu Toggle (for mobile touch devices)
-        function toggleAccountMenu() {
-            const dropdown = document.querySelector('.account-dropdown');
-            dropdown.classList.toggle('active');
+            document.body.classList.toggle('nav-open', nav.classList.contains('active'));
         }
 
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(event) {
-            const nav = document.getElementById('mainNav');
+            const nav    = document.getElementById('mainNav');
             const toggle = document.querySelector('.mobile-nav-toggle');
-            const accountDropdown = document.querySelector('.account-dropdown');
-
-            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+            if (nav && toggle && !nav.contains(event.target) && !toggle.contains(event.target)) {
                 nav.classList.remove('active');
-            }
-
-            if (accountDropdown && !accountDropdown.contains(event.target)) {
-                accountDropdown.classList.remove('active');
+                document.body.classList.remove('nav-open');
             }
         });
 
-        // Handle window resize
         window.addEventListener('resize', function() {
             const nav = document.getElementById('mainNav');
-            const accountDropdown = document.querySelector('.account-dropdown');
+            if (window.innerWidth > 768 && nav) nav.classList.remove('active');
+        });
 
-            if (window.innerWidth > 768) {
-                nav.classList.remove('active');
-                if (accountDropdown) {
-                    accountDropdown.classList.remove('active');
+        // Portal: move menus to <body> so they escape the header's stacking context
+        document.addEventListener('DOMContentLoaded', function () {
+            function makePortal(btnEl, menuEl) {
+                if (!btnEl || !menuEl) return;
+                // Move to body
+                menuEl.style.position   = 'fixed';
+                menuEl.style.zIndex     = '99999';
+                menuEl.style.opacity    = '1';
+                menuEl.style.visibility = 'visible';
+                menuEl.style.transform  = 'none';
+                menuEl.style.display    = 'none';
+                menuEl.style.marginTop  = '0';
+                document.body.appendChild(menuEl);
+
+                function place() {
+                    var r   = btnEl.getBoundingClientRect();
+                    var w   = menuEl.offsetWidth || 220;
+                    var left = r.right - w;
+                    menuEl.style.top   = (r.bottom + 6) + 'px';
+                    menuEl.style.left  = Math.max(8, Math.min(left, window.innerWidth - w - 8)) + 'px';
+                    menuEl.style.right = 'auto';
                 }
+                function open()  { menuEl.style.display = 'block'; place(); }
+                function close() { menuEl.style.display = 'none'; }
+
+                btnEl.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    menuEl.style.display === 'none' ? open() : close();
+                });
+                document.addEventListener('click', function (e) {
+                    if (!menuEl.contains(e.target) && e.target !== btnEl) close();
+                });
+                window.addEventListener('scroll', close, { passive: true });
+                window.addEventListener('resize', function () { close(); }, { passive: true });
             }
+
+            makePortal(document.querySelector('.account-btn'),  document.querySelector('.account-menu'));
+            makePortal(document.getElementById('langToggle'),   document.getElementById('langMenu'));
         });
     </script>
+
+    {# Hidden Google Translate widget — must stay in DOM for Google to initialise #}
+    <div id="google_translate_element" style="display:none;position:absolute;"></div>
+    <script>
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                autoDisplay: false
+            }, 'google_translate_element');
+
+            // Hide the Google toolbar banner as soon as it appears, then stop watching
+            var observer = new MutationObserver(function () {
+                var banner = document.querySelector('iframe.goog-te-banner-frame, .goog-te-banner-frame');
+                if (banner) {
+                    banner.style.cssText = 'display:none!important';
+                    document.body.style.top = '0';
+                    document.body.style.marginTop = '0';
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: false });
+        }
+
+        function setLang(lang) {
+            document.getElementById('langMenu').classList.remove('open');
+
+            if (!lang) {
+                // Restore English: wipe the cookie on every possible path/domain and reload
+                var exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+                document.cookie = 'googtrans=; ' + exp;
+                document.cookie = 'googtrans=; ' + exp + '; domain=' + location.hostname;
+                document.cookie = 'googtrans=; ' + exp + '; domain=.' + location.hostname;
+                window.location.reload();
+                return;
+            }
+
+            var sel = document.querySelector('.goog-te-combo');
+            if (sel) {
+                sel.value = lang;
+                sel.dispatchEvent(new Event('change'));
+            } else {
+                document.cookie = 'googtrans=/en/' + lang + '; path=/';
+                window.location.reload();
+            }
+        }
+
+        // lang menu open/close handled by makePortal above
+    </script>
+    <script async src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</div>{# /pg #}
+
+    {# ── Travagir Globe Mascot — user pages only (hidden on /admin/* routes) ── #}
+    {% if not (app.request.pathInfo starts with '/admin') %}
+    <canvas id="gb-canvas"></canvas>
+    <div id="globe-bot" title="Double-click me to open the AI Trip Planner!">
+      <div class="gb-shadow"></div>
+      <div id="gb-character">
+        <!-- CSS sparkles pinned to bot -->
+        <span class="gb-sparkle" style="width:5px;height:5px;background:#ffe066;top:-2px;left:8px;--dur:1.6s;--delay:0s;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></span>
+        <span class="gb-sparkle" style="width:4px;height:4px;background:#a78bfa;top:6px;right:-4px;--dur:1.9s;--delay:.4s;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></span>
+        <span class="gb-sparkle" style="width:4px;height:4px;background:#34d399;bottom:14px;left:-5px;--dur:2.1s;--delay:.8s;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></span>
+        <span class="gb-sparkle" style="width:5px;height:5px;background:#f472b6;top:22px;right:-6px;--dur:1.5s;--delay:1.1s;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></span>
+        <span class="gb-sparkle" style="width:4px;height:4px;background:#60a5fa;bottom:22px;right:0px;--dur:2.3s;--delay:.2s;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)"></span>
+        <div class="gb-character-stage">
+          <div class="gb-character-art" id="gb-character-art"></div>
+        </div>
+      </div>
+      <button type="button" class="gb-cycle-btn" id="gb-cycle" title="Change mascot design">Change look</button>
+      <div class="gb-bubble" id="gb-bubble">
+        <span>👋 Double-click me!</span>
+        <div class="gb-bubble-arrow"></div>
+      </div>
+    </div>
+
+    {# ── Mascot Chat Window ── #}
+    <div id="gb-chat" aria-hidden="true">
+      <div class="gbc-header">
+        <div class="gbc-avatar-wrap">
+          <img class="gbc-avatar" id="gbc-avatar" src="" alt=""/>
+        </div>
+        <div class="gbc-header-info">
+          <div class="gbc-name" id="gbc-name">Orbit</div>
+          <div class="gbc-status">Online · Ready to help</div>
+          <div class="gbc-trait" id="gbc-trait">Your AI Travel Guide</div>
+        </div>
+        <button class="gbc-close" id="gbc-close" aria-label="Close">✕</button>
+      </div>
+      <div class="gbc-messages" id="gbc-messages"></div>
+      <form class="gbc-form" id="gbc-form" autocomplete="off">
+        <input class="gbc-input" id="gbc-input" type="text" placeholder="Tell me your dream trip… ✈️" maxlength="300"/>
+        <button class="gbc-send" type="submit" aria-label="Send">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </form>
+    </div>
+
+    <style>
+      /* ── canvas layer — purely for particles, transparent bg ── */
+      #gb-canvas {
+        position: fixed; inset: 0;
+        pointer-events: none;
+        z-index: 9998;
+        background: transparent;
+      }
+
+      /* ── wrapper ── */
+      #globe-bot {
+        position: fixed;
+        bottom: 24px; right: 24px;
+        z-index: 9999;
+        cursor: grab;
+        user-select: none;
+        animation: gb-float 3.2s ease-in-out infinite;
+        transition: filter .2s;
+        width: 110px;
+        contain: layout style;
+      }
+      #globe-bot:active { cursor: grabbing; }
+
+      /* idle glow ring around bot */
+      #gb-character {
+        position: relative;
+        width: 110px;
+        height: 120px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      #gb-character::before {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 45%, rgba(120,150,255,0.18) 0%, transparent 70%);
+        animation: gb-aura 2.8s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes gb-aura {
+        0%,100% { transform: scale(1);   opacity: .5; }
+        50%      { transform: scale(1.2); opacity: .9; }
+      }
+
+      #globe-bot:hover #gb-character::before {
+        background: radial-gradient(circle, rgba(160,200,255,0.28) 0%, transparent 70%);
+      }
+      .gb-character-stage {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .gb-character-stage::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: 2px;
+        width: 70px;
+        height: 14px;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(16,24,48,0.5) 0%, transparent 72%);
+        filter: blur(3px);
+      }
+      .gb-character-art {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+      }
+
+      .gb-cycle-btn {
+        position: absolute;
+        top: -4px;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        border: 0;
+        border-radius: 999px;
+        padding: 5px 10px;
+        background: rgba(10, 18, 48, 0.92);
+        color: #ffffff;
+        font-family: Inter, sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity .18s ease, transform .18s ease, background .18s ease;
+      }
+      #globe-bot:hover .gb-cycle-btn,
+      #globe-bot:focus-within .gb-cycle-btn {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -110%);
+      }
+      .gb-cycle-btn:hover {
+        background: rgba(79, 110, 247, 0.98);
+      }
+      @media (hover: none) and (pointer: coarse) {
+        .gb-cycle-btn {
+          opacity: 1;
+          pointer-events: auto;
+          top: -10px;
+        }
+      }
+
+      /* ── Mobile mascot & chat ── */
+      @media (max-width: 768px) {
+        #globe-bot { width: 80px; touch-action: none; }
+        #gb-character { width: 80px; height: 88px; }
+        .gb-character-stage { width: 80px; height: 80px; }
+        .gb-pic { width: 80px; }
+        #gb-chat {
+          right: 8px;
+          left: 8px;
+          width: auto;
+          bottom: 140px;
+          border-radius: 18px;
+          max-height: calc(100vh - 180px);
+        }
+        .gbc-input { font-size: 16px; }
+        /* hide mascot when mobile nav is open so it doesn't block nav */
+        body.nav-open #globe-bot,
+        body.nav-open #gb-chat { opacity: 0; pointer-events: none; }
+      }
+
+      /* ── float bob ── */
+      @keyframes gb-float {
+        0%,100% { transform: translateY(0)    rotate(0deg); }
+        28%      { transform: translateY(-13px) rotate(2.5deg); }
+        70%      { transform: translateY(-6px)  rotate(-2deg); }
+      }
+
+      /* ── excited bounce ── */
+      @keyframes gb-excited {
+        0%,100% { transform: scale(1)    rotate(0deg); }
+        15%      { transform: scale(1.32) rotate(-10deg); }
+        35%      { transform: scale(1.26) rotate(10deg); }
+        55%      { transform: scale(1.18) rotate(-5deg); }
+        75%      { transform: scale(1.1)  rotate(5deg); }
+      }
+      #globe-bot.excited { animation: gb-excited .6s cubic-bezier(.36,.07,.19,.97) forwards; }
+
+      /* ── roaming: stop float, wave arms ── */
+      #globe-bot.roaming { animation: none; }
+      @keyframes gb-wave { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-38deg)} }
+      #globe-bot.roaming .arm-wave {
+        animation: gb-wave .42s ease-in-out infinite;
+        transform-box: fill-box; transform-origin: top right;
+      }
+      @keyframes dasho-run { 0%,100%{transform:rotate(0)} 50%{transform:rotate(9deg)} }
+      #globe-bot.roaming .dasho-body {
+        animation: dasho-run .32s ease-in-out infinite;
+        transform-box: fill-box; transform-origin: center;
+      }
+
+      /* ── coloured shadow that breathes ── */
+      .gb-shadow {
+        width: 44px; height: 7px;
+        background: radial-gradient(ellipse, var(--gb-shadow-color, rgba(79,110,247,0.4)) 0%, transparent 70%);
+        margin: 0 auto; border-radius: 50%;
+        animation: gb-shadow-pulse 3.2s ease-in-out infinite;
+        transition: background .4s;
+      }
+      @keyframes gb-shadow-pulse {
+        0%,100% { transform: scaleX(1);    opacity: .6; }
+        50%      { transform: scaleX(.55);  opacity: .15; }
+      }
+
+      /* ── speech bubble ── */
+      .gb-bubble {
+        position: absolute;
+        bottom: calc(100% + 12px); right: 0;
+        background: white; color: #1a1a2e;
+        font-family: Inter, sans-serif; font-size: 13px; font-weight: 700;
+        padding: 9px 16px;
+        border-radius: 18px 18px 4px 18px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+        white-space: nowrap; opacity: 0;
+        transform: translateY(8px) scale(.9);
+        transition: opacity .28s cubic-bezier(.34,1.56,.64,1), transform .28s cubic-bezier(.34,1.56,.64,1);
+        pointer-events: none;
+      }
+      .gb-bubble.visible { opacity: 1; transform: translateY(0) scale(1); }
+      .gb-bubble-arrow {
+        position: absolute; bottom: -9px; right: 20px;
+        width: 0; height: 0;
+        border-left: 9px solid transparent;
+        border-top: 10px solid white;
+      }
+
+      /* ══════════════════════════════════
+         MASCOT CHAT WINDOW
+         ══════════════════════════════════ */
+
+      /* animated border glow via conic-gradient rotation */
+      @property --gbc-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+      }
+      @keyframes gbc-spin-border { to { --gbc-angle: 360deg; } }
+
+      #gb-chat {
+        position: fixed;
+        bottom: 186px; right: 24px;
+        left: auto; top: auto;
+        width: min(350px, calc(100vw - 16px));
+        max-height: min(540px, calc(100vh - 220px));
+        will-change: transform, opacity;
+        transform: translateZ(0);
+        border-radius: 24px;
+        display: flex;
+        flex-direction: column;
+        z-index: 10000;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(22px) scale(.93) perspective(600px) rotateX(4deg);
+        transform-origin: bottom right;
+        transition: opacity .4s cubic-bezier(.34,1.56,.64,1),
+                    transform .4s cubic-bezier(.34,1.56,.64,1);
+        /* layered background */
+        background:
+          linear-gradient(180deg, #0d1a2e 0%, #080f1d 100%);
+        /* spinning conic border via box-shadow simulation */
+        box-shadow:
+          0 0 0 1px rgba(79,110,247,.25),
+          0 32px 80px rgba(0,0,0,.7),
+          0 8px 32px rgba(79,110,247,.12),
+          inset 0 1px 0 rgba(255,255,255,.06);
+      }
+      #gb-chat.open {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(0) scale(1) perspective(600px) rotateX(0deg);
+        animation: gbc-border-pulse 3s ease-in-out infinite;
+      }
+      @keyframes gbc-border-pulse {
+        0%,100% { box-shadow: 0 0 0 1px rgba(79,110,247,.3), 0 32px 80px rgba(0,0,0,.7), 0 8px 32px rgba(79,110,247,.12), inset 0 1px 0 rgba(255,255,255,.06); }
+        50%      { box-shadow: 0 0 0 1px rgba(99,160,255,.55), 0 32px 80px rgba(0,0,0,.7), 0 12px 48px rgba(79,110,247,.22), inset 0 1px 0 rgba(255,255,255,.08); }
+      }
+
+      /* header */
+      .gbc-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 16px 14px;
+        background: linear-gradient(135deg, rgba(30,41,59,.95) 0%, rgba(15,23,42,.98) 100%);
+        border-bottom: 1px solid rgba(99,140,255,.12);
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+      }
+      /* header shimmer sweep */
+      .gbc-header::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(105deg, transparent 40%, rgba(99,140,255,.07) 50%, transparent 60%);
+        animation: gbc-shimmer 3.5s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes gbc-shimmer {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
+      }
+
+      .gbc-avatar-wrap {
+        position: relative; flex-shrink: 0;
+      }
+      .gbc-avatar {
+        width: 46px; height: 46px;
+        border-radius: 50%;
+        object-fit: contain;
+        background: rgba(79,110,247,.1);
+        border: 2px solid rgba(99,140,255,.35);
+        display: block;
+        filter: drop-shadow(0 4px 12px rgba(79,110,247,.5));
+        animation: gbc-avatar-bob 2.8s ease-in-out infinite;
+      }
+      @keyframes gbc-avatar-bob {
+        0%,100% { transform: translateY(0) rotate(-2deg); }
+        50%      { transform: translateY(-4px) rotate(2deg); }
+      }
+      /* online dot */
+      .gbc-avatar-wrap::after {
+        content: '';
+        position: absolute; bottom: 1px; right: 1px;
+        width: 11px; height: 11px;
+        background: #22c55e;
+        border-radius: 50%;
+        border: 2px solid #0d1a2e;
+        animation: gbc-online-pulse 2s ease-in-out infinite;
+      }
+      @keyframes gbc-online-pulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+        50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+      }
+
+      .gbc-header-info { flex: 1; min-width: 0; }
+      .gbc-name {
+        font-family: Inter, sans-serif;
+        font-size: 14px; font-weight: 800;
+        color: #f1f5f9;
+        letter-spacing: -.3px;
+      }
+      .gbc-status {
+        font-family: Inter, sans-serif;
+        font-size: 10px; font-weight: 600;
+        color: #22c55e;
+        letter-spacing: .4px;
+        margin-top: 1px;
+        display: flex; align-items: center; gap: 4px;
+      }
+      .gbc-status::before {
+        content: '';
+        width: 5px; height: 5px; border-radius: 50%;
+        background: #22c55e;
+        animation: gbc-blink 1.6s ease-in-out infinite;
+      }
+      @keyframes gbc-blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+      .gbc-trait {
+        font-family: Inter, sans-serif;
+        font-size: 10px; font-weight: 500;
+        color: #475569;
+        margin-top: 1px;
+      }
+      .gbc-close {
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 50%;
+        width: 30px; height: 30px;
+        color: #64748b;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: background .18s, color .18s, transform .18s, border-color .18s;
+        z-index: 1;
+      }
+      .gbc-close:hover {
+        background: rgba(239,68,68,.18);
+        border-color: rgba(239,68,68,.3);
+        color: #f87171;
+        transform: rotate(90deg) scale(1.1);
+      }
+
+      /* messages area */
+      .gbc-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        scroll-behavior: smooth;
+        min-height: 200px;
+      }
+      .gbc-messages::-webkit-scrollbar { width: 3px; }
+      .gbc-messages::-webkit-scrollbar-track { background: transparent; }
+      .gbc-messages::-webkit-scrollbar-thumb { background: rgba(99,140,255,.2); border-radius: 2px; }
+
+      /* message row */
+      .gbc-msg {
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        animation: gbc-msg-in .38s cubic-bezier(.34,1.56,.64,1) forwards;
+      }
+      @keyframes gbc-msg-in {
+        from { opacity:0; transform: translateY(14px) scale(.95); }
+        to   { opacity:1; transform: translateY(0) scale(1); }
+      }
+      .gbc-msg.user {
+        flex-direction: row-reverse;
+        animation-name: gbc-msg-in-right;
+      }
+      @keyframes gbc-msg-in-right {
+        from { opacity:0; transform: translateX(14px) scale(.95); }
+        to   { opacity:1; transform: translateX(0) scale(1); }
+      }
+
+      .gbc-msg-bubble {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-family: Inter, sans-serif;
+        font-size: 13px; line-height: 1.55;
+        font-weight: 500;
+        position: relative;
+        word-break: break-word;
+      }
+      .gbc-msg.bot .gbc-msg-bubble {
+        background: linear-gradient(135deg, rgba(30,41,70,.9) 0%, rgba(20,30,60,.95) 100%);
+        border: 1px solid rgba(99,140,255,.2);
+        color: #cbd5e1;
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+      }
+      .gbc-msg.user .gbc-msg-bubble {
+        background: linear-gradient(135deg, #4f6ef7 0%, #6d28d9 100%);
+        color: #fff;
+        border-bottom-right-radius: 5px;
+        box-shadow: 0 4px 20px rgba(79,110,247,.4);
+      }
+      .gbc-msg-avatar {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        object-fit: contain;
+        background: rgba(79,110,247,.1);
+        flex-shrink: 0;
+        align-self: flex-end;
+        border: 1.5px solid rgba(99,140,255,.2);
+      }
+
+      /* recommendation card */
+      .gbc-rec {
+        background: linear-gradient(135deg, rgba(79,110,247,.08) 0%, rgba(30,41,70,.6) 100%);
+        border: 1px solid rgba(99,140,255,.22);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-top: 8px;
+        font-family: Inter, sans-serif;
+        transition: border-color .2s, transform .2s, box-shadow .2s;
+        cursor: default;
+        animation: gbc-rec-in .4s cubic-bezier(.34,1.56,.64,1) both;
+      }
+      @keyframes gbc-rec-in {
+        from { opacity:0; transform: translateY(10px) scale(.97); }
+        to   { opacity:1; transform: translateY(0) scale(1); }
+      }
+      .gbc-rec:hover {
+        border-color: rgba(99,140,255,.45);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(79,110,247,.2);
+      }
+      .gbc-rec-icon { font-size: 18px; margin-bottom: 4px; }
+      .gbc-rec-title {
+        font-size: 13px; font-weight: 700; color: #f1f5f9;
+        margin-bottom: 4px;
+      }
+      .gbc-rec-reason { font-size: 11.5px; color: #94a3b8; line-height: 1.45; }
+      .gbc-rec-price {
+        display: inline-block;
+        margin-top: 7px;
+        font-size: 11px; font-weight: 800;
+        color: #f97316;
+        background: rgba(249,115,22,.1);
+        border: 1px solid rgba(249,115,22,.25);
+        border-radius: 6px;
+        padding: 2px 8px;
+      }
+
+      /* typing indicator */
+      .gbc-typing {
+        display: flex; gap: 5px; align-items: center;
+        padding: 11px 14px;
+        background: linear-gradient(135deg, rgba(30,41,70,.9), rgba(20,30,60,.95));
+        border: 1px solid rgba(99,140,255,.2);
+        border-radius: 18px; border-bottom-left-radius: 5px;
+        width: fit-content;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25);
+      }
+      .gbc-typing span {
+        width: 7px; height: 7px;
+        background: linear-gradient(135deg, #4f6ef7, #818cf8);
+        border-radius: 50%;
+        animation: gbc-bounce .9s ease-in-out infinite;
+      }
+      .gbc-typing span:nth-child(2) { animation-delay: .18s; }
+      .gbc-typing span:nth-child(3) { animation-delay: .36s; }
+      @keyframes gbc-bounce {
+        0%,80%,100% { transform: translateY(0) scale(1); opacity:.4; }
+        40%          { transform: translateY(-6px) scale(1.2); opacity:1; }
+      }
+
+      /* input area */
+      .gbc-form {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px 14px;
+        border-top: 1px solid rgba(99,140,255,.1);
+        background: rgba(8,15,29,.95);
+        flex-shrink: 0;
+        position: relative;
+      }
+      /* subtle glow line at top of form */
+      .gbc-form::before {
+        content: '';
+        position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(99,140,255,.4), transparent);
+      }
+      .gbc-input {
+        flex: 1;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(99,140,255,.18);
+        border-radius: 14px;
+        padding: 10px 14px;
+        color: #f1f5f9;
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        outline: none;
+        transition: border-color .2s, background .2s, box-shadow .2s;
+      }
+      .gbc-input::placeholder { color: #334155; }
+      .gbc-input:focus {
+        border-color: rgba(99,140,255,.5);
+        background: rgba(255,255,255,.07);
+        box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+      }
+      .gbc-send {
+        width: 40px; height: 40px;
+        border-radius: 13px;
+        background: linear-gradient(135deg, #4f6ef7, #6d28d9);
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+        box-shadow: 0 4px 18px rgba(79,110,247,.45);
+        position: relative;
+        overflow: hidden;
+      }
+      .gbc-send::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+        border-radius: inherit;
+      }
+      .gbc-send:hover { transform: scale(1.12) rotate(-5deg); box-shadow: 0 6px 24px rgba(79,110,247,.6); }
+      .gbc-send:active { transform: scale(.94); }
+      .gbc-send:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; }
+
+/* ── CSS star sparkles on the bot itself ── */
+      .gb-sparkle {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        animation: gb-sparkle-anim var(--dur,1.4s) ease-in-out infinite var(--delay,0s);
+      }
+      @keyframes gb-sparkle-anim {
+        0%,100% { transform: scale(0) rotate(0deg);   opacity: 0; }
+        40%      { transform: scale(1) rotate(180deg); opacity: 1; }
+        80%      { transform: scale(.6) rotate(320deg); opacity: .4; }
+      }
+      .gb-pic {
+        width: 110px;
+        height: auto;
+        display: block;
+        pointer-events: auto;
+        image-rendering: auto;
+        -webkit-image-rendering: auto;
+        object-fit: contain;
+        background: transparent;
+        margin: 0 auto;
+        filter: drop-shadow(0 6px 16px rgba(0,0,0,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+        transition: filter .3s ease, transform .3s ease;
+      }
+      #globe-bot:hover .gb-pic {
+        filter: drop-shadow(0 8px 20px rgba(80,120,255,0.5)) drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        transform: scale(1.06) translateY(-3px);
+      }
+    </style>
+
+    <script>window._mascotCfg={tripUrl:'{{ path("trip_planner") }}',planUrl:'{{ path("trip_planner_plan") }}'};</script>
+    <script src="/js/mascot.js" defer></script>
+    {% endif %}{# end mascot guard #}
+
+    {# ══ UI Enhancement DOM elements ══ #}
+    <div id="tg-toast-rack" aria-live="polite"></div>
+
+    <button id="tg-top" title="Back to top" aria-label="Back to top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <div id="tg-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="tg-confirm-title">
+      <div id="tg-confirm-box">
+        <div id="tg-confirm-icon">⚠️</div>
+        <p id="tg-confirm-title"></p>
+        <p id="tg-confirm-msg"></p>
+        <div class="tg-confirm-btns">
+          <button class="tg-confirm-cancel" id="tg-confirm-cancel">Cancel</button>
+          <button class="tg-confirm-ok" id="tg-confirm-ok">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/ui.js" defer></script>
+
+    <style>
+        /* Kill every piece of Google Translate UI chrome */
+        .goog-te-banner-frame,
+        .goog-te-balloon-frame,
+        iframe.goog-te-banner-frame,
+        #goog-gt-tt,
+        .skiptranslate > iframe,
+        .goog-te-menu-frame { display: none !important; visibility: hidden !important; }
+        body { top: 0 !important; margin-top: 0 !important; }
+
+        /* ── Custom language picker ── */
+        .lang-picker { position: relative; display: flex; align-items: center; }
+
+        .lang-toggle {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color .2s, background .2s;
+            color: inherit;
+        }
+        .lang-toggle:hover { border-color: var(--amazon-orange); background: rgba(255,153,0,.1); }
+
+        .lang-menu {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: #111c2d;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 6px;
+            z-index: 99999;
+            min-width: 170px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.55);
+            gap: 2px;
+        }
+        .lang-menu.open { display: flex; }
+
+        .lang-menu button {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            width: 100%;
+            transition: background .15s, color .15s;
+        }
+        .lang-menu button:hover { background: rgba(255,153,0,.15); color: var(--amazon-orange); }
+    </style>
 </body>
 </html>

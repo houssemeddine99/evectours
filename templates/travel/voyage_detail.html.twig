@@ -1,6 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}{{ voyage.title|default('Voyage details') }} | Travagir{% endblock %}
+{% block meta_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Travagir — curated voyages and exclusive travel offers.')|striptags|slice(0,160) }}{% endblock %}
+{% block og_title %}{{ voyage.title|default('Voyage') }} — Travagir{% endblock %}
+{% block og_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Travagir.')|striptags|slice(0,200) }}{% endblock %}
+{% block og_image %}{% set _img = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : '' %}{% if _img %}{{ _img }}{% else %}{{ parent() }}{% endif %}{% endblock %}
+{% block twitter_title %}{{ voyage.title|default('Voyage') }} — Travagir{% endblock %}
+{% block twitter_description %}{{ voyage.description|default('')|striptags|slice(0,200) }}{% endblock %}
+{% block twitter_image %}{% set _img = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : '' %}{% if _img %}{{ _img }}{% else %}{{ parent() }}{% endif %}{% endblock %}
 
 {% block body %}
     <section class="voyage-hero">
@@ -35,33 +42,45 @@
                         </div>
                     </div>
                 {% endif %}
+            </div>
         </div>
     </section>
 
     <section class="voyage-detail-container">
         <div class="voyage-detail-wrapper">
-            <!-- Main Content Card -->
             <div class="voyage-main-card">
                 <div class="voyage-header-section">
                     <div class="voyage-headline-enhanced">
                         <div class="headline-content">
-                            <p class="meta-location">🌍 {{ voyage.destination|default('') }}</p>
+                            <p class="meta-location">
+                                <span id="meta-flag">🌍</span>
+                                {{ voyage.destination|default('') }}
+                            </p>
                             <h1 class="voyage-title-premium">{{ voyage.title|default('') }}</h1>
                             <p class="voyage-tagline">Discover unforgettable experiences in your next adventure</p>
+                            {% if voyage.tags is defined and voyage.tags|length > 0 %}
+                                <div class="detail-tags">
+                                    {% for tag in voyage.tags %}
+                                        <a href="{{ path('travel_voyages', {tag: tag.name}) }}" class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="voyage-date-badge">
                             <span class="badge-icon">📅</span>
                             <span class="badge-text">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
                         </div>
                     </div>
-                    
-                    <!-- Quick Info Cards -->
+
                     <div class="voyage-quick-info">
                         <div class="info-card">
                             <span class="info-icon">💰</span>
                             <div class="info-content">
                                 <p class="info-label">Starting Price</p>
-                                <p class="info-value">{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Contact us' }}</p>
+                                <p class="info-value">{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Contact us' }}</p>
+                                {% if voyage.scarcity_label is defined and voyage.scarcity_label %}
+                                    <span class="scarcity-badge scarcity-{{ voyage.scarcity_level }}">{{ voyage.scarcity_label }}</span>
+                                {% endif %}
                                 {% if offer is defined and offer %}
                                     <p class="offer-badge">🎉 {{ offer.discount_percentage }}% OFF</p>
                                 {% endif %}
@@ -71,7 +90,7 @@
                             <span class="info-icon">⏱️</span>
                             <div class="info-content">
                                 <p class="info-label">Duration</p>
-                                <p class="info-value">5-7 days</p>
+                                <p class="info-value">{{ duration_days }} day{{ duration_days != 1 ? 's' : '' }}</p>
                             </div>
                         </div>
                         <div class="info-card">
@@ -84,9 +103,18 @@
                     </div>
                 </div>
 
+                {# Country Info Section — loaded async via /api/voyage-meta #}
+                <div id="country-info-section">
+                    <div class="country-info-skeleton">
+                        <div class="skeleton-line skeleton-line--short"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                    </div>
+                </div>
                 <div class="voyage-separator"></div>
 
-                <!-- Offer Section -->
+                <div class="voyage-separator"></div>
+
                 {% if offer is defined and offer %}
                 <div class="voyage-offer-section">
                     <div class="offer-banner">
@@ -94,26 +122,33 @@
                         <h3 class="offer-title">{{ offer.title }}</h3>
                         <p class="offer-description">{{ offer.description|default('Limited time offer for this voyage!') }}</p>
                         <div class="offer-details">
-                            <span class="offer-discount">
-                                <strong>{{ offer.discount_percentage }}% Discount</strong>
-                            </span>
+                            <span class="offer-discount"><strong>{{ offer.discount_percentage }}% Discount</strong></span>
                             {% if offer.end_date %}
                                 <span class="offer-expiry">Expires on {{ offer.end_date|date('d M Y') }}</span>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-
                 <div class="voyage-separator"></div>
                 {% endif %}
 
-                <!-- Description Section -->
                 <div class="voyage-description-section">
                     <h2 class="section-title">About This Journey</h2>
                     <p class="voyage-description">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
                 </div>
 
-                <!-- Activities Section -->
+                {# AI Itinerary Section #}
+                <div class="voyage-itinerary-section">
+                    <div class="itinerary-header">
+                        <h2 class="section-title">🗓 AI Itinerary Preview</h2>
+                        <button id="loadItineraryBtn" class="btn-itinerary" onclick="loadItinerary()">Generate Itinerary</button>
+                    </div>
+                    <div id="itineraryContent" class="itinerary-content" style="display:none"></div>
+                    <div id="itineraryLoading" class="itinerary-loading" style="display:none">✨ Generating your itinerary…</div>
+                </div>
+
+                <div class="voyage-separator"></div>
+
                 {% if voyage.activities|default([]) is not empty %}
                 <div class="voyage-activities-section">
                     <h2 class="section-title">✨ Included Activities</h2>
@@ -135,11 +170,16 @@
                 </div>
                 {% endif %}
 
-                <!-- Action Buttons -->
                 <div class="voyage-actions">
                     <a class="btn btn-primary btn-reserve" href="{{ path('travel_voyage_reserve', {id: voyage.id}) }}">
                         <span class="btn-text">Reserve Your Spot</span>
                         <span class="btn-arrow">→</span>
+                    </a>
+                    <button class="btn btn-fav {% if is_favorite %}btn-fav-active{% endif %}" id="favBtn" onclick="toggleFavorite({{ voyage.id }})" title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                        {{ is_favorite ? '♥ Saved' : '♡ Save' }}
+                    </button>
+                    <a href="{{ path('compare_pick', {id: voyage.id}) }}" class="btn btn-compare" title="Compare with another voyage">
+                        ⊕ Compare
                     </a>
                     <a class="btn btn-secondary btn-back" href="{{ path('travel_voyages') }}">
                         <span class="btn-text">Back to voyages</span>
@@ -149,23 +189,116 @@
         </div>
     </section>
 
+    {# ======================== REVIEWS SECTION ======================== #}
+    <section class="reviews-section">
+        <div class="reviews-container">
+            <div class="reviews-header">
+                <h2 class="section-title">⭐ Traveller Reviews</h2>
+                {% if review_count > 0 %}
+                <div class="reviews-summary">
+                    <span class="avg-rating">{{ review_avg|number_format(1) }}</span>
+                    <span class="avg-stars">
+                        {% for i in 1..5 %}
+                            <span class="star {{ i <= review_avg|round ? 'star-filled' : (i - 0.5 <= review_avg ? 'star-half' : '') }}">★</span>
+                        {% endfor %}
+                    </span>
+                    <span class="review-count">{{ review_count }} review{{ review_count != 1 ? 's' : '' }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Review form #}
+            {% if user_id > 1 %}
+            <div class="review-form-card">
+                <h3>{{ user_review ? 'Update Your Review' : 'Leave a Review' }}</h3>
+                <form method="post" action="{{ path('voyage_submit_review', {id: voyage.id}) }}" class="review-form">
+                    <div class="star-picker" id="starPicker">
+                        {% for i in 1..5 %}
+                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {% if user_review and user_review.rating == i %}checked{% elseif not user_review and i == 5 %}checked{% endif %} class="star-radio">
+                        <label for="star{{ i }}" title="{{ i }} star{{ i != 1 ? 's' : '' }}">★</label>
+                        {% endfor %}
+                    </div>
+                    <textarea name="comment" class="review-textarea" placeholder="Share your experience (optional)" rows="3" maxlength="1000">{{ user_review ? user_review.comment : '' }}</textarea>
+                    <button type="submit" class="btn btn-primary btn-review-submit">{{ user_review ? 'Update Review' : 'Submit Review' }}</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="review-login-cta"><a href="{{ path('auth_login') }}">Log in</a> to leave a review.</p>
+            {% endif %}
+
+            {# Review list #}
+            {% if reviews is not empty %}
+            <div class="review-list">
+                {% for review in reviews %}
+                <div class="review-card {% if user_review and review.user_id == user_id %}review-card--own{% endif %}">
+                    <div class="review-meta">
+                        <span class="review-stars">
+                            {% for i in 1..5 %}
+                                <span class="{{ i <= review.rating ? 'star-filled' : 'star-empty' }}">★</span>
+                            {% endfor %}
+                        </span>
+                        <span class="review-date">{{ review.created_at }}</span>
+                        {% if user_review and review.user_id == user_id %}
+                            <span class="review-own-badge">Your review</span>
+                        {% endif %}
+                    </div>
+                    {% if review.comment %}
+                    <p class="review-comment">{{ review.comment }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-reviews">No reviews yet. Be the first!</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <style>
+        .reviews-section { background: rgba(255,255,255,.02); border-top: 1px solid var(--border-dark); padding: 40px 0; }
+        .reviews-container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .reviews-header { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+        .reviews-summary { display: flex; align-items: center; gap: 8px; }
+        .avg-rating { font-size: 2rem; font-weight: 800; color: #f59e0b; }
+        .avg-stars .star-filled { color: #f59e0b; }
+        .avg-stars .star-half { color: #f59e0b; opacity: .5; }
+        .avg-stars span:not(.star-filled):not(.star-half) { color: rgba(255,255,255,.2); }
+        .review-count { color: var(--text-muted); font-size: .9rem; }
+
+        .review-form-card { background: rgba(255,255,255,.04); border: 1px solid var(--border-dark); border-radius: 12px; padding: 24px; margin-bottom: 28px; }
+        .review-form-card h3 { margin: 0 0 16px; font-size: 1.05rem; }
+        .review-form { display: flex; flex-direction: column; gap: 14px; }
+        .star-picker { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+        .star-radio { display: none; }
+        .star-picker label { font-size: 2rem; cursor: pointer; color: rgba(255,255,255,.2); transition: color .15s; }
+        .star-picker input:checked ~ label,
+        .star-picker label:hover,
+        .star-picker label:hover ~ label { color: #f59e0b; }
+        .review-textarea { background: rgba(255,255,255,.06); border: 1px solid var(--border-dark); border-radius: 8px; color: inherit; font-size: .95rem; padding: 10px 14px; resize: vertical; font-family: inherit; }
+        .review-textarea:focus { outline: none; border-color: #6366f1; }
+        .btn-review-submit { align-self: flex-start; padding: 10px 22px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .review-login-cta { color: var(--text-muted); margin-bottom: 24px; }
+        .review-login-cta a { color: #6366f1; }
+
+        .review-list { display: flex; flex-direction: column; gap: 16px; }
+        .review-card { background: rgba(255,255,255,.04); border: 1px solid var(--border-dark); border-radius: 10px; padding: 16px 20px; }
+        .review-card--own { border-color: #6366f1; }
+        .review-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .review-stars .star-filled { color: #f59e0b; }
+        .review-stars .star-empty { color: rgba(255,255,255,.2); }
+        .review-date { color: var(--text-muted); font-size: .82rem; }
+        .review-own-badge { background: #6366f1; color: #fff; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .review-comment { margin: 0; font-size: .95rem; line-height: 1.6; color: var(--text-muted); }
+        .no-reviews { color: var(--text-muted); text-align: center; padding: 24px 0; }
+    </style>
+
     <script>
-        // Store images array globally
         const images = {{ voyage.image_url is iterable ? voyage.image_url|json_encode|raw : '[]' }};
         let currentImageIndex = 0;
 
         function changeImage(direction) {
             if (images.length <= 1) return;
-            
-            currentImageIndex += direction;
-            
-            // Wrap around
-            if (currentImageIndex < 0) {
-                currentImageIndex = images.length - 1;
-            } else if (currentImageIndex >= images.length) {
-                currentImageIndex = 0;
-            }
-            
+            currentImageIndex = (currentImageIndex + direction + images.length) % images.length;
             updateImage();
         }
 
@@ -178,34 +311,159 @@
             const mainImage = document.getElementById('mainImage');
             const imageCounter = document.getElementById('imageCounter');
             const thumbnails = document.querySelectorAll('.thumbnail');
-            
-            if (mainImage) {
-                mainImage.src = images[currentImageIndex];
-            }
-            
-            if (imageCounter) {
-                imageCounter.textContent = (currentImageIndex + 1) + ' / ' + images.length;
-            }
-            
-            // Update active thumbnail
-            thumbnails.forEach((thumb, index) => {
-                if (index === currentImageIndex) {
-                    thumb.classList.add('active');
-                } else {
-                    thumb.classList.remove('active');
-                }
-            });
+            if (mainImage) mainImage.src = images[currentImageIndex];
+            if (imageCounter) imageCounter.textContent = (currentImageIndex + 1) + ' / ' + images.length;
+            thumbnails.forEach((thumb, index) => thumb.classList.toggle('active', index === currentImageIndex));
         }
 
-        // Add keyboard navigation
         document.addEventListener('keydown', function(e) {
             if (images.length <= 1) return;
-            
-            if (e.key === 'ArrowLeft') {
-                changeImage(-1);
-            } else if (e.key === 'ArrowRight') {
-                changeImage(1);
-            }
+            if (e.key === 'ArrowLeft') changeImage(-1);
+            else if (e.key === 'ArrowRight') changeImage(1);
         });
+
+        async function toggleFavorite(voyageId) {
+            const btn = document.getElementById('favBtn');
+            try {
+                const res = await fetch('/favorites/toggle/' + voyageId, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+                if (res.status === 401) { window.location.href = '/login'; return; }
+                const data = await res.json();
+                btn.classList.toggle('btn-fav-active', data.added);
+                btn.textContent = data.added ? '♥ Saved' : '♡ Save';
+            } catch(e) { console.error(e); }
+        }
+
+        async function toggleCompare(voyageId) {
+            const btn = document.getElementById('cmpBtn');
+            const inList = btn.classList.contains('cmp-active');
+            const url = inList ? '/compare/remove/' + voyageId : '/compare/add/' + voyageId;
+            try {
+                const res = await fetch(url, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+                const data = await res.json();
+                if (res.ok) {
+                    btn.classList.toggle('cmp-active', !inList);
+                    btn.textContent = !inList ? '✓ In Compare' : '⊕ Compare';
+                    if (!inList) {
+                        if (typeof tgToast !== 'undefined') tgToast('Added to comparison — <a href="/compare" style="color:#fbbf24">View now →</a>', 'info', 5000);
+                    }
+                } else if (data.status === 'max_reached') {
+                    if (typeof tgToast !== 'undefined') tgToast('Max 3 voyages. <a href="/compare" style="color:#fbbf24">View comparison →</a>', 'warning', 6000);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadItinerary() {
+            const btn = document.getElementById('loadItineraryBtn');
+            const content = document.getElementById('itineraryContent');
+            const loading = document.getElementById('itineraryLoading');
+
+            btn.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const res = await fetch('{{ path('voyage_ai_itinerary', {slug: voyage.slug}) }}');
+                const data = await res.json();
+                loading.style.display = 'none';
+                if (data.itinerary) {
+                    content.innerHTML = data.itinerary.split('\n').map(line => line.trim() ? '<p>' + line + '</p>' : '').join('');
+                    content.style.display = 'block';
+                } else {
+                    content.innerHTML = '<p class="ai-error">Could not generate itinerary at this time.</p>';
+                    content.style.display = 'block';
+                }
+            } catch(e) {
+                loading.style.display = 'none';
+                content.innerHTML = '<p class="ai-error">Network error.</p>';
+                content.style.display = 'block';
+            }
+        }
+    </script>
+
+    <style>
+        .country-info-section { margin: 24px 0; }
+        .country-grid { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; background: rgba(255,255,255,.04); border: 1px solid var(--border-dark); border-radius: 12px; padding: 20px; }
+        .country-flag-wrap { flex-shrink: 0; }
+        .country-flag { width: 100px; height: 66px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-dark); }
+        .country-facts { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+        .fact-item { display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,.06); padding: 8px 14px; border-radius: 8px; font-size: .9rem; }
+        .fact-icon { font-size: 1rem; }
+        .fact-label { color: var(--text-muted); font-size: .82rem; }
+        .fact-value { font-weight: 600; }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .tag-pill { display: inline-block; padding: 3px 12px; border-radius: 14px; border: 1px solid; font-size: .82rem; font-weight: 600; text-decoration: none; }
+        .voyage-itinerary-section { margin: 28px 0; }
+        .itinerary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .btn-itinerary { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; font-weight: 600; font-size: .9rem; }
+        .itinerary-content p { margin: 6px 0; line-height: 1.6; font-size: .95rem; }
+        .itinerary-loading { color: var(--text-muted); font-style: italic; padding: 12px 0; }
+        .ai-error { color: #ef4444; }
+        .btn-fav { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid #ef4444; }
+        .btn-fav-active,.btn-fav:hover { background: #ef4444; color: #fff; }
+        .btn-compare { background: rgba(255,153,0,.15); color: var(--amazon-orange); border: 1px solid var(--amazon-orange); }
+        .btn-compare.cmp-active,.btn-compare:hover { background: var(--amazon-orange); color: #000; }
+        .voyage-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+        .voyage-actions .btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        /* Country info skeleton */
+        .country-info-skeleton { padding: 20px 0; }
+        .skeleton-line { height: 14px; background: linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.06) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; margin: 10px 0; }
+        .skeleton-line--short { width: 40%; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    </style>
+
+    <script>
+    (function () {
+        var destination = {{ voyage.destination|json_encode|raw }};
+
+        fetch('/api/voyage-meta?destination=' + encodeURIComponent(destination))
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                // Update flag emoji in header
+                var flagEl = document.getElementById('meta-flag');
+                if (flagEl && data && data.flag_emoji) {
+                    flagEl.textContent = data.flag_emoji;
+                }
+
+                var section = document.getElementById('country-info-section');
+                if (!section) return;
+
+                if (!data) {
+                    section.innerHTML = '';
+                    return;
+                }
+
+                var flagImg = data.flag_svg
+                    ? '<div class="country-flag-wrap"><img src="' + escHtml(data.flag_svg) + '" alt="' + escHtml(data.name) + ' flag" class="country-flag"></div>'
+                    : '';
+
+                var facts = '<div class="fact-item"><span class="fact-icon">🏳</span><span class="fact-label">Country</span><span class="fact-value">' + escHtml(data.name) + '</span></div>';
+                if (data.capital)  facts += '<div class="fact-item"><span class="fact-icon">🏛</span><span class="fact-label">Capital</span><span class="fact-value">'  + escHtml(data.capital)  + '</span></div>';
+                if (data.language) facts += '<div class="fact-item"><span class="fact-icon">💬</span><span class="fact-label">Language</span><span class="fact-value">' + escHtml(data.language) + '</span></div>';
+                if (data.currency) facts += '<div class="fact-item"><span class="fact-icon">💱</span><span class="fact-label">Currency</span><span class="fact-value">' + escHtml(data.currency) + '</span></div>';
+                if (data.timezone) facts += '<div class="fact-item"><span class="fact-icon">🕐</span><span class="fact-label">Timezone</span><span class="fact-value">' + escHtml(data.timezone) + '</span></div>';
+
+                section.innerHTML =
+                    '<div class="country-info-section">' +
+                        '<h2 class="section-title">🗺 Destination Info</h2>' +
+                        '<div class="country-grid">' + flagImg + '<div class="country-facts">' + facts + '</div></div>' +
+                    '</div>';
+            })
+            .catch(function() {
+                var section = document.getElementById('country-info-section');
+                if (section) section.innerHTML = '';
+            });
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Track this voyage as recently viewed
+        {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=400&q=60' %}
+        tgTrackVoyage(
+            {{ voyage.id }},
+            '{{ voyage.title|e('js') }}',
+            '{{ thumb }}',
+            '{{ url('travel_voyage_detail', {slug: voyage.slug}) }}'
+        );
+    })();
     </script>
 {% endblock %}

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3)",
+      "Bash(python3 -c \"import rembg; print\\('ok'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python3 -c \"import rembg; print\\('rembg ready'\\)\")",
+      "PowerShell(pip install rembg 2>&1)",
+      "PowerShell(pip install rembg)",
+      "Bash(python3 -c \"import rembg; print\\('ready'\\)\")"
+    ]
+  }
+}

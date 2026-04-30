@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Travagir — Character Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  width:100%; min-height:100vh;
+  background: radial-gradient(ellipse at 28% 18%, #0d1f3c 0%, #080e1a 45%, #060b14 100%);
+  font-family:'Inter',sans-serif;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:56px 32px 64px;
+}
+.sheet { width:1400px; max-width:100%; }
+
+/* ── Header ── */
+.header { text-align:center; margin-bottom:52px; }
+.header h1 {
+  font-size:40px; font-weight:900; color:#fff;
+  letter-spacing:-2px; line-height:1;
+  text-shadow: 0 0 80px rgba(59,130,246,.3), 0 2px 4px rgba(0,0,0,.5);
+}
+.header h1 em { color:#f97316; font-style:normal; }
+.header p { margin-top:10px; font-size:13px; color:#475569; letter-spacing:1px; font-weight:500; text-transform:uppercase; }
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+/* ── Card ── */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(255,255,255,.065) 0%, rgba(255,255,255,.02) 100%);
+  border: 1px solid rgba(255,255,255,.1);
+  overflow: hidden;
+  cursor: default;
+  transition: transform .38s cubic-bezier(.34,1.56,.64,1), box-shadow .38s ease;
+  padding-bottom: 18px;
+}
+
+/* number badge */
+.num {
+  position: absolute;
+  top: 12px; left: 14px;
+  font-size: 10px; font-weight: 800;
+  color: #f97316;
+  letter-spacing: 1.5px;
+  z-index: 3;
+}
+
+/* inner glow */
+.card::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:60%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(99,140,255,.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+/* bottom accent line */
+.card::after {
+  content: '';
+  position: absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:55%; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(59,130,246,.5), transparent);
+}
+
+.card:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow:
+    0 32px 72px rgba(0,0,0,.7),
+    0 0 0 1px rgba(99,140,255,.22),
+    0 0 60px rgba(59,130,246,.15);
+  overflow: visible;
+  z-index: 10;
+}
+.card:hover .char-img {
+  transform: scale(1.08) translateY(-8px);
+  filter: drop-shadow(0 16px 36px rgba(80,120,255,.55));
+}
+
+/* ── Character image ── */
+.char-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  object-position: center center;
+  transition: transform .38s cubic-bezier(.34,1.56,.64,1), filter .38s ease;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.55));
+  position: relative;
+  z-index: 1;
+  /* push image to fill from top, number badge sits above via z-index */
+  margin-top: 8px;
+}
+
+/* ── Labels ── */
+.name {
+  margin-top: 8px;
+  font-size: 15px; font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -.2px;
+  z-index: 1;
+  text-align: center;
+}
+.trait {
+  margin-top: 3px;
+  font-size: 11px; font-weight: 500;
+  color: #64748b;
+  letter-spacing: .35px;
+  z-index: 1;
+  text-align: center;
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  margin-top: 52px;
+  font-size: 14px; font-weight: 500;
+  color: #475569;
+  letter-spacing: .25px;
+}
+.footer .pin { color: #f97316; margin-right: 6px; }
+.footer strong { color: #f97316; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="header">
+    <h1>Trava<em>gir</em> — Globe Squad</h1>
+    <p>10 characters &nbsp;·&nbsp; infinite journeys &nbsp;·&nbsp; one mission</p>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <span class="num">01</span>
+      <img class="char-img" src="orbit.png" alt="Orbit"/>
+      <div class="name">Orbit</div>
+      <div class="trait">Friendly • Energetic</div>
+    </div>
+
+    <div class="card">
+      <span class="num">02</span>
+      <img class="char-img" src="jetto.png" alt="Jetto"/>
+      <div class="name">Jetto</div>
+      <div class="trait">Adventurous • Curious</div>
+    </div>
+
+    <div class="card">
+      <span class="num">03</span>
+      <img class="char-img" src="nomio.png" alt="Nomio"/>
+      <div class="name">Nomio</div>
+      <div class="trait">Smart • Organized</div>
+    </div>
+
+    <div class="card">
+      <span class="num">04</span>
+      <img class="char-img" src="trailix.png" alt="Trailix"/>
+      <div class="name">Trailix</div>
+      <div class="trait">Explorer • Rugged</div>
+    </div>
+
+    <div class="card">
+      <span class="num">05</span>
+      <img class="char-img" src="guidee.png" alt="Guidee"/>
+      <div class="name">Guidee</div>
+      <div class="trait">Helpful • Supportive</div>
+    </div>
+
+    <div class="card">
+      <span class="num">06</span>
+      <img class="char-img" src="voyaj.png" alt="Voyaj"/>
+      <div class="name">Voyaj</div>
+      <div class="trait">Futuristic • Innovative</div>
+    </div>
+
+    <div class="card">
+      <span class="num">07</span>
+      <img class="char-img" src="paki.png" alt="Paki"/>
+      <div class="name">Paki</div>
+      <div class="trait">Fun • Playful</div>
+    </div>
+
+    <div class="card">
+      <span class="num">08</span>
+      <img class="char-img" src="roami.png" alt="Roami"/>
+      <div class="name">Roami</div>
+      <div class="trait">Relaxed • Easygoing</div>
+    </div>
+
+    <div class="card">
+      <span class="num">09</span>
+      <img class="char-img" src="dasho.png" alt="Dasho"/>
+      <div class="name">Dasho</div>
+      <div class="trait">Fast • Dynamic</div>
+    </div>
+
+    <div class="card">
+      <span class="num">10</span>
+      <img class="char-img" src="lumi.png" alt="Lumi"/>
+      <div class="name">Lumi</div>
+      <div class="trait">Calm • Inspiring</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span class="pin">📍</span>
+    Different looks. Same mission. <strong>Your journey, our world.</strong>
+  </div>
+
+</div>
+</body>
+</html>
