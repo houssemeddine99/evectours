@@ -1,4 +1,16 @@
     (function () {
+      /* Ensure body/html never trap fixed children via an active transform */
+      document.body.style.transform      = 'none';
+      document.documentElement.style.transform = 'none';
+
+      /* Move mascot elements to <html> so they escape any body transform */
+      var _bot    = document.getElementById('globe-bot');
+      var _canvas = document.getElementById('gb-canvas');
+      var _chat   = document.getElementById('gb-chat');
+      if (_bot)    document.documentElement.appendChild(_bot);
+      if (_canvas) document.documentElement.appendChild(_canvas);
+      if (_chat)   document.documentElement.appendChild(_chat);
+
       /* ── SVG definitions for all 10 characters ── */
       const CHARS = [
         {
@@ -515,12 +527,28 @@
       (function initTrail() {
         // no cursor trail on touch-only devices
         if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+
+        // Strip any transform from body/html that would make position:fixed relative to document
+        document.body.style.transform = 'none';
+        document.documentElement.style.transform = 'none';
+
         const tc = document.createElement('canvas');
-        tc.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99997;';
-        document.body.appendChild(tc);
+        // Use explicit top/left/width/height instead of inset so scroll offset can be applied
+        tc.style.position = 'fixed';
+        tc.style.top = '0';
+        tc.style.left = '0';
+        tc.style.pointerEvents = 'none';
+        tc.style.zIndex = '99997';
+        // Append to documentElement (<html>) to escape any body transform
+        document.documentElement.appendChild(tc);
         const tx = tc.getContext('2d');
 
-        function resize() { tc.width = window.innerWidth; tc.height = window.innerHeight; }
+        function resize() {
+          tc.width  = window.innerWidth;
+          tc.height = window.innerHeight;
+          tc.style.width  = window.innerWidth  + 'px';
+          tc.style.height = window.innerHeight + 'px';
+        }
         resize();
         window.addEventListener('resize', resize);
 
