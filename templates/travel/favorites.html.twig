@@ -1,31 +1,69 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Favorites | Travagir{% endblock %}
+{% block title %}My Favorites | Travagir{% endblock %}
 
 {% block body %}
-    <section>
-        <h1>Favorites</h1>
-        <p class="lead">Great choices! Save these favorite destinations before booking.</p>
+<section class="container" style="padding-top:40px;padding-bottom:60px">
+    <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:6px">❤️ My Favorites</h1>
+    <p class="lead" style="color:var(--text-muted);margin-bottom:32px">Your saved destinations — ready to book whenever you are.</p>
 
-        {% if favorites is empty %}
-            <p>No favorites yet. Browse voyages and mark ones you love.</p>
-        {% else %}
-            <div class="grid">
-                {% for voyage in favorites %}
-                    <article class="card">
-                        <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title }}" class="card-image">
-                        <div class="card-body">
-                            <p class="meta">{{ voyage.destination }} • {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
-                            <h3>{{ voyage.title }}</h3>
-                            <p>{{ voyage.description }}</p>
-                            <div class="card-footer">
-                                <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
-                                <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}">View</a>
-                            </div>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </section>
+    {% if favorites is empty %}
+        <div class="tg-empty">
+            <div class="tg-empty-icon">🗺️</div>
+            <h3>No favorites yet</h3>
+            <p>Browse voyages and tap the ♥ button on any trip to save it here.</p>
+            <a href="{{ path('travel_voyages') }}" class="btn">Explore Voyages</a>
+        </div>
+    {% else %}
+        <div class="grid" id="fav-grid">
+        {% for voyage in favorites %}
+            {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' %}
+            <article class="card voyage-card" id="fav-card-{{ voyage.id }}">
+                <div class="card-image-wrap" style="position:relative;overflow:hidden">
+                    <img src="{{ thumb }}" alt="{{ voyage.title }}" class="card-image">
+                    <button class="fav-btn fav-active" data-voyage-id="{{ voyage.id }}" onclick="removeFavorite(event, {{ voyage.id }})" title="Remove from favorites">♥</button>
+                </div>
+                <div class="card-body">
+                    <p class="meta">{{ voyage.destination }} • {{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</p>
+                    <h3>{{ voyage.title }}</h3>
+                    <p>{{ voyage.description|slice(0, 120) }}{% if voyage.description|length > 120 %}…{% endif %}</p>
+                    <div class="card-footer">
+                        <strong>{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</strong>
+                        <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-sm">View trip</a>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
+<script>
+async function removeFavorite(e, voyageId) {
+    e.preventDefault();
+    try {
+        const res = await fetch('/favorites/toggle/' + voyageId, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        const data = await res.json();
+        if (!data.added) {
+            const card = document.getElementById('fav-card-' + voyageId);
+            if (card) {
+                card.style.transition = 'opacity .3s,transform .3s';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(.95)';
+                setTimeout(() => {
+                    card.remove();
+                    if (!document.querySelector('#fav-grid .card')) location.reload();
+                }, 320);
+            }
+        }
+    } catch(err) { console.error(err); }
+}
+</script>
+
+<style>
+.card-image-wrap{position:relative;overflow:hidden}
+.fav-btn{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;background:#ef4444;color:#fff}
+.fav-btn:hover{background:#dc2626;transform:scale(1.1)}
+</style>
 {% endblock %}

@@ -11,6 +11,7 @@ use App\Service\SearchHistoryService;
 use App\Service\VoyageVisitService;
 use App\Service\TagService;
 use App\Service\AiVoyageService;
+use App\Service\FavoriteService;
 use App\Service\ReviewService;
 use App\Repository\ReviewRepository;
 use App\Repository\VoyageRepository;
@@ -39,6 +40,7 @@ class VoyageController extends AbstractController
         private readonly AdminController $adminController,
         private readonly TagService $tagService,
         private readonly AiVoyageService $aiVoyageService,
+        private readonly FavoriteService $favoriteService,
         private readonly ReviewService $reviewService,
         private readonly ReviewRepository $reviewRepository,
         #[Target('cache.api_external')]
@@ -110,6 +112,7 @@ class VoyageController extends AbstractController
 
         $sessionUser = $request->getSession()->get('auth_user');
         $userId = $sessionUser['id'] ?? 0;
+        $favoriteIds = $userId > 0 ? $this->favoriteService->getFavoriteVoyageIds($userId) : [];
 
         return $this->render('travel/voyages.html.twig', [
             'active_nav' => 'voyages',
@@ -121,6 +124,7 @@ class VoyageController extends AbstractController
             'all_tags' => $this->tagService->getAllTags(),
             'active_tag' => $tagFilter,
             'user_id' => $userId,
+            'favorite_ids' => $favoriteIds,
         ]);
     }
 

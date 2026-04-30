@@ -82,7 +82,7 @@
     <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
         <div class="tg-img-wrap card-image-wrap" style="position:relative">
             <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
-            <button class="fav-btn {% if user_id > 0 %}active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="Add to favorites">♥</button>
+            <button class="fav-btn {% if voyage.id in favorite_ids %}fav-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="{% if voyage.id in favorite_ids %}Remove from favorites{% else %}Add to favorites{% endif %}">♥</button>
             <a href="{{ path('compare_pick', {id: voyage.id}) }}" class="cmp-btn" title="Compare this voyage">⊕</a>
         </div>
         <div class="card-body">
