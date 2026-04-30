@@ -82,8 +82,8 @@
     <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
         <div class="tg-img-wrap card-image-wrap" style="position:relative">
             <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
-            <button class="fav-btn {% if user_id > 0 %}active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="Add to favorites">♥</button>
-            <a href="{{ path('compare_pick', {id: voyage.id}) }}" class="cmp-btn" title="Compare this voyage">⊕</a>
+            <button class="fav-btn {% if voyage.id in favorite_ids %}fav-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="{% if voyage.id in favorite_ids %}Remove from favorites{% else %}Add to favorites{% endif %}">♥</button>
+            <button class="cmp-btn" data-voyage-id="{{ voyage.id }}" onclick="openComparePicker({{ voyage.id }})" title="Compare this voyage">⊕</button>
         </div>
         <div class="card-body">
             <div class="voyage-badges">
@@ -170,7 +170,15 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 </section>
 
+{# Embed all voyage data for the compare picker modal #}
 <script>
+const ALL_VOYAGES = [
+{% for voyage in voyages %}
+    {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80' %}
+    {id:{{ voyage.id }},title:{{ voyage.title|json_encode|raw }},destination:{{ voyage.destination|json_encode|raw }},price:{{ voyage.price is not empty ? voyage.price|json_encode|raw : 'null' }},img:{{ thumb|json_encode|raw }},slug:{{ voyage.slug|json_encode|raw }}}{% if not loop.last %},{% endif %}
+{% endfor %}
+];
+
 async function toggleFavorite(e, voyageId) {
     e.preventDefault();
     const btn = e.currentTarget;
@@ -179,9 +187,66 @@ async function toggleFavorite(e, voyageId) {
         if (res.status === 401) { window.location.href = '/login'; return; }
         const data = await res.json();
         btn.classList.toggle('fav-active', data.added);
+        btn.title = data.added ? 'Remove from favorites' : 'Add to favorites';
     } catch(err) { console.error(err); }
 }
+
+let _anchorId = null;
+function openComparePicker(anchorId) {
+    _anchorId = anchorId;
+    const anchor = ALL_VOYAGES.find(v => v.id === anchorId);
+    const others = ALL_VOYAGES.filter(v => v.id !== anchorId);
+    const overlay = document.getElementById('cmp-overlay');
+    const title = document.getElementById('cmp-anchor-title');
+    const grid = document.getElementById('cmp-picker-grid');
+
+    title.textContent = anchor ? anchor.title : '';
+
+    grid.innerHTML = others.length === 0
+        ? '<p style="color:#94a3b8;grid-column:1/-1;text-align:center;padding:24px">No other voyages available.</p>'
+        : others.map(v => `
+            <button class="cmp-pick-card" onclick="goCompare(${anchorId}, ${v.id})">
+                <img src="${v.img}" alt="${v.title}" class="cmp-pick-img">
+                <div class="cmp-pick-body">
+                    <div class="cmp-pick-name">${v.title}</div>
+                    <div class="cmp-pick-dest">🌍 ${v.destination}</div>
+                    <div class="cmp-pick-price">${v.price ? Number(v.price).toLocaleString('en', {minimumFractionDigits:2}) + ' TND' : 'On request'}</div>
+                    <span class="cmp-pick-cta">Compare →</span>
+                </div>
+            </button>`).join('');
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeComparePicker() {
+    document.getElementById('cmp-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function goCompare(a, b) {
+    window.location.href = '/compare/instant/' + a + '/' + b;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeComparePicker();
+});
 </script>
+
+{# Compare picker modal #}
+<div id="cmp-overlay" onclick="if(event.target===this)closeComparePicker()">
+    <div id="cmp-modal">
+        <div id="cmp-modal-head">
+            <div>
+                <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--amazon-orange);margin-bottom:4px">Comparing with</div>
+                <div id="cmp-anchor-title" style="font-weight:800;font-size:1.1rem;color:#f1f5f9"></div>
+            </div>
+            <button onclick="closeComparePicker()" style="background:rgba(255,255,255,.07);border:none;color:#94a3b8;width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        </div>
+        <p style="color:#64748b;font-size:.88rem;margin:0 0 18px">Pick a voyage to compare side-by-side:</p>
+        <div id="cmp-picker-grid"></div>
+    </div>
+</div>
 
 <style>
 .tag-filter-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
@@ -193,8 +258,24 @@ async function toggleFavorite(e, voyageId) {
 .fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
 .fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
 .fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
-.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s}
+.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
 .cmp-btn:hover{background:var(--amazon-orange);color:#000}
+
+/* Compare picker modal */
+#cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s}
+#cmp-overlay.open{opacity:1;pointer-events:auto}
+#cmp-modal{background:#0f172a;border:1px solid rgba(99,140,255,.2);border-radius:20px;width:min(700px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);transform:scale(.95) translateY(10px);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+#cmp-overlay.open #cmp-modal{transform:scale(1) translateY(0)}
+#cmp-modal-head{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0;flex-shrink:0}
+#cmp-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;overflow-y:auto;padding:0 24px 24px;scrollbar-width:thin}
+.cmp-pick-card{background:rgba(255,255,255,.04);border:2px solid rgba(99,140,255,.15);border-radius:14px;overflow:hidden;cursor:pointer;text-align:left;transition:border-color .18s,transform .18s,box-shadow .18s;padding:0;display:flex;flex-direction:column}
+.cmp-pick-card:hover{border-color:var(--amazon-orange);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,153,0,.2)}
+.cmp-pick-img{width:100%;height:110px;object-fit:cover}
+.cmp-pick-body{padding:10px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
+.cmp-pick-name{font-weight:700;font-size:.88rem;color:#f1f5f9;line-height:1.3}
+.cmp-pick-dest{font-size:.78rem;color:#94a3b8}
+.cmp-pick-price{font-size:.82rem;font-weight:700;color:var(--amazon-orange)}
+.cmp-pick-cta{margin-top:auto;padding-top:6px;font-size:.78rem;font-weight:700;color:var(--amazon-orange)}
 
 /* Pagination */
 .tg-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:32px 0 8px;flex-wrap:wrap}

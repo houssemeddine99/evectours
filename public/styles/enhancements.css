@@ -2,13 +2,13 @@
    TRAVAGIR — UI ENHANCEMENTS
    ============================================= */
 
-/* ── Page transition ── */
-body { animation: tg-page-in .28s ease both; }
+/* ── Page transition — animate #pg wrapper, NOT body, so fixed mascot/canvas are unaffected ── */
+#pg { animation: tg-page-in .28s ease both; }
 @keyframes tg-page-in {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-body.tg-leaving { opacity: 0; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease; }
+body.tg-leaving #pg { opacity: 0; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease; }
 
 /* ── Toast notifications ── */
 #tg-toast-rack {
