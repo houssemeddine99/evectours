@@ -98,6 +98,7 @@
         function toggleMobileNav() {
             const nav = document.getElementById('mainNav');
             nav.classList.toggle('active');
+            document.body.classList.toggle('nav-open', nav.classList.contains('active'));
         }
 
         // Account Menu Toggle (for mobile touch devices)
@@ -114,6 +115,7 @@
 
             if (!nav.contains(event.target) && !toggle.contains(event.target)) {
                 nav.classList.remove('active');
+                document.body.classList.remove('nav-open');
             }
 
             if (accountDropdown && !accountDropdown.contains(event.target)) {
@@ -360,6 +362,26 @@
         }
       }
 
+      /* ── Mobile mascot & chat ── */
+      @media (max-width: 768px) {
+        #globe-bot { width: 80px; touch-action: none; }
+        #gb-character { width: 80px; height: 88px; }
+        .gb-character-stage { width: 80px; height: 80px; }
+        .gb-pic { width: 80px; }
+        #gb-chat {
+          right: 8px;
+          left: 8px;
+          width: auto;
+          bottom: 140px;
+          border-radius: 18px;
+          max-height: calc(100vh - 180px);
+        }
+        .gbc-input { font-size: 16px; }
+        /* hide mascot when mobile nav is open so it doesn't block nav */
+        body.nav-open #globe-bot,
+        body.nav-open #gb-chat { opacity: 0; pointer-events: none; }
+      }
+
       /* ── float bob ── */
       @keyframes gb-float {
         0%,100% { transform: translateY(0)    rotate(0deg); }
@@ -441,7 +463,7 @@
         position: fixed;
         bottom: 186px; right: 24px;
         left: auto; top: auto;
-        width: 350px;
+        width: min(350px, calc(100vw - 16px));
         max-height: min(540px, calc(100vh - 220px));
         will-change: transform, opacity;
         transform: translateZ(0);
@@ -1316,6 +1338,8 @@
          CURSOR TRAIL — animated sparkle particles
          ══════════════════════════════════════════════ */
       (function initTrail() {
+        // no cursor trail on touch-only devices
+        if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
         const tc = document.createElement('canvas');
         tc.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99997;';
         document.body.appendChild(tc);
@@ -1650,9 +1674,11 @@
       const bubble = document.getElementById('gb-bubble');
       const tripUrl = '{{ path("trip_planner") }}';
 
-      const BOT_W = 110, BOT_H = 150;
-      let posX = window.innerWidth  - BOT_W - 24;
-      let posY = window.innerHeight - BOT_H - 32;
+      const isMobile = window.innerWidth <= 768;
+      const BOT_W = isMobile ? 80 : 110;
+      const BOT_H = isMobile ? 110 : 150;
+      let posX = window.innerWidth  - BOT_W - 16;
+      let posY = window.innerHeight - BOT_H - 24;
       let dragging = false, dragOffX = 0, dragOffY = 0;
       let roaming = false, roamTimer = null, roamRAF = null;
       let bubbleTimer = null;
@@ -1717,6 +1743,47 @@
         bot.style.cursor = 'grab';
         bot.style.animation = 'gb-float 3.2s ease-in-out infinite';
         scheduleRoam();
+      });
+
+      /* ── Touch drag ── */
+      bot.addEventListener('touchstart', e => {
+        if (e.target.closest('.gb-cycle-btn')) return;
+        dragging = true; stopRoaming();
+        const t = e.touches[0];
+        dragOffX = t.clientX - posX; dragOffY = t.clientY - posY;
+        bot.style.animation = 'none';
+        bubble.classList.remove('visible');
+      }, { passive: true });
+
+      document.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const t = e.touches[0];
+        posX = clamp(t.clientX - dragOffX, 8, window.innerWidth  - BOT_W - 8);
+        posY = clamp(t.clientY - dragOffY, 8, window.innerHeight - BOT_H - 8);
+        applyPos(); positionChat();
+      }, { passive: true });
+
+      document.addEventListener('touchend', () => {
+        if (!dragging) return;
+        dragging = false;
+        bot.style.animation = 'gb-float 3.2s ease-in-out infinite';
+        scheduleRoam();
+      }, { passive: true });
+
+      /* ── Double-tap for touch ── */
+      let lastTap = 0;
+      bot.addEventListener('touchend', e => {
+        const now = Date.now();
+        if (now - lastTap < 320) {
+          e.preventDefault();
+          stopRoaming();
+          bot.classList.remove('excited'); void bot.offsetWidth;
+          bot.classList.add('excited');
+          spawnBurst(posX, posY);
+          if (chatOpen) closeChat();
+          else { showBubble('💬 Let\'s plan your trip!', 2000); openChat(); }
+        }
+        lastTap = now;
       });
 
       /* ── Chat window logic ── */
