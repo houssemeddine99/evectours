@@ -1,0 +1,486 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Flights & Hotels | Travagir{% endblock %}
+
+{% block body %}
+<section class="ts-page">
+    <div class="ts-hero">
+        <h1>Find Flights & Hotels</h1>
+        <p class="ts-lead">Search available flights and hotels worldwide. Contact our agency to book.</p>
+    </div>
+
+    <div class="ts-tabs">
+        <button class="ts-tab active" data-tab="flights">✈ Flights</button>
+        <button class="ts-tab" data-tab="hotels">🏨 Hotels</button>
+    </div>
+
+    <!-- Flights Panel -->
+    <div id="tab-flights" class="ts-panel ts-card">
+        <div class="trip-toggle">
+            <button class="trip-btn active" data-type="one-way">One-way</button>
+            <button class="trip-btn" data-type="round-trip">Round-trip</button>
+        </div>
+        <div class="ts-form-grid">
+            <div class="ts-field ts-autocomplete-wrap">
+                <label>From</label>
+                <input type="text" id="f-from-input" placeholder="City or airport" class="ts-input" autocomplete="off">
+                <input type="hidden" id="f-from-id">
+                <div class="ts-suggestions" id="f-from-sug"></div>
+            </div>
+            <div class="ts-field ts-autocomplete-wrap">
+                <label>To</label>
+                <input type="text" id="f-to-input" placeholder="City or airport" class="ts-input" autocomplete="off">
+                <input type="hidden" id="f-to-id">
+                <div class="ts-suggestions" id="f-to-sug"></div>
+            </div>
+            <div class="ts-field">
+                <label>Depart</label>
+                <input type="date" id="f-depart" class="ts-input">
+            </div>
+            <div class="ts-field" id="f-return-wrap" style="display:none">
+                <label>Return</label>
+                <input type="date" id="f-return" class="ts-input">
+            </div>
+            <div class="ts-field">
+                <label>Adults</label>
+                <select id="f-adults" class="ts-input">
+                    {% for i in 1..9 %}<option value="{{ i }}"{% if i == 1 %} selected{% endif %}>{{ i }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="ts-field">
+                <label>Cabin</label>
+                <select id="f-cabin" class="ts-input">
+                    <option value="ECONOMY">Economy</option>
+                    <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                    <option value="BUSINESS">Business</option>
+                    <option value="FIRST">First Class</option>
+                </select>
+            </div>
+        </div>
+        <button class="ts-search-btn" onclick="searchFlights()">Search Flights</button>
+        <div id="f-error" class="ts-error" style="display:none"></div>
+    </div>
+
+    <!-- Hotels Panel -->
+    <div id="tab-hotels" class="ts-panel ts-card" hidden>
+        <div class="ts-form-grid">
+            <div class="ts-field ts-autocomplete-wrap" style="grid-column:1/-1">
+                <label>Destination</label>
+                <input type="text" id="h-dest-input" placeholder="City or area" class="ts-input" autocomplete="off">
+                <input type="hidden" id="h-dest-id">
+                <input type="hidden" id="h-dest-type" value="city">
+                <div class="ts-suggestions" id="h-dest-sug"></div>
+            </div>
+            <div class="ts-field">
+                <label>Check-in</label>
+                <input type="date" id="h-checkin" class="ts-input">
+            </div>
+            <div class="ts-field">
+                <label>Check-out</label>
+                <input type="date" id="h-checkout" class="ts-input">
+            </div>
+            <div class="ts-field">
+                <label>Adults</label>
+                <select id="h-adults" class="ts-input">
+                    {% for i in 1..9 %}<option value="{{ i }}"{% if i == 2 %} selected{% endif %}>{{ i }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="ts-field">
+                <label>Rooms</label>
+                <select id="h-rooms" class="ts-input">
+                    {% for i in 1..5 %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <button class="ts-search-btn" onclick="searchHotels()">Search Hotels</button>
+        <div id="h-error" class="ts-error" style="display:none"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="ts-results" style="display:none">
+        <div id="ts-spinner" class="ts-spinner" style="display:none">
+            <div class="spin-ring"></div>
+            <p>Searching...</p>
+        </div>
+        <div id="ts-results-bar" style="display:none">
+            <span id="ts-results-count"></span>
+            <small class="ts-agency-note">Contact our agency to complete your booking</small>
+        </div>
+        <div id="ts-list"></div>
+    </div>
+</section>
+
+<style>
+:root{--ts-bg:rgba(15,23,34,.6);--ts-border:var(--border-dark,rgba(255,255,255,.12));--ts-orange:var(--amazon-orange,#ff9900)}
+.ts-page{max-width:1100px;margin:0 auto;padding:40px 20px}
+.ts-hero{text-align:center;margin-bottom:32px}
+.ts-hero h1{font-size:2.2rem;margin:0 0 8px}
+.ts-lead{color:var(--text-muted);margin:0}
+.ts-tabs{display:flex;gap:0;margin-bottom:0;border-radius:12px 12px 0 0;overflow:hidden;max-width:400px}
+.ts-tab{flex:1;padding:14px 0;border:none;cursor:pointer;font-size:1rem;font-weight:600;background:rgba(15,23,34,.4);color:var(--text-muted);transition:all .2s}
+.ts-tab.active{background:var(--ts-orange);color:#000}
+.ts-panel{border-radius:0 12px 12px 12px}
+.ts-card{background:var(--ts-bg);border:1px solid var(--ts-border);padding:28px;margin-bottom:28px}
+.trip-toggle{display:flex;gap:8px;margin-bottom:20px}
+.trip-btn{padding:8px 18px;border-radius:20px;border:1px solid var(--ts-border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem;font-weight:600;transition:all .2s}
+.trip-btn.active{background:var(--ts-orange);color:#000;border-color:var(--ts-orange)}
+.ts-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.ts-field{position:relative;display:flex;flex-direction:column;gap:6px}
+.ts-field label{font-size:.85rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.ts-input{padding:12px 14px;border:1px solid var(--ts-border);border-radius:8px;background:rgba(15,23,34,.5);color:var(--text-primary);font-size:1rem;width:100%;box-sizing:border-box;transition:border-color .2s}
+.ts-input:focus{outline:none;border-color:var(--ts-orange)}
+.ts-autocomplete-wrap{position:relative}
+.ts-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#1a2433;border:1px solid var(--ts-border);border-radius:8px;z-index:100;max-height:220px;overflow-y:auto;display:none}
+.ts-sug-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);font-size:.95rem;transition:background .15s}
+.ts-sug-item:hover{background:rgba(255,153,0,.15)}
+.ts-sug-item small{color:var(--text-muted);font-size:.8rem;margin-left:6px}
+.ts-search-btn{padding:14px 32px;background:var(--ts-orange);color:#000;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s}
+.ts-search-btn:hover{background:#e68a00}
+.ts-error{color:#ef4444;margin-top:12px;font-size:.9rem}
+.ts-spinner{text-align:center;padding:40px;color:var(--text-muted)}
+.spin-ring{width:48px;height:48px;border:4px solid rgba(255,153,0,.2);border-top-color:var(--ts-orange);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#ts-results-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:12px 16px;background:rgba(15,23,34,.4);border-radius:8px;border:1px solid var(--ts-border)}
+#ts-results-count{font-weight:700;font-size:1rem}
+.ts-agency-note{color:var(--text-muted);font-size:.85rem}
+
+/* Flight cards */
+.flight-card{background:var(--ts-bg);border:1px solid var(--ts-border);border-radius:12px;padding:0;margin-bottom:16px;overflow:hidden;transition:border-color .2s}
+.flight-card:hover{border-color:var(--ts-orange)}
+.flight-main{display:flex;align-items:center;gap:20px;padding:20px 24px;flex-wrap:wrap}
+.flight-airline{display:flex;align-items:center;gap:10px;min-width:160px}
+.flight-airline img{width:36px;height:36px;object-fit:contain;border-radius:4px;background:#fff;padding:2px}
+.flight-airline-name{font-weight:600;font-size:.95rem}
+.flight-airline-code{font-size:.8rem;color:var(--text-muted)}
+.flight-route{flex:1;display:flex;align-items:center;gap:12px;min-width:200px}
+.flight-time{text-align:center}
+.flight-time-val{font-size:1.2rem;font-weight:700}
+.flight-time-code{font-size:.8rem;color:var(--text-muted)}
+.flight-middle{flex:1;text-align:center;color:var(--text-muted);font-size:.85rem}
+.flight-middle .f-dur{font-weight:600;color:var(--text-primary)}
+.flight-stop{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:.75rem;background:rgba(255,153,0,.15);color:var(--ts-orange)}
+.flight-price{text-align:right;min-width:120px}
+.flight-price-val{font-size:1.4rem;font-weight:700;color:var(--ts-orange)}
+.flight-price-label{font-size:.8rem;color:var(--text-muted)}
+.flight-detail-toggle{padding:10px 24px;background:rgba(255,255,255,.04);border:none;border-top:1px solid var(--ts-border);width:100%;cursor:pointer;color:var(--text-muted);font-size:.85rem;text-align:left;transition:background .2s}
+.flight-detail-toggle:hover{background:rgba(255,255,255,.08)}
+.flight-detail{padding:20px 24px;border-top:1px solid var(--ts-border);display:none;background:rgba(15,23,34,.3)}
+.flight-detail.open{display:block}
+.flight-detail-grid{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px}
+.detail-item{font-size:.9rem}
+.detail-item strong{display:block;color:var(--text-muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.flight-cta{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--ts-orange);color:#000;border-radius:8px;font-weight:700;font-size:.9rem;text-decoration:none;border:none;cursor:pointer}
+.flight-cta:hover{background:#e68a00}
+
+/* Hotel cards */
+.hotel-card{background:var(--ts-bg);border:1px solid var(--ts-border);border-radius:12px;overflow:hidden;margin-bottom:16px;display:flex;gap:0;transition:border-color .2s}
+.hotel-card:hover{border-color:var(--ts-orange)}
+.hotel-img{width:200px;min-height:150px;object-fit:cover;flex-shrink:0}
+.hotel-img-placeholder{width:200px;min-height:150px;background:rgba(255,153,0,.08);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0}
+.hotel-body{flex:1;padding:20px 24px;display:flex;flex-direction:column;gap:8px}
+.hotel-name{font-size:1.15rem;font-weight:700}
+.hotel-score{display:flex;align-items:center;gap:8px;font-size:.9rem}
+.hotel-score-badge{background:var(--ts-orange);color:#000;font-weight:700;padding:4px 10px;border-radius:6px;font-size:.9rem}
+.hotel-reviews{color:var(--text-muted)}
+.hotel-price{font-size:1.3rem;font-weight:700;color:var(--ts-orange)}
+.hotel-price small{font-size:.8rem;font-weight:400;color:var(--text-muted)}
+.hotel-dates{font-size:.85rem;color:var(--text-muted)}
+.hotel-footer{margin-top:auto;display:flex;align-items:center;gap:12px}
+
+@media(max-width:600px){
+    .hotel-card{flex-direction:column}
+    .hotel-img,.hotel-img-placeholder{width:100%;min-height:180px}
+    .flight-main{gap:12px}
+}
+</style>
+
+<script>
+const FLIGHT_DEST_URL = '{{ path('travel_search_flight_dest') }}';
+const HOTEL_DEST_URL  = '{{ path('travel_search_hotel_dest') }}';
+const FLIGHT_SEARCH   = '{{ path('travel_search_flights') }}';
+const HOTEL_SEARCH    = '{{ path('travel_search_hotels') }}';
+
+// Tab switching
+document.querySelectorAll('.ts-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.ts-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.getElementById('tab-flights').hidden = tab !== 'flights';
+        document.getElementById('tab-hotels').hidden  = tab !== 'hotels';
+        document.getElementById('ts-results').style.display = 'none';
+    });
+});
+
+// Trip type toggle
+document.querySelectorAll('.trip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.trip-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('f-return-wrap').style.display =
+            btn.dataset.type === 'round-trip' ? '' : 'none';
+    });
+});
+
+// Autocomplete factory
+function makeAutocomplete(inputId, sugId, hiddenId, hiddenTypeId, url, labelFn, idFn, typeFn) {
+    const input  = document.getElementById(inputId);
+    const sug    = document.getElementById(sugId);
+    const hidden = document.getElementById(hiddenId);
+    const hiddenType = hiddenTypeId ? document.getElementById(hiddenTypeId) : null;
+    let timer;
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) { sug.style.display = 'none'; return; }
+        timer = setTimeout(async () => {
+            const res  = await fetch(url + '?q=' + encodeURIComponent(q));
+            const data = await res.json();
+            if (!data.length) { sug.style.display = 'none'; return; }
+            sug.innerHTML = data.slice(0, 8).map((item, i) =>
+                `<div class="ts-sug-item" data-idx="${i}" data-id="${idFn(item)}" data-type="${typeFn ? typeFn(item) : ''}" data-label="${labelFn(item)}">${labelFn(item)}</div>`
+            ).join('');
+            sug.style.display = 'block';
+        }, 300);
+    });
+
+    sug.addEventListener('click', e => {
+        const item = e.target.closest('.ts-sug-item');
+        if (!item) return;
+        input.value  = item.dataset.label;
+        hidden.value = item.dataset.id;
+        if (hiddenType) hiddenType.value = item.dataset.type;
+        sug.style.display = 'none';
+    });
+
+    document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !sug.contains(e.target)) sug.style.display = 'none';
+    });
+}
+
+makeAutocomplete(
+    'f-from-input', 'f-from-sug', 'f-from-id', null, FLIGHT_DEST_URL,
+    d => (d.name || d.id || ''),
+    d => d.id || '',
+    null
+);
+makeAutocomplete(
+    'f-to-input', 'f-to-sug', 'f-to-id', null, FLIGHT_DEST_URL,
+    d => (d.name || d.id || ''),
+    d => d.id || '',
+    null
+);
+makeAutocomplete(
+    'h-dest-input', 'h-dest-sug', 'h-dest-id', 'h-dest-type', HOTEL_DEST_URL,
+    d => (d.label || d.name || ''),
+    d => d.dest_id || '',
+    d => d.search_type || 'city'
+);
+
+// Set default dates
+(function setDefaults() {
+    const today = new Date();
+    const fmt   = d => d.toISOString().split('T')[0];
+    const plus  = n => { const d = new Date(today); d.setDate(d.getDate() + n); return d; };
+    document.getElementById('f-depart').value   = fmt(plus(30));
+    document.getElementById('f-return').value   = fmt(plus(37));
+    document.getElementById('h-checkin').value  = fmt(plus(30));
+    document.getElementById('h-checkout').value = fmt(plus(34));
+    document.getElementById('f-depart').min    = fmt(today);
+    document.getElementById('f-return').min    = fmt(today);
+    document.getElementById('h-checkin').min   = fmt(today);
+    document.getElementById('h-checkout').min  = fmt(today);
+})();
+
+function showSpinner() {
+    const r = document.getElementById('ts-results');
+    r.style.display = 'block';
+    document.getElementById('ts-spinner').style.display = 'block';
+    document.getElementById('ts-results-bar').style.display = 'none';
+    document.getElementById('ts-list').innerHTML = '';
+}
+
+function hideSpinner() {
+    document.getElementById('ts-spinner').style.display = 'none';
+    document.getElementById('ts-results-bar').style.display = 'flex';
+}
+
+async function searchFlights() {
+    const fromId = document.getElementById('f-from-id').value;
+    const toId   = document.getElementById('f-to-id').value;
+    const depart = document.getElementById('f-depart').value;
+    const ret    = document.getElementById('f-return').value;
+    const errEl  = document.getElementById('f-error');
+    errEl.style.display = 'none';
+
+    if (!fromId || !toId) {
+        errEl.textContent = 'Please select a From and To destination from the suggestions.';
+        errEl.style.display = 'block'; return;
+    }
+    if (!depart) {
+        errEl.textContent = 'Please select a departure date.';
+        errEl.style.display = 'block'; return;
+    }
+
+    showSpinner();
+    const isRT = document.querySelector('.trip-btn.active')?.dataset.type === 'round-trip';
+    const body = new FormData();
+    body.append('fromId', fromId);
+    body.append('toId', toId);
+    body.append('departDate', depart);
+    if (isRT && ret) body.append('returnDate', ret);
+    body.append('adults', document.getElementById('f-adults').value);
+    body.append('cabinClass', document.getElementById('f-cabin').value);
+
+    const res  = await fetch(FLIGHT_SEARCH, { method: 'POST', body });
+    const data = await res.json();
+    hideSpinner();
+
+    if (!data.success) {
+        document.getElementById('ts-list').innerHTML = `<p class="ts-error">${data.error || 'Search failed.'}</p>`;
+        document.getElementById('ts-results-count').textContent = '';
+        return;
+    }
+
+    document.getElementById('ts-results-count').textContent =
+        data.count + ' flight' + (data.count !== 1 ? 's' : '') + ' found';
+    document.getElementById('ts-list').innerHTML = data.flights.map(renderFlight).join('') || '<p style="color:var(--text-muted)">No flights found for these criteria.</p>';
+}
+
+async function searchHotels() {
+    const destId  = document.getElementById('h-dest-id').value;
+    const destType= document.getElementById('h-dest-type').value;
+    const checkin = document.getElementById('h-checkin').value;
+    const checkout= document.getElementById('h-checkout').value;
+    const errEl   = document.getElementById('h-error');
+    errEl.style.display = 'none';
+
+    if (!destId) {
+        errEl.textContent = 'Please select a destination from the suggestions.';
+        errEl.style.display = 'block'; return;
+    }
+    if (!checkin || !checkout) {
+        errEl.textContent = 'Please select check-in and check-out dates.';
+        errEl.style.display = 'block'; return;
+    }
+
+    showSpinner();
+    const body = new FormData();
+    body.append('dest_id', destId);
+    body.append('search_type', destType || 'city');
+    body.append('arrival_date', checkin);
+    body.append('departure_date', checkout);
+    body.append('adults', document.getElementById('h-adults').value);
+    body.append('rooms', document.getElementById('h-rooms').value);
+
+    const res  = await fetch(HOTEL_SEARCH, { method: 'POST', body });
+    const data = await res.json();
+    hideSpinner();
+
+    if (!data.success) {
+        document.getElementById('ts-list').innerHTML = `<p class="ts-error">${data.error || 'Search failed.'}</p>`;
+        document.getElementById('ts-results-count').textContent = '';
+        return;
+    }
+
+    document.getElementById('ts-results-count').textContent =
+        data.count + ' hotel' + (data.count !== 1 ? 's' : '') + ' found';
+    document.getElementById('ts-list').innerHTML = data.hotels.map(renderHotel).join('') || '<p style="color:var(--text-muted)">No hotels found for these criteria.</p>';
+}
+
+function renderFlight(f, idx) {
+    const logo = f.airline_logo
+        ? `<img src="${f.airline_logo}" alt="${f.airline}">`
+        : `<span style="font-size:1.4rem">✈</span>`;
+
+    const price = f.price != null
+        ? `<div class="flight-price-val">$${Number(f.price).toLocaleString()}</div><div class="flight-price-label">${f.currency} · per person</div>`
+        : `<div class="flight-price-val" style="font-size:1rem;color:var(--text-muted)">Price on request</div>`;
+
+    const dt = f.depart_time ? new Date(f.depart_time) : null;
+    const at = f.arrive_time ? new Date(f.arrive_time) : null;
+    const fmtTime = d => d ? d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '--:--';
+
+    return `
+<div class="flight-card" id="fc-${idx}">
+    <div class="flight-main">
+        <div class="flight-airline">
+            ${logo}
+            <div>
+                <div class="flight-airline-name">${f.airline}</div>
+                <div class="flight-airline-code">${f.flight_no}</div>
+            </div>
+        </div>
+        <div class="flight-route">
+            <div class="flight-time">
+                <div class="flight-time-val">${fmtTime(dt)}</div>
+                <div class="flight-time-code">${f.from} · ${f.from_city}</div>
+            </div>
+            <div class="flight-middle">
+                <div class="f-dur">${f.duration || '—'}</div>
+                <div>──────────</div>
+                <div><span class="flight-stop">${f.stop_label}</span></div>
+            </div>
+            <div class="flight-time">
+                <div class="flight-time-val">${fmtTime(at)}</div>
+                <div class="flight-time-code">${f.to} · ${f.to_city}</div>
+            </div>
+        </div>
+        <div class="flight-price">${price}</div>
+    </div>
+    <button class="flight-detail-toggle" onclick="toggleFlightDetail(${idx})">▼ View details</button>
+    <div class="flight-detail" id="fd-${idx}">
+        <div class="flight-detail-grid">
+            <div class="detail-item"><strong>Cabin</strong>${f.cabin}</div>
+            <div class="detail-item"><strong>Stops</strong>${f.stop_label}</div>
+            <div class="detail-item"><strong>Duration</strong>${f.duration || '—'}</div>
+            <div class="detail-item"><strong>Baggage included</strong>${f.baggage ? 'Yes' : 'Check airline'}</div>
+        </div>
+        <a href="{{ path('travel_contact') }}" class="flight-cta">📞 Contact agency to book</a>
+    </div>
+</div>`;
+}
+
+function toggleFlightDetail(idx) {
+    const el  = document.getElementById('fd-' + idx);
+    const btn = el.previousElementSibling;
+    const open = el.classList.toggle('open');
+    btn.textContent = (open ? '▲' : '▼') + ' View details';
+}
+
+function renderHotel(h) {
+    const img = h.photo
+        ? `<img src="${h.photo}" alt="${h.name}" class="hotel-img" loading="lazy">`
+        : `<div class="hotel-img-placeholder">🏨</div>`;
+
+    const score = h.review_score
+        ? `<span class="hotel-score-badge">${Number(h.review_score).toFixed(1)}</span>
+           <span>${h.review_word}</span>
+           <span class="hotel-reviews">${Number(h.review_count).toLocaleString()} reviews</span>`
+        : '<span class="hotel-reviews">No reviews yet</span>';
+
+    const price = h.price != null
+        ? `<div class="hotel-price">$${Number(h.price).toFixed(0)} <small>/ total (${h.currency})</small></div>`
+        : `<div class="hotel-price" style="font-size:1rem;color:var(--text-muted)">Price on request</div>`;
+
+    const dates = (h.checkin && h.checkout)
+        ? `<div class="hotel-dates">📅 ${h.checkin} → ${h.checkout}</div>`
+        : '';
+
+    return `
+<div class="hotel-card">
+    ${img}
+    <div class="hotel-body">
+        <div class="hotel-name">${h.name}</div>
+        <div class="hotel-score">${score}</div>
+        ${price}
+        ${dates}
+        <div class="hotel-footer">
+            <a href="{{ path('travel_contact') }}" class="flight-cta">📞 Contact agency to book</a>
+        </div>
+    </div>
+</div>`;
+}
+</script>
+{% endblock %}

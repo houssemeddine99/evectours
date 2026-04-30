@@ -18,6 +18,10 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
+    App\Service\BookingComService:
+        arguments:
+            $apiKey:  '%env(string:RAPIDAPI_KEY)%'
+            $apiHost: '%env(string:RAPIDAPI_BOOKING_HOST)%'
     App\Service\Analytics\NvidiaAIClient:
         arguments:
             $apiKeyNvidia: '%env(NVIDIA_API_KEY)%'
