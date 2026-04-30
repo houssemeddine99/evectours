@@ -39,7 +39,8 @@
         </div>
         {% endif %}
 
-        <form method="post" action="{{ path('user_reclamation_new') }}" class="rf-form">
+        <form method="post" action="{{ path('user_reclamation_new') }}" class="rf-form" data-autosave="reclamation-new">
+            <span class="tg-autosave" style="margin-bottom:8px;display:flex;">✅ Draft saved</span>
 
             {% if data.reservation_id is defined and data.reservation_id is not empty %}
                 <input type="hidden" name="reservation_id" value="{{ data.reservation_id }}">

@@ -445,6 +445,15 @@
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
+
+        // Track this voyage as recently viewed
+        {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=400&q=60' %}
+        tgTrackVoyage(
+            {{ voyage.id }},
+            '{{ voyage.title|e('js') }}',
+            '{{ thumb }}',
+            '{{ url('travel_voyage_detail', {slug: voyage.slug}) }}'
+        );
     })();
     </script>
 {% endblock %}

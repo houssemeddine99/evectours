@@ -8,6 +8,16 @@
         <p class="lead">Save more with our limited-time discounts and packages.</p>
 
         <div class="offers-grid">
+            {% if offers|length == 0 %}
+                <div style="grid-column:1/-1">
+                    <div class="tg-empty">
+                        <div class="tg-empty-icon">🎫</div>
+                        <h3>No active offers right now</h3>
+                        <p>Check back soon — exclusive deals drop regularly. Browse all voyages in the meantime.</p>
+                        <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Browse Voyages</a>
+                    </div>
+                </div>
+            {% endif %}
             {% for offer in offers %}
                 {% set base_price = offer.price|default(0) %}
                 {% set discount = offer.discount_percentage|default(0) %}
@@ -69,12 +79,25 @@
                             <small>Destination: {{ offer.destination|default('Unknown') }}</small>
                             <small>Valid: {{ offer.start_date ? offer.start_date|date('d M Y') : 'TBD' }} – {{ offer.end_date ? offer.end_date|date('d M Y') : 'TBD' }}</small>
                         </div>
+                        {% if offer.end_date %}
+                            <div class="tg-countdown" data-ends="{{ offer.end_date|date('Y-m-d') }}T23:59:59">
+                                <span class="tg-countdown-icon">⏳</span>
+                                <span class="tg-countdown-val">--:--:--</span>
+                            </div>
+                        {% endif %}
+
                         <div class="card-footer">
                             <div class="price-block">
                                 <small>From</small>
                                 <p><del>${{ base_price|number_format(2, '.', ',') }}</del> <strong>${{ final_price|number_format(2, '.', ',') }}</strong></p>
                             </div>
-                            <a class="btn-primary" href="{{ path('travel_voyage_detail', {slug: offer.voyage_slug}) }}">Fly now</a>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button class="tg-share-btn" onclick="tgShare('{{ offer.title|default('Special offer')|e('js') }}', '{{ url('travel_voyage_detail', {slug: offer.voyage_slug}) }}')" title="Share">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                    Share
+                                </button>
+                                <a class="btn-primary" href="{{ path('travel_voyage_detail', {slug: offer.voyage_slug}) }}">Fly now</a>
+                            </div>
                         </div>
                     </div>
                 </article>

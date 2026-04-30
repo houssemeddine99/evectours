@@ -13,6 +13,7 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <!-- Include component styles for admin tables and other shared components -->
     <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/enhancements.css">
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
@@ -73,9 +74,10 @@
     </header>
 
     <main class="container">
+        {# Flash messages → converted to toasts via JS below #}
         {% for label, messages in app.flashes %}
             {% for message in messages %}
-                <div class="flash-{{ label }} alert">{{ message }}</div>
+                <div class="tg-flash-data" data-type="{{ label }}" data-msg="{{ message|e('html_attr') }}" hidden></div>
             {% endfor %}
         {% endfor %}
 
@@ -2053,6 +2055,262 @@
     })();
     </script>
     {% endif %}{# end mascot guard #}
+
+    {# ══ UI Enhancement DOM elements ══ #}
+    <div id="tg-toast-rack" aria-live="polite"></div>
+
+    <button id="tg-top" title="Back to top" aria-label="Back to top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <div id="tg-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="tg-confirm-title">
+      <div id="tg-confirm-box">
+        <div id="tg-confirm-icon">⚠️</div>
+        <p id="tg-confirm-title"></p>
+        <p id="tg-confirm-msg"></p>
+        <div class="tg-confirm-btns">
+          <button class="tg-confirm-cancel" id="tg-confirm-cancel">Cancel</button>
+          <button class="tg-confirm-ok" id="tg-confirm-ok">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    /* ══════════════════════════════════════════
+       TRAVAGIR UI ENHANCEMENTS — global JS
+       ══════════════════════════════════════════ */
+
+    /* ── 1. Toast notifications ── */
+    (function () {
+      const rack = document.getElementById('tg-toast-rack');
+      const ICONS = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+      const DUR   = { success:4000, error:6000, warning:5000, info:4000 };
+
+      window.tgToast = function (msg, type, dur) {
+        type = type || 'info';
+        dur  = dur  || DUR[type] || 4000;
+        const t = document.createElement('div');
+        t.className = 'tg-toast ' + type;
+        t.style.setProperty('--dur', dur + 'ms');
+        t.innerHTML = '<span class="tg-toast-icon">' + (ICONS[type]||'ℹ️') + '</span>'
+                    + '<span class="tg-toast-msg">' + msg + '</span>'
+                    + '<button class="tg-toast-close" aria-label="Close">✕</button>';
+        rack.appendChild(t);
+        t.querySelector('.tg-toast-close').onclick = () => dismiss(t);
+        setTimeout(() => dismiss(t), dur);
+      };
+
+      function dismiss(t) {
+        if (t.classList.contains('out')) return;
+        t.classList.add('out');
+        t.addEventListener('animationend', () => t.remove(), { once: true });
+      }
+
+      // Convert server flash data elements to toasts
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.tg-flash-data').forEach(function (el) {
+          var type = el.dataset.type;
+          if (type === 'danger') type = 'error';
+          tgToast(el.dataset.msg, type);
+          el.remove();
+        });
+      });
+    })();
+
+    /* ── 2. Back-to-top button ── */
+    (function () {
+      var btn = document.getElementById('tg-top');
+      window.addEventListener('scroll', function () {
+        btn.classList.toggle('visible', window.scrollY > 320);
+      }, { passive: true });
+      btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+
+    /* ── 3. Page transition fade ── */
+    (function () {
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+        if (!a) return;
+        var href = a.getAttribute('href');
+        if (!href || href.startsWith('#') || href.startsWith('javascript') || a.target === '_blank' || e.ctrlKey || e.metaKey) return;
+        // same origin only
+        try { var url = new URL(href, location.href); if (url.origin !== location.origin) return; } catch(x) { return; }
+        e.preventDefault();
+        document.body.classList.add('tg-leaving');
+        setTimeout(function () { location.href = href; }, 200);
+      });
+    })();
+
+    /* ── 4. Image blur-up lazy load ── */
+    (function () {
+      function initBlur(img) {
+        img.classList.add('loading');
+        var io = new IntersectionObserver(function (entries, ob) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var i = entry.target;
+            var src = i.dataset.src || i.src;
+            var tmp = new Image();
+            tmp.onload = function () { i.src = src; i.classList.remove('loading'); i.classList.add('loaded'); };
+            tmp.src = src;
+            ob.unobserve(i);
+          });
+        }, { rootMargin: '120px' });
+        io.observe(img);
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.tg-img-wrap img').forEach(initBlur);
+      });
+    })();
+
+    /* ── 5. Confirm dialog ── */
+    (function () {
+      var overlay = document.getElementById('tg-confirm-overlay');
+      var titleEl = document.getElementById('tg-confirm-title');
+      var msgEl   = document.getElementById('tg-confirm-msg');
+      var okBtn   = document.getElementById('tg-confirm-ok');
+      var cancelBtn = document.getElementById('tg-confirm-cancel');
+      var _resolve;
+
+      window.tgConfirm = function (opts) {
+        opts = opts || {};
+        titleEl.textContent = opts.title || 'Are you sure?';
+        msgEl.textContent   = opts.msg   || '';
+        okBtn.textContent   = opts.ok    || 'Confirm';
+        okBtn.className     = 'tg-confirm-ok' + (opts.safe ? ' safe' : '');
+        document.getElementById('tg-confirm-icon').textContent = opts.icon || (opts.safe ? '✅' : '⚠️');
+        overlay.classList.add('open');
+        return new Promise(function (res) { _resolve = res; });
+      };
+
+      function close(val) { overlay.classList.remove('open'); if (_resolve) _resolve(val); }
+      okBtn.addEventListener('click',     function () { close(true);  });
+      cancelBtn.addEventListener('click', function () { close(false); });
+      overlay.addEventListener('click',   function (e) { if (e.target === overlay) close(false); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) close(false); });
+
+      // Wire every data-confirm-form to the dialog
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-confirm]').forEach(function (el) {
+          el.addEventListener('click', async function (e) {
+            e.preventDefault();
+            var msg   = el.dataset.confirm       || 'This action cannot be undone.';
+            var title = el.dataset.confirmTitle  || 'Are you sure?';
+            var form  = el.closest('form') || document.querySelector(el.dataset.confirmForm);
+            var ok = await tgConfirm({ title: title, msg: msg });
+            if (ok && form) form.submit();
+            else if (ok && el.href) location.href = el.href;
+          });
+        });
+      });
+    })();
+
+    /* ── 6. Form autosave to localStorage ── */
+    (function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('form[data-autosave]').forEach(function (form) {
+          var key = 'tg_autosave_' + (form.dataset.autosave || form.id || form.action);
+          var indicator = form.querySelector('.tg-autosave');
+          var timer;
+
+          // Restore
+          try {
+            var saved = JSON.parse(localStorage.getItem(key));
+            if (saved) {
+              Object.entries(saved).forEach(function ([name, val]) {
+                var el = form.elements[name];
+                if (el && el.type !== 'file' && el.type !== 'hidden') el.value = val;
+              });
+            }
+          } catch(x) {}
+
+          // Save on input
+          form.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+              var data = {};
+              Array.from(form.elements).forEach(function (el) {
+                if (el.name && el.type !== 'file' && el.type !== 'hidden' && el.type !== 'submit') data[el.name] = el.value;
+              });
+              try { localStorage.setItem(key, JSON.stringify(data)); } catch(x) {}
+              if (indicator) { indicator.classList.add('visible'); setTimeout(function(){ indicator.classList.remove('visible'); }, 2000); }
+            }, 600);
+          });
+
+          // Clear on submit
+          form.addEventListener('submit', function () { try { localStorage.removeItem(key); } catch(x) {} });
+        });
+      });
+    })();
+
+    /* ── 7. Recently viewed voyages ── */
+    (function () {
+      var MAX = 6;
+      var KEY = 'tg_recent_voyages';
+
+      window.tgTrackVoyage = function (id, title, img, url) {
+        try {
+          var list = JSON.parse(localStorage.getItem(KEY)) || [];
+          list = list.filter(function (v) { return v.id !== id; });
+          list.unshift({ id: id, title: title, img: img, url: url });
+          list = list.slice(0, MAX);
+          localStorage.setItem(KEY, JSON.stringify(list));
+        } catch(x) {}
+      };
+
+      window.tgRenderRecent = function (containerSelector) {
+        try {
+          var list = JSON.parse(localStorage.getItem(KEY)) || [];
+          if (!list.length) return;
+          var container = document.querySelector(containerSelector);
+          if (!container) return;
+          var section = document.createElement('div');
+          section.className = 'tg-recent-section';
+          section.innerHTML = '<h3>Recently Viewed</h3>'
+            + '<div class="tg-recent-row">'
+            + list.map(function (v) {
+                return '<a class="tg-recent-chip" href="' + v.url + '">'
+                  + '<img class="tg-recent-thumb" src="' + v.img + '" alt="" loading="lazy">'
+                  + '<span class="tg-recent-label">' + v.title + '</span>'
+                  + '</a>';
+              }).join('')
+            + '</div>';
+          container.appendChild(section);
+        } catch(x) {}
+      };
+    })();
+
+    /* ── 8. Countdown tick for .tg-countdown[data-ends] ── */
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.tg-countdown[data-ends]').forEach(function (el) {
+        function tick() {
+          var diff = new Date(el.dataset.ends).getTime() - Date.now();
+          if (diff <= 0) { el.textContent = 'Expired'; el.classList.add('urgent'); return; }
+          var d = Math.floor(diff / 86400000);
+          var h = Math.floor((diff % 86400000) / 3600000);
+          var m = Math.floor((diff % 3600000) / 60000);
+          var s = Math.floor((diff % 60000) / 1000);
+          el.querySelector('.tg-countdown-val').textContent =
+            (d ? d + 'd ' : '') + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+          el.classList.toggle('urgent', diff < 3600000);
+        }
+        tick();
+        setInterval(tick, 1000);
+      });
+    });
+
+    /* ── 9. Share button ── */
+    window.tgShare = async function (title, url) {
+      url = url || location.href;
+      if (navigator.share) {
+        try { await navigator.share({ title: title, url: url }); return; } catch(x) {}
+      }
+      try { await navigator.clipboard.writeText(url); tgToast('Link copied to clipboard!', 'success'); }
+      catch(x) { tgToast('Copy failed — ' + url, 'error'); }
+    };
+    </script>
 
     <style>
         /* Kill every piece of Google Translate UI chrome */

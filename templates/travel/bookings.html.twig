@@ -72,7 +72,9 @@
                             {% endif %}
                             {% if reservation.status == 'PENDING' or reservation.status == 'CONFIRMED' %}
                                 <form method="post" action="{{ path('account_reservation_detail', {id: reservation.id}) }}" class="inline-form">
-                                    <button type="submit" name="action_cancel" class="btn btn-danger">Cancel</button>
+                                    <button type="submit" name="action_cancel" class="btn btn-danger"
+                                        data-confirm="This will cancel your reservation. This action cannot be undone."
+                                        data-confirm-title="Cancel Reservation?">Cancel</button>
                                 </form>
                             {% endif %}
                         </div>

@@ -61,7 +61,8 @@
         </div>
     {% else %}
         {# Normal reservation form #}
-        <form method="post" id="reserve-form">
+        <form method="post" id="reserve-form" data-autosave="reserve-{{ voyage.id }}">
+            <span class="tg-autosave">✅ Draft saved</span>
             <div class="form-group" style="margin-bottom:16px;">
                 <label for="number_of_people">Number of people</label>
                 <input type="number" id="number_of_people" name="number_of_people" value="1" min="1" max="20" required
