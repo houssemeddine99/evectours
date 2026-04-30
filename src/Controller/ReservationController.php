@@ -281,7 +281,14 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('auth_login');
         }
 
-        $reservations   = $this->reservationService->getReservationsForUser($user['id']);
+        $page  = max(1, $request->query->getInt('page', 1));
+        $limit = 6;
+
+        $allReservations = $this->reservationService->getReservationsForUser($user['id']);
+        $totalBookings   = count($allReservations);
+        $totalPages      = (int) ceil($totalBookings / $limit) ?: 1;
+        $reservations    = array_slice($allReservations, ($page - 1) * $limit, $limit);
+
         $loyaltyBalance = $this->loyaltyPointsService->getBalance($user['id']);
         $canRedeem      = $this->loyaltyPointsService->canRedeem($user['id']);
 
@@ -290,6 +297,8 @@ class ReservationController extends AbstractController
             'bookings'        => $reservations,
             'loyalty_balance' => $loyaltyBalance,
             'can_redeem'      => $canRedeem,
+            'current_page'    => $page,
+            'total_pages'     => $totalPages,
         ]);
     }
 

@@ -234,6 +234,11 @@ body.tg-leaving { opacity: 0; transform: translateY(-8px); transition: opacity .
 }
 .tg-autosave.visible { opacity: 1; }
 
+/* ── Button loading spinner ── */
+@keyframes tg-spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 768px) {
   #tg-toast-rack { bottom: 16px; left: 16px; right: 16px; }
   .tg-toast { max-width: 100%; }

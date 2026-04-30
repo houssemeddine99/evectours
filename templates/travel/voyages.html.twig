@@ -129,6 +129,33 @@
 {% endfor %}
 </div>
 
+{# Pagination #}
+{% if total_pages is defined and total_pages > 1 %}
+<nav class="tg-pagination" aria-label="Voyage pages">
+    {% if current_page > 1 %}
+        <a href="{{ path('travel_voyages', app.request.query.all|merge({page: current_page - 1})) }}" class="tg-page-btn" aria-label="Previous">‹</a>
+    {% else %}
+        <span class="tg-page-btn disabled" aria-disabled="true">‹</span>
+    {% endif %}
+
+    {% for p in 1..total_pages %}
+        {% if p == current_page %}
+            <span class="tg-page-btn active" aria-current="page">{{ p }}</span>
+        {% elseif p == 1 or p == total_pages or (p >= current_page - 2 and p <= current_page + 2) %}
+            <a href="{{ path('travel_voyages', app.request.query.all|merge({page: p})) }}" class="tg-page-btn">{{ p }}</a>
+        {% elseif p == current_page - 3 or p == current_page + 3 %}
+            <span class="tg-page-btn ellipsis">…</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if current_page < total_pages %}
+        <a href="{{ path('travel_voyages', app.request.query.all|merge({page: current_page + 1})) }}" class="tg-page-btn" aria-label="Next">›</a>
+    {% else %}
+        <span class="tg-page-btn disabled" aria-disabled="true">›</span>
+    {% endif %}
+</nav>
+{% endif %}
+
 {# Recently viewed ── rendered by JS from localStorage #}
 <div id="tg-recent-anchor"></div>
 
@@ -168,5 +195,13 @@ async function toggleFavorite(e, voyageId) {
 .fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
 .cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s}
 .cmp-btn:hover{background:var(--amazon-orange);color:#000}
+
+/* Pagination */
+.tg-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:32px 0 8px;flex-wrap:wrap}
+.tg-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;font-family:Inter,sans-serif;font-size:.88rem;font-weight:700;text-decoration:none;border:1px solid rgba(99,140,255,.2);background:rgba(255,255,255,.03);color:#94a3b8;transition:background .15s,border-color .15s,color .15s}
+.tg-page-btn:hover{background:rgba(99,140,255,.12);border-color:rgba(99,140,255,.4);color:#f1f5f9}
+.tg-page-btn.active{background:linear-gradient(135deg,#4f6ef7,#6366f1);border-color:transparent;color:#fff;cursor:default}
+.tg-page-btn.disabled{opacity:.35;cursor:default;pointer-events:none}
+.tg-page-btn.ellipsis{border-color:transparent;background:transparent;cursor:default}
 </style>
 {% endblock %}

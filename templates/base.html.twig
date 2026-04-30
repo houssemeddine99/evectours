@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Travagir{% endblock %}</title>
+    <title>{% block title %}Travagir — Discover the World{% endblock %}</title>
+
+    {# ── SEO & Social meta ── #}
+    <meta name="description" content="{% block meta_description %}Travagir — curated travel voyages, exclusive offers, and AI-powered trip planning. Discover your next adventure.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
+
+    {# Open Graph #}
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Travagir">
+    <meta property="og:title"       content="{% block og_title %}{% block _title %}Travagir — Discover the World{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Curated travel voyages, exclusive offers, and AI-powered trip planning.{% endblock %}">
+    <meta property="og:image"       content="{% block og_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+    <meta property="og:url"         content="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
+
+    {# Twitter Card #}
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{% block twitter_title %}Travagir — Discover the World{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Curated voyages, exclusive deals, AI trip planner.{% endblock %}">
+    <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+
     <link rel="icon" href="/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2302,6 +2322,23 @@
     });
 
     /* ── 9. Share button ── */
+    /* ── 10. Loading states on submit buttons ── */
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+          form.querySelectorAll('[type="submit"]').forEach(function (btn) {
+            if (btn.dataset.noLoadingState !== undefined) return;
+            var orig = btn.textContent;
+            btn.disabled = true;
+            btn.dataset.origText = orig;
+            btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px">'
+              + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:tg-spin .7s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'
+              + 'Please wait…</span>';
+          });
+        });
+      });
+    });
+
     window.tgShare = async function (title, url) {
       url = url || location.href;
       if (navigator.share) {
