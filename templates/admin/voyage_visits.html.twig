@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin – Voyage Visits
+{% endblock %}
+
+{% block body %}
+	<style>:root
+	{
+		--admin-orange: #ff8c00;
+		--admin-orange-light: #fff4e6;
+		--admin-orange-dark: #e67e00;
+	}
+	.stats-header {
+		color: var(--admin-orange-dark);
+		border-bottom: 2px solid var(--admin-orange);
+		margin-bottom: 20px;
+	}
+	.chart-container {
+		background: white;
+		padding: 20px;
+		border-radius: 12px;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		margin-bottom: 30px;
+	}
+	.admin-table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.admin-table th {
+		background-color: var(--admin-orange);
+		color: white;
+		padding: 12px;
+		text-align: left;
+	}
+	.admin-table tr:nth-child(even) {
+		background-color: var(--admin-orange-light);
+	}
+	.pagination-btn {
+		background: var(--admin-orange);
+		color: white;
+		padding: 8px 16px;
+		text-decoration: none;
+		border-radius: 4px;
+	}
+</style>
+
+<div class="container" style="padding: 20px;">
+	<h1 class="stats-header">En tant qu'admin : Statistiques des Visites</h1>
+
+	<div class="chart-container">
+		<h3>Top 10 Voyages les plus visités</h3>
+		<canvas id="visitChart"></canvas>
+	</div>
+
+	<div class="table-section">
+		<h3>Dernières Visites (Total:
+			{{ totalItems }})</h3>
+		<table class="admin-table">
+			<thead>
+				<tr>
+					<th>User ID</th>
+					<th>Voyage ID</th>
+					<th>Date de Visite</th>
+					<th>Source</th>
+					<th>Durée (sec)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{# Inside the table <tbody> #}
+				{% for entry in visits %}
+					{# entry[0] is the VoyageVisit entity, entry.voyageName is the joined title #}
+					{% set visit = entry[0] %}
+					<tr>
+						<td>
+							<strong>{{ visit.userId }}</strong>
+						</td>
+						<td style="color: var(--admin-orange-dark); font-weight: bold;">
+							{{ entry.voyageName }}
+							<small>(#{{ visit.voyageId }})</small>
+						</td>
+						<td>{{ visit.visitTime|date('d/m/Y H:i:s') }}</td>
+						<td>
+							<span class="badge">{{ visit.source }}</span>
+						</td>
+						<td>{{ visit.viewDurationSeconds }}s</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<div style="margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+			{% if currentPage > 1 %}
+				<a href="{{ path('admin_voyage_visits', {page: currentPage - 1}) }}" class="pagination-btn">Précédent</a>
+			{% endif %}
+			<span>Page
+				{{ currentPage }}
+				sur
+				{{ totalPages }}</span>
+			{% if currentPage < totalPages %}
+				<a href="{{ path('admin_voyage_visits', {page: currentPage + 1}) }}" class="pagination-btn">Suivant</a>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	const ctx = document.getElementById('visitChart').getContext('2d');
+new Chart(ctx, {
+type: 'bar',
+data: {
+labels: {{ chartLabels|json_encode|raw }},
+datasets: [
+{
+label: 'Nombre de visites',
+data: {{ chartData|json_encode|raw }},
+backgroundColor: 'rgba(255, 140, 0, 0.6)',
+borderColor: 'rgba(255, 140, 0, 1)',
+borderWidth: 1
+}
+]
+},
+options: {
+responsive: true,
+scales: {
+y: {
+beginAtZero: true,
+ticks: {
+stepSize: 1
+}
+}
+}
+}
+});
+</script>{% endblock %}
