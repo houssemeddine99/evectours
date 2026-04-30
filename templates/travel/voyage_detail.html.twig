@@ -178,8 +178,8 @@
                     <button class="btn btn-fav {% if is_favorite %}btn-fav-active{% endif %}" id="favBtn" onclick="toggleFavorite({{ voyage.id }})" title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
                         {{ is_favorite ? '♥ Saved' : '♡ Save' }}
                     </button>
-                    <button class="btn btn-compare" id="cmpBtn" onclick="toggleCompare({{ voyage.id }})" title="Add to comparison">
-                        ⊕ Compare
+                    <button class="btn btn-compare {% if voyage.id in compare_list %}cmp-active{% endif %}" id="cmpBtn" onclick="toggleCompare({{ voyage.id }})" title="{% if voyage.id in compare_list %}Remove from comparison{% else %}Add to comparison{% endif %}">
+                        {{ voyage.id in compare_list ? '✓ In Compare' : '⊕ Compare' }}
                     </button>
                     <a class="btn btn-secondary btn-back" href="{{ path('travel_voyages') }}">
                         <span class="btn-text">Back to voyages</span>
@@ -343,8 +343,11 @@
                 if (res.ok) {
                     btn.classList.toggle('cmp-active', !inList);
                     btn.textContent = !inList ? '✓ In Compare' : '⊕ Compare';
+                    if (!inList) {
+                        if (typeof tgToast !== 'undefined') tgToast('Added to comparison — <a href="/compare" style="color:#fbbf24">View now →</a>', 'info', 5000);
+                    }
                 } else if (data.status === 'max_reached') {
-                    alert('Max 3 voyages can be compared. Go to /compare to view.');
+                    if (typeof tgToast !== 'undefined') tgToast('Max 3 voyages. <a href="/compare" style="color:#fbbf24">View comparison →</a>', 'warning', 6000);
                 }
             } catch(e) { console.error(e); }
         }

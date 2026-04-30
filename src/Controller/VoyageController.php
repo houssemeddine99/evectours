@@ -113,6 +113,7 @@ class VoyageController extends AbstractController
         $sessionUser = $request->getSession()->get('auth_user');
         $userId = $sessionUser['id'] ?? 0;
         $favoriteIds = $userId > 0 ? $this->favoriteService->getFavoriteVoyageIds($userId) : [];
+        $compareList = $request->getSession()->get('compare_list', []);
 
         return $this->render('travel/voyages.html.twig', [
             'active_nav' => 'voyages',
@@ -125,6 +126,7 @@ class VoyageController extends AbstractController
             'active_tag' => $tagFilter,
             'user_id' => $userId,
             'favorite_ids' => $favoriteIds,
+            'compare_list' => $compareList,
         ]);
     }
 
@@ -146,15 +148,7 @@ class VoyageController extends AbstractController
         $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $voyage['id']);
         $offer = $offerForVoyage ? array_values($offerForVoyage)[0] : null;
 
-        $isFavorite = false;
-        if ($userId > 1) {
-            $favIds = $request->getSession()->get('favorite_ids_' . $userId, null);
-            if ($favIds === null) {
-                $isFavorite = false;
-            } else {
-                $isFavorite = in_array($voyage['id'], $favIds, true);
-            }
-        }
+        $isFavorite = $userId > 1 && $this->favoriteService->isFavorite($userId, $voyage['id']);
 
         $compareList = $request->getSession()->get('compare_list', []);
 

@@ -83,7 +83,7 @@
         <div class="tg-img-wrap card-image-wrap" style="position:relative">
             <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
             <button class="fav-btn {% if voyage.id in favorite_ids %}fav-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="{% if voyage.id in favorite_ids %}Remove from favorites{% else %}Add to favorites{% endif %}">♥</button>
-            <a href="{{ path('compare_pick', {id: voyage.id}) }}" class="cmp-btn" title="Compare this voyage">⊕</a>
+            <button class="cmp-btn {% if voyage.id in compare_list %}cmp-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleCompare(event, {{ voyage.id }})" title="{% if voyage.id in compare_list %}In comparison{% else %}Add to comparison{% endif %}">{% if voyage.id in compare_list %}✓{% else %}⊕{% endif %}</button>
         </div>
         <div class="card-body">
             <div class="voyage-badges">
@@ -179,6 +179,25 @@ async function toggleFavorite(e, voyageId) {
         if (res.status === 401) { window.location.href = '/login'; return; }
         const data = await res.json();
         btn.classList.toggle('fav-active', data.added);
+        btn.title = data.added ? 'Remove from favorites' : 'Add to favorites';
+    } catch(err) { console.error(err); }
+}
+async function toggleCompare(e, voyageId) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const inList = btn.classList.contains('cmp-active');
+    const url = inList ? '/compare/remove/' + voyageId : '/compare/add/' + voyageId;
+    try {
+        const res = await fetch(url, { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
+        const data = await res.json();
+        if (res.ok) {
+            btn.classList.toggle('cmp-active', !inList);
+            btn.textContent = !inList ? '✓' : '⊕';
+            btn.title = !inList ? 'In comparison' : 'Add to comparison';
+            if (!inList && typeof tgToast !== 'undefined') tgToast('Added to comparison — <a href="/compare" style="color:#fbbf24">View →</a>', 'info', 5000);
+        } else if (data.status === 'max_reached') {
+            if (typeof tgToast !== 'undefined') tgToast('Max 3 voyages. <a href="/compare" style="color:#fbbf24">View comparison →</a>', 'warning', 6000);
+        }
     } catch(err) { console.error(err); }
 }
 </script>
@@ -193,8 +212,8 @@ async function toggleFavorite(e, voyageId) {
 .fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
 .fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
 .fav-btn:hover,.fav-btn.fav-active{background:#ef4444;color:#fff}
-.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s}
-.cmp-btn:hover{background:var(--amazon-orange);color:#000}
+.cmp-btn{right:52px;background:rgba(0,0,0,.55);color:#fff;position:absolute;top:10px;width:34px;height:34px;border-radius:50%;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
+.cmp-btn:hover,.cmp-btn.cmp-active{background:var(--amazon-orange);color:#000}
 
 /* Pagination */
 .tg-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:32px 0 8px;flex-wrap:wrap}
