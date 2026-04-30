@@ -388,9 +388,23 @@ class ReservationController extends AbstractController
     #[Route('/account/reservations/{id}/ticket.pdf', name: 'account_reservation_ticket_pdf', requirements: ['id' => '\\d+'], methods: ['GET'])]
     public function printTicketPdf(Request $request, int $id): Response
     {
-        $user = $request->getSession()->get('auth_user');
+        $session = $request->getSession();
+        $user    = $session->get('auth_user');
         if (!$user) {
             return $this->redirectToRoute('auth_login');
+        }
+
+        $now    = time();
+        $window = (int) ($session->get('pdf_window', 0));
+        $count  = (int) ($session->get('pdf_count', 0));
+        if ($now - $window < 60) {
+            if ($count >= 10) {
+                return new Response('Too many PDF requests. Please wait a minute.', 429, ['Content-Type' => 'text/plain']);
+            }
+            $session->set('pdf_count', $count + 1);
+        } else {
+            $session->set('pdf_window', $now);
+            $session->set('pdf_count', 1);
         }
 
         $isAdmin = $user['is_admin'] ?? false;

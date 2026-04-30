@@ -171,6 +171,22 @@ class VoyageService
         return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
     }
 
+    /**
+     * Returns a slim summary of active voyages for AI prompts (no images, capped at $limit rows).
+     * @return array<array{id:int,title:string,destination:string,price:float,start_date:string,end_date:string}>
+     */
+    public function getSlimVoyagesForAi(int $limit = 50): array
+    {
+        return $this->safeExecute(function () use ($limit) {
+            return $this->entityManager->getConnection()->fetchAllAssociative(
+                'SELECT id, title, destination, price, start_date, end_date
+                 FROM voyages
+                 ORDER BY id DESC
+                 LIMIT ' . $limit
+            );
+        }, []);
+    }
+
     public function getVoyages(int $page = 1, int $limit = 12): array
     {
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findPublicPaginated($limit, ($page - 1) * $limit));
