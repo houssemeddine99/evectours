@@ -28,12 +28,26 @@ class TripPlannerController extends AbstractController
     #[Route('/trip-planner/plan', name: 'trip_planner_plan', methods: ['POST'])]
     public function plan(Request $request): JsonResponse
     {
+        $session = $request->getSession();
+        $now     = time();
+        $window  = (int) ($session->get('ai_plan_window', 0));
+        $count   = (int) ($session->get('ai_plan_count', 0));
+        if ($now - $window < 60) {
+            if ($count >= 5) {
+                return $this->json(['success' => false, 'error' => 'Too many requests. Please wait a minute.'], 429);
+            }
+            $session->set('ai_plan_count', $count + 1);
+        } else {
+            $session->set('ai_plan_window', $now);
+            $session->set('ai_plan_count', 1);
+        }
+
         $userInput = trim((string) $request->request->get('query', ''));
         if ($userInput === '') {
             return $this->json(['success' => false, 'error' => 'Please describe your trip.']);
         }
 
-        $voyages = $this->voyageService->getAllVoyages();
+        $voyages = $this->voyageService->getSlimVoyagesForAi(50);
         $offers  = $this->offerService->getActiveOffers();
 
         $result = $this->aiPlannerService->plan($userInput, $voyages, $offers);
@@ -41,14 +55,14 @@ class TripPlannerController extends AbstractController
             return $this->json(['success' => false, 'error' => 'AI service unavailable. Please try again.']);
         }
 
-        // Enrich recommendations with full voyage data
+        // Enrich recommendations — slim voyages already have the fields we need
         $voyageMap = array_column($voyages, null, 'id');
         $offerMap  = array_column($offers, null, 'id');
 
         $enriched = [];
         foreach ($result['recommendations'] as $rec) {
-            $vid   = (int) ($rec['voyage_id'] ?? 0);
-            $oid   = isset($rec['offer_id']) ? (int) $rec['offer_id'] : null;
+            $vid    = (int) ($rec['voyage_id'] ?? 0);
+            $oid    = isset($rec['offer_id']) ? (int) $rec['offer_id'] : null;
             $voyage = $voyageMap[$vid] ?? null;
             if (!$voyage) continue;
 
