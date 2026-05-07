@@ -247,23 +247,6 @@ CREATE TABLE IF NOT EXISTS offer_views (
     CONSTRAINT fk_offer_views_offer FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE CASCADE
 )");
 
-            /* ── Tags ── */
-            $this->connection->executeStatement("
-CREATE TABLE IF NOT EXISTS tags (
-    id $pk,
-    name VARCHAR(100) NOT NULL,
-    color VARCHAR(30) NULL
-)");
-
-            $this->connection->executeStatement("
-CREATE TABLE IF NOT EXISTS voyage_tags (
-    voyage_id INTEGER NOT NULL,
-    tag_id INTEGER NOT NULL,
-    PRIMARY KEY (voyage_id, tag_id),
-    CONSTRAINT fk_vt_voyage FOREIGN KEY (voyage_id) REFERENCES voyages(id) ON DELETE CASCADE,
-    CONSTRAINT fk_vt_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-)");
-
             /* ── Favorites ── */
             $this->connection->executeStatement("
 CREATE TABLE IF NOT EXISTS favorites (

@@ -3,11 +3,13 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
+use App\Service\CurrencyService;
 use App\Service\ValidationService;
 use App\Service\UserLoginService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,8 +20,20 @@ class AuthController extends AbstractController
         private readonly AuthService $authService,
         private readonly ValidationService $validationService,
         private readonly UserLoginService $userLoginService,
+        private readonly CurrencyService $currencyService,
         private readonly LoggerInterface $logger
     ) {}
+
+    #[Route('/set-currency', name: 'set_currency', methods: ['POST'])]
+    public function setCurrency(Request $request): JsonResponse
+    {
+        $currency = strtoupper((string) $request->request->get('currency', ''));
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            return new JsonResponse(['error' => 'Invalid currency'], 400);
+        }
+        $this->currencyService->setOverride($currency);
+        return new JsonResponse(['currency' => $currency]);
+    }
 
     #[Route('/login', name: 'auth_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response

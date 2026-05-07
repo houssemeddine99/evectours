@@ -121,7 +121,6 @@
                         <div class="action-buttons">
                             {% if reservation.status == 'PENDING' %}
                             <form method="post" action="{{ path('admin_reservation_confirm', {id: reservation.id}) }}" class="confirm-form">
-                                <input type="text" name="payment_reference" placeholder="pi_/ch_…" title="Optional Stripe payment reference" class="ref-input" />
                                 <button type="submit" class="btn-action btn-confirm" title="Confirm reservation">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                                 </button>

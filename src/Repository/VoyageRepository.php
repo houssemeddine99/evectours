@@ -139,12 +139,6 @@ class VoyageRepository extends ServiceEntityRepository
         $qb->andWhere('v.startDate IS NULL OR v.startDate >= :filterToday')
             ->setParameter('filterToday', new \DateTime('today'));
 
-        // Filter by tag
-        if (!empty($filters['tag'])) {
-            $qb->join('v.tags', 'ft')
-                ->andWhere('ft.name = :tagName')
-                ->setParameter('tagName', $filters['tag']);
-        }
 
         // Keyword search — case-insensitive OR across title and destination
         $keyword = $filters['search'] ?? $filters['destination'] ?? null;

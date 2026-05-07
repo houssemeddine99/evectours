@@ -235,66 +235,12 @@
                     </select>
                 </div>
 
-                <div class="rfd-field">
-                    <label>
-                        Stripe Payment Reference
-                        <span>(required when approving)</span>
-                    </label>
-                    <div class="rfd-ref-row">
-                        <input type="text" id="payment_reference" name="payment_reference" class="rfd-input" placeholder="pi_xxx or ch_xxx">
-                        <button type="button" id="btn-generate" class="rfd-gen-btn">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
-                            Generate Test
-                        </button>
-                    </div>
-                    <div id="generate-status" class="rfd-status-msg"></div>
-                </div>
-
                 <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Save Changes</button>
             </form>
         </div>
     </div>
 </div>
 
-<script>
-(function(){
-    var btn       = document.getElementById('btn-generate');
-    var refInput  = document.getElementById('payment_reference');
-    var statusEl  = document.getElementById('generate-status');
-    var generateUrl = '{{ path('admin_refund_generate_test', {'id': refund.id}) }}';
-
-    btn.addEventListener('click', function(){
-        btn.disabled = true;
-        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Working…';
-        statusEl.style.display = 'none';
-
-        fetch(generateUrl, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'} })
-            .then(r => r.json())
-            .then(data => {
-                if(data.success){
-                    refInput.value = data.reference;
-                    document.getElementById('refund-status').value = 'APPROVED';
-                    statusEl.textContent = '✓ Reference generated: ' + data.reference;
-                    statusEl.className = 'rfd-status-msg ok';
-                } else {
-                    statusEl.textContent = '✕ ' + (data.error || 'Unknown error');
-                    statusEl.className = 'rfd-status-msg err';
-                }
-                statusEl.style.display = 'block';
-            })
-            .catch(e => {
-                statusEl.textContent = '✕ ' + e.message;
-                statusEl.className = 'rfd-status-msg err';
-                statusEl.style.display = 'block';
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg> Generate Test';
-            });
-    });
-})();
-</script>
-<style>@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }</style>
 {% else %}
     <p style="color:var(--text-muted);">Refund request not found.</p>
 {% endif %}

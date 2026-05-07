@@ -7,24 +7,9 @@
 <h1>Available Voyages</h1>
 <p class="lead">Choose your next destination from our curated travel collection.</p>
 
-{# Tag filter strip #}
-{% if all_tags is defined and all_tags|length > 0 %}
-<div class="tag-filter-strip">
-    <a href="{{ path('travel_voyages') }}" class="tag-btn {% if not active_tag %}tag-btn-active{% endif %}">All</a>
-    {% for tag in all_tags %}
-        <a href="{{ path('travel_voyages', {tag: tag.name}) }}"
-           class="tag-btn {% if active_tag == tag.name %}tag-btn-active{% endif %}"
-           style="--tag-color:{{ tag.color ?? '#ff9900' }}">
-            {{ tag.name }}
-        </a>
-    {% endfor %}
-</div>
-{% endif %}
-
 {# Filter Section #}
 <div class="filter-bar">
     <form method="get" action="{{ path('travel_voyages') }}" class="filter-form">
-        {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
         <div class="filter-row">
             <div class="filter-field">
                 <label for="search">Search</label>
@@ -90,13 +75,6 @@
                 <span class="badge destination">{{ voyage.destination }}</span>
                 <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
             </div>
-            {% if voyage.tags is defined and voyage.tags|length > 0 %}
-                <div class="card-tags">
-                    {% for tag in voyage.tags %}
-                        <span class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
-                    {% endfor %}
-                </div>
-            {% endif %}
             <h3>{{ voyage.title }}</h3>
             <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
             <div class="card-footer">
@@ -249,11 +227,6 @@ document.addEventListener('keydown', function(e) {
 </div>
 
 <style>
-.tag-filter-strip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.tag-btn{padding:6px 16px;border-radius:20px;text-decoration:none;font-weight:600;font-size:.88rem;border:2px solid var(--border-dark);color:var(--text-muted);transition:all .15s}
-.tag-btn:hover,.tag-btn-active{border-color:var(--tag-color,var(--amazon-orange));color:var(--tag-color,var(--amazon-orange));background:color-mix(in srgb,var(--tag-color,var(--amazon-orange)) 12%,transparent)}
-.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
-.tag-pill{display:inline-block;padding:2px 10px;border-radius:12px;border:1px solid;font-size:.78rem;font-weight:600}
 .card-image-wrap{position:relative;overflow:hidden}
 .fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
 .fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}

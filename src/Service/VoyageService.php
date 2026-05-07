@@ -126,11 +126,6 @@ class VoyageService
         } else {
             $imageUrls = $this->extractImageUrls($voyage->getId());
         }
-        $tags = [];
-        foreach ($voyage->getTags() as $tag) {
-            $tags[] = ['id' => $tag->getId(), 'name' => $tag->getName(), 'color' => $tag->getColor()];
-        }
-
         $slug = $voyage->getSlug();
         if ($slug === '') {
             $slug = 'voyage-' . $voyage->getId();
@@ -149,7 +144,6 @@ class VoyageService
             'created_at' => $voyage->getCreatedAt()?->format('Y-m-d H:i:s'),
             'activities_count' => $voyage->getActivities()->count(),
             'offers_count' => $voyage->getOffers()->count(),
-            'tags' => $tags,
         ];
     }
 
@@ -235,11 +229,6 @@ class VoyageService
 
     private function mapVoyage(object $voyage, ?array $preloadedImages = null): array
     {
-        $tags = [];
-        foreach ($voyage->getTags() as $tag) {
-            $tags[] = ['id' => $tag->getId(), 'name' => $tag->getName(), 'color' => $tag->getColor()];
-        }
-
         $slug = $voyage->getSlug();
         if ($slug === '') {
             $slug = 'voyage-' . $voyage->getId();
@@ -270,7 +259,6 @@ class VoyageService
             'scarcity_level'  => $pricing['scarcity_level'],
             'booked_people'   => $pricing['booked'],
             'image_url'       => $imageUrls,
-            'tags'            => $tags,
         ];
     }
 

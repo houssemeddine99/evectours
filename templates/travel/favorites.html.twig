@@ -28,7 +28,7 @@
                     <h3>{{ voyage.title }}</h3>
                     <p>{{ voyage.description|slice(0, 120) }}{% if voyage.description|length > 120 %}…{% endif %}</p>
                     <div class="card-footer">
-                        <strong>{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</strong>
+                        <strong>{{ voyage.price is not empty ? voyage.price|format_price : 'Price on request' }}</strong>
                         <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-sm">View trip</a>
                     </div>
                 </div>

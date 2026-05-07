@@ -18,7 +18,7 @@
             <p class="anchor-label">Selected voyage</p>
             <h2>{{ anchor.title }}</h2>
             <p class="anchor-meta">{{ anchor.destination }} &bull; {{ anchor.start_date ? anchor.start_date|date('d M Y') : 'TBD' }} → {{ anchor.end_date ? anchor.end_date|date('d M Y') : 'TBD' }}</p>
-            <p class="anchor-price">{{ anchor.price is not empty ? anchor.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</p>
+            <p class="anchor-price">{{ anchor.price is not empty ? anchor.price|format_price : 'Price on request' }}</p>
         </div>
         <div class="anchor-vs">VS</div>
     </div>
@@ -38,7 +38,7 @@
                         <h3>{{ voyage.title }}</h3>
                         <p class="pick-dest">🌍 {{ voyage.destination }}</p>
                         <p class="pick-dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }}</p>
-                        <p class="pick-price">{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'On request' }}</p>
+                        <p class="pick-price">{{ voyage.price is not empty ? voyage.price|format_price : 'On request' }}</p>
                         <span class="pick-cta">Compare →</span>
                     </div>
                 </a>

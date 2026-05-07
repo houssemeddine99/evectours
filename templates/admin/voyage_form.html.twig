@@ -11,7 +11,6 @@
         </div>
         <div class="header-actions">
             <a href="{{ path('admin_voyages') }}" class="btn btn-secondary">← Back to Voyages</a>
-            <a href="{{ path('admin_tags') }}" class="btn btn-secondary">🏷 Manage Tags</a>
         </div>
     </div>
 
@@ -53,23 +52,6 @@
                 <textarea id="description" name="description" rows="6" class="form-control">{{ voyage.description|default('') }}</textarea>
                 <div id="aiDescStatus" class="ai-status"></div>
             </div>
-
-            {% if all_tags is defined and all_tags|length > 0 %}
-            <div class="form-group">
-                <label>Tags / Categories</label>
-                <div class="tags-grid">
-                    {% for tag in all_tags %}
-                        <label class="tag-checkbox">
-                            <input type="checkbox" name="tags[]" value="{{ tag.id }}"
-                                {% if voyage and voyage.tags is defined %}
-                                    {% for vt in voyage.tags %}{% set vtId = vt.id is defined ? vt.id : vt %}{% if vtId == tag.id %}checked{% endif %}{% endfor %}
-                                {% endif %}>
-                            <span class="tag-label" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
             <div class="form-group">
                 <label for="image_url">Image URLs (one per line)</label>
@@ -165,11 +147,6 @@ textarea.form-control{resize:vertical;min-height:100px}
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
 .form-hint{display:block;margin-top:6px;color:var(--text-muted);font-size:.85rem}
 .form-actions{display:flex;gap:12px;margin-top:30px;padding-top:20px;border-top:1px solid var(--border-dark)}
-.tags-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
-.tag-checkbox{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
-.tag-checkbox input[type=checkbox]{display:none}
-.tag-label{padding:6px 14px;border-radius:20px;border:2px solid;font-weight:600;font-size:.88rem;transition:all .15s;opacity:.55}
-.tag-checkbox input[type=checkbox]:checked+.tag-label{opacity:1;box-shadow:0 0 0 2px currentColor}
 .ai-status{margin-top:8px;font-size:.9rem;min-height:20px}
 .ai-success{color:#22c55e}
 .ai-error{color:#ef4444}

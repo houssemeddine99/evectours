@@ -9,7 +9,6 @@ use App\Service\VoyageImageService;
 use App\Service\ValidationService;
 use App\Service\SearchHistoryService;
 use App\Service\VoyageVisitService;
-use App\Service\TagService;
 use App\Service\AiVoyageService;
 use App\Service\FavoriteService;
 use App\Service\ReviewService;
@@ -38,7 +37,6 @@ class VoyageController extends AbstractController
         private readonly SearchHistoryService $searchHistoryService,
         private readonly VoyageVisitService $voyageVisitService,
         private readonly AdminController $adminController,
-        private readonly TagService $tagService,
         private readonly AiVoyageService $aiVoyageService,
         private readonly FavoriteService $favoriteService,
         private readonly ReviewService $reviewService,
@@ -68,8 +66,6 @@ class VoyageController extends AbstractController
         $maxPrice = $request->query->get('max_price');
         $sortBy = $request->query->get('sort_by', 'startDate');
         $sortOrder = $request->query->get('sort_order', 'ASC');
-        $tagFilter = $request->query->get('tag', '');
-
         $filters = [
             'sort_by' => $sortBy,
             'sort_order' => $sortOrder,
@@ -86,11 +82,7 @@ class VoyageController extends AbstractController
         if (!empty($maxPrice)) {
             $filters['max_price'] = $maxPrice;
         }
-        if (!empty($tagFilter)) {
-            $filters['tag'] = $tagFilter;
-        }
-
-        $hasFilters = !empty($search) || !empty($minPrice) || !empty($maxPrice) || !empty($tagFilter);
+        $hasFilters = !empty($search) || !empty($minPrice) || !empty($maxPrice);
 
         if ($hasFilters) {
             $this->logger?->info('Public searching voyages', $filters);
@@ -122,8 +114,6 @@ class VoyageController extends AbstractController
             'total_pages' => $totalPages,
             'search' => $search,
             'filters' => $filters,
-            'all_tags' => $this->tagService->getAllTags(),
-            'active_tag' => $tagFilter,
             'user_id' => $userId,
             'favorite_ids' => $favoriteIds,
             'compare_list' => $compareList,
@@ -344,17 +334,12 @@ class VoyageController extends AbstractController
                 return $this->render('admin/voyage_form.html.twig', [
                     'voyage' => $data,
                     'voyages' => $this->voyageRepository->findAll(),
-                    'all_tags' => $this->tagService->getAllTags(),
                     'errors' => $this->validationService->getErrors(),
                 ]);
             }
 
             $this->logger?->info('Creating new voyage', ['title' => $data['title'] ?? '']);
-            $voyage = $this->voyageService->createVoyage($data);
-            $tagIds = $data['tags'] ?? [];
-            if (!empty($tagIds)) {
-                $this->tagService->syncVoyageTags($voyage, $tagIds);
-            }
+            $this->voyageService->createVoyage($data);
             $this->addFlash('success', 'Voyage created successfully!');
             return $this->redirectToRoute('admin_voyages');
         }
@@ -362,7 +347,6 @@ class VoyageController extends AbstractController
         return $this->render('admin/voyage_form.html.twig', [
             'voyage' => null,
             'voyages' => $this->voyageRepository->findAll(),
-            'all_tags' => $this->tagService->getAllTags(),
         ]);
     }
 
@@ -407,12 +391,6 @@ class VoyageController extends AbstractController
             $data = $request->request->all();
             $this->voyageService->updateVoyage($id, $data);
 
-            $tagIds = $data['tags'] ?? [];
-            $voyageEntity = $this->voyageRepository->find($id);
-            if ($voyageEntity) {
-                $this->tagService->syncVoyageTags($voyageEntity, $tagIds);
-            }
-
             $this->addFlash('success', 'Voyage updated successfully!');
             return $this->redirectToRoute('admin_voyages');
         }
@@ -420,7 +398,6 @@ class VoyageController extends AbstractController
         return $this->render('admin/voyage_form.html.twig', [
             'voyage' => $voyage,
             'voyages' => $this->voyageRepository->findAll(),
-            'all_tags' => $this->tagService->getAllTags(),
         ]);
     }
 
@@ -434,40 +411,6 @@ class VoyageController extends AbstractController
         $this->voyageService->deleteVoyage($id);
         $this->addFlash('success', 'Voyage deleted successfully!');
         return $this->redirectToRoute('admin_voyages');
-    }
-
-    #[Route('/admin/tags', name: 'admin_tags', methods: ['GET', 'POST'])]
-    public function adminTags(Request $request): Response
-    {
-        if ($this->adminController->ensureIsAdmin($request) !== null) {
-            return $this->adminController->ensureIsAdmin($request);
-        }
-
-        if ($request->isMethod('POST')) {
-            $name = trim((string) $request->request->get('name', ''));
-            $color = trim((string) $request->request->get('color', '')) ?: null;
-            if (!empty($name)) {
-                $this->tagService->createTag($name, $color);
-                $this->addFlash('success', "Tag \"{$name}\" created.");
-            }
-            return $this->redirectToRoute('admin_tags');
-        }
-
-        return $this->render('admin/tags.html.twig', [
-            'tags' => $this->tagService->getAllTags(),
-        ]);
-    }
-
-    #[Route('/admin/tags/{id}/delete', name: 'admin_tag_delete', methods: ['POST'])]
-    public function adminDeleteTag(Request $request, int $id): Response
-    {
-        if ($this->adminController->ensureIsAdmin($request) !== null) {
-            return $this->adminController->ensureIsAdmin($request);
-        }
-
-        $this->tagService->deleteTag($id);
-        $this->addFlash('success', 'Tag deleted.');
-        return $this->redirectToRoute('admin_tags');
     }
 
     // ==================== HELPER METHODS ====================

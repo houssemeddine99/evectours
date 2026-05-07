@@ -68,20 +68,6 @@
                         {% endfor %}
                     </tr>
                     <tr>
-                        <td class="row-label">Tags</td>
-                        {% for voyage in voyages %}
-                            <td>
-                                {% if voyage.tags is defined and voyage.tags|length > 0 %}
-                                    {% for tag in voyage.tags %}
-                                        <span class="tag-pill" style="border-color:{{ tag.color ?? '#ff9900' }};color:{{ tag.color ?? '#ff9900' }}">{{ tag.name }}</span>
-                                    {% endfor %}
-                                {% else %}
-                                    <span style="color:var(--text-muted)">—</span>
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
                         <td class="row-label">Description</td>
                         {% for voyage in voyages %}
                             <td class="desc-cell">{{ voyage.description|default('No description.')|slice(0, 140) }}{% if voyage.description|length > 140 %}…{% endif %}</td>
@@ -124,6 +110,5 @@
 .compare-title{font-weight:700;font-size:1rem;margin:0}
 .highlight{font-weight:700;color:var(--amazon-orange);font-size:1.05rem}
 .desc-cell{font-size:.88rem;color:var(--text-muted);line-height:1.5;max-width:240px}
-.tag-pill{display:inline-block;padding:2px 10px;border-radius:12px;border:1px solid;font-size:.8rem;font-weight:600;margin:2px}
 </style>
 {% endblock %}

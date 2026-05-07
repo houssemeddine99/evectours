@@ -38,14 +38,6 @@ services:
             $model:   '%env(string:AI_MODEL)%'
             $enabled: '%env(bool:AI_SUGGESTION_ENABLED)%'
 
-    App\Service\StripeRefundService:
-        arguments:
-            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
-
-    App\Service\StripePaymentService:
-        arguments:
-            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
-
     App\Service\FlouciPaymentService:
         arguments:
             $appPublic: '%env(string:FLOUCI_APP_PUBLIC)%'

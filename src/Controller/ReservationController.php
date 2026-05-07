@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Service\AiCancellationService;
-use App\Service\CarbonFootprintService;
 use App\Service\LoyaltyPointsService;
 use App\Service\OfferService;
 use App\Service\FlouciPaymentService;
@@ -35,7 +34,6 @@ class ReservationController extends AbstractController
         private readonly ValidationService $validationService,
         private readonly WaitlistService $waitlistService,
         private readonly WeatherService $weatherService,
-        private readonly CarbonFootprintService $carbonService,
         private readonly AiCancellationService $aiCancellationService,
         private readonly LoyaltyPointsService $loyaltyPointsService,
         private readonly UserRepository $userRepository,
@@ -81,9 +79,6 @@ class ReservationController extends AbstractController
         $activeCount     = $this->waitlistService->getActiveReservationCount($id);
         $loyaltyBalance  = $this->loyaltyPointsService->getBalance($user['id']);
         $canRedeem       = $this->loyaltyPointsService->canRedeem($user['id']);
-
-        // Carbon footprint for this voyage destination
-        $carbon = $this->carbonService->calculate($voyage['destination'] ?? '', 1);
 
         if ($request->isMethod('POST')) {
             $numberOfPeople  = (int) $request->request->get('number_of_people', 1);
@@ -172,7 +167,6 @@ class ReservationController extends AbstractController
             'active_count'    => $activeCount,
             'loyalty_balance' => $loyaltyBalance,
             'can_redeem'      => $canRedeem,
-            'carbon'          => $carbon,
         ]);
     }
 
@@ -375,12 +369,10 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
         }
 
-        $carbon  = $this->carbonService->calculate($reservation['destination'] ?? '', (int) ($reservation['number_of_people'] ?? 1));
         $baseUrl = $this->resolveBaseUrl($request);
 
         return $this->render('travel/ticket_print.html.twig', [
             'reservation' => $reservation,
-            'carbon'      => $carbon,
             'base_url'    => $baseUrl,
         ]);
     }
@@ -421,11 +413,6 @@ class ReservationController extends AbstractController
             return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
         }
 
-        $carbon = $this->carbonService->calculate(
-            $reservation['destination'] ?? '',
-            (int) ($reservation['number_of_people'] ?? 1)
-        );
-
         $baseUrl = rtrim((string) ($_ENV['APP_BASE_URL'] ?? ''), '/');
         if ($baseUrl === '') {
             $baseUrl = $request->getSchemeAndHttpHost();
@@ -435,7 +422,6 @@ class ReservationController extends AbstractController
 
         $html = $this->renderView('travel/ticket_pdf.html.twig', [
             'reservation' => $reservation,
-            'carbon'      => $carbon,
             'qr_url'      => $qrUrl,
         ]);
 
@@ -578,19 +564,12 @@ class ReservationController extends AbstractController
             }
         }
 
-        // Carbon footprint
-        $carbon = $this->carbonService->calculate(
-            $reservation['destination'] ?? '',
-            (int) ($reservation['number_of_people'] ?? 1)
-        );
-
         return $this->render('travel/reservation_detail.html.twig', [
             'active_nav'    => 'account',
             'reservation'   => $reservation,
             'error'         => $error,
             'success'       => $success,
             'is_admin_view' => $isAdmin,
-            'carbon'        => $carbon,
             'base_url'      => $this->resolveBaseUrl($request),
         ]);
     }
