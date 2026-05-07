@@ -65,7 +65,7 @@
                         <div class="card-footer">
                             <div class="price-block">
                                 <small>From</small>
-                                <p><del>${{ base_price|number_format(2, '.', ',') }}</del> <strong>${{ final_price|number_format(2, '.', ',') }}</strong></p>
+                                <p><del>{{ base_price|format_price }}</del> <strong>{{ final_price|format_price }}</strong></p>
                             </div>
                             <div style="display:flex;gap:8px;align-items:center">
                                 <button class="tg-share-btn" onclick="tgShare('{{ offer.title|default('Special offer')|e('js') }}', '{{ url('travel_voyage_detail', {slug: offer.voyage_slug}) }}')" title="Share">

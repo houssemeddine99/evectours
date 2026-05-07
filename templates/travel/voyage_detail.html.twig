@@ -70,7 +70,7 @@
                             <span class="info-icon">💰</span>
                             <div class="info-content">
                                 <p class="info-label">Starting Price</p>
-                                <p class="info-value">{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Contact us' }}</p>
+                                <p class="info-value">{{ voyage.price is not empty ? voyage.price|format_price : 'Contact us' }}</p>
                                 {% if voyage.scarcity_label is defined and voyage.scarcity_label %}
                                     <span class="scarcity-badge scarcity-{{ voyage.scarcity_level }}">{{ voyage.scarcity_label }}</span>
                                 {% endif %}
@@ -154,7 +154,7 @@
                                 </div>
                                 <p class="activity-description">{{ activity.description|default('Description not available.') }}</p>
                                 <div class="activity-footer">
-                                    <span class="activity-price">{{ activity.price_per_person is not empty ? '$' ~ activity.price_per_person|number_format(2, '.', ',') : 'Included' }}</span>
+                                    <span class="activity-price">{{ activity.price_per_person is not empty ? activity.price_per_person|format_price : 'Included' }}</span>
                                     <span class="activity-label">per person</span>
                                 </div>
                             </div>

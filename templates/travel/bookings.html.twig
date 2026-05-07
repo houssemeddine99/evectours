@@ -52,7 +52,7 @@
                                 {% if reservation.voyage_end is defined and reservation.voyage_end %}→ {{ reservation.voyage_end|date('d M Y') }}{% endif %}
                             </div>
                             <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
-                            <div><strong>Total</strong><br>{{ reservation.total_price|number_format(2, '.', ',') }} TND</div>
+                            <div><strong>Total</strong><br>{{ reservation.total_price|format_price }}</div>
                             <div><strong>Payment</strong><br>
                                 <span style="color:{% if reservation.payment_status == 'PAID' %}#22c55e{% elseif reservation.payment_status == 'REFUNDED' %}#f59e0b{% else %}#94a3b8{% endif %}">
                                     {{ reservation.payment_status }}

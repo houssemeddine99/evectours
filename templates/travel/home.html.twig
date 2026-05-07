@@ -37,7 +37,7 @@
                         <h3>{{ voyage.title|default('Untitled trip') }}</h3>
                         <p>{{ voyage.description|default('')|slice(0, 100) ~ '...' }}</p>
                         <div class="card-footer">
-                            <strong>{{ voyage.price is not empty ? '$' ~ voyage.price|number_format(2, '.', ',') : 'Price on request' }}</strong>
+                            <strong>{{ voyage.price is not empty ? voyage.price|format_price : 'Price on request' }}</strong>
                             <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}">View details</a>
                         </div>
                     </div>

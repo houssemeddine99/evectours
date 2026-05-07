@@ -54,7 +54,23 @@
                 <a class="{{ active_nav|default('') == 'home' ? 'active' : '' }}" href="{{ path('travel_home') }}">Home</a>
                 <a class="{{ active_nav|default('') == 'voyages' ? 'active' : '' }}" href="{{ path('travel_voyages') }}">Voyages</a>
                 <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
-<a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+                <a class="{{ active_nav|default('') == 'search' ? 'active' : '' }}" href="{{ path('travel_search') }}">Flights & Hotels</a>
+                <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
+                <div class="currency-picker" id="currencyPicker">
+                    <button class="currency-toggle" id="currencyToggle" title="Change currency">
+                        <span class="currency-code">{{ user_currency }}</span>
+                    </button>
+                    <div class="lang-menu" id="currencyMenu">
+                        <button onclick="setCurrency('TND')">🇹🇳 TND — Dinar</button>
+                        <button onclick="setCurrency('USD')">🇺🇸 USD — Dollar</button>
+                        <button onclick="setCurrency('EUR')">🇪🇺 EUR — Euro</button>
+                        <button onclick="setCurrency('GBP')">🇬🇧 GBP — Pound</button>
+                        <button onclick="setCurrency('SAR')">🇸🇦 SAR — Riyal</button>
+                        <button onclick="setCurrency('AED')">🇦🇪 AED — Dirham</button>
+                        <button onclick="setCurrency('MAD')">🇲🇦 MAD — Dirham</button>
+                        <button onclick="setCurrency('EGP')">🇪🇬 EGP — Pound</button>
+                    </div>
+                </div>
                 <div class="lang-picker" id="langPicker">
                     <button class="lang-toggle" id="langToggle" title="Select language" aria-label="Select language">🌐</button>
                     <div class="lang-menu" id="langMenu">
@@ -183,8 +199,9 @@
                 window.addEventListener('resize', function () { close(); }, { passive: true });
             }
 
-            makePortal(document.querySelector('.account-btn'),  document.querySelector('.account-menu'));
-            makePortal(document.getElementById('langToggle'),   document.getElementById('langMenu'));
+            makePortal(document.querySelector('.account-btn'),    document.querySelector('.account-menu'));
+            makePortal(document.getElementById('langToggle'),     document.getElementById('langMenu'));
+            makePortal(document.getElementById('currencyToggle'), document.getElementById('currencyMenu'));
         });
     </script>
 
@@ -208,6 +225,14 @@
                 }
             });
             observer.observe(document.body, { childList: true, subtree: false });
+        }
+
+        function setCurrency(currency) {
+            document.getElementById('currencyMenu').classList.remove('open');
+            var fd = new FormData();
+            fd.append('currency', currency);
+            fetch('{{ path('set_currency') }}', { method: 'POST', body: fd })
+                .then(function() { window.location.reload(); });
         }
 
         function setLang(lang) {
@@ -289,7 +314,7 @@
       #gb-canvas {
         position: fixed; inset: 0;
         pointer-events: none;
-        z-index: 9998;
+        z-index: 1998;
         background: transparent;
       }
 
@@ -297,7 +322,7 @@
       #globe-bot {
         position: fixed;
         bottom: 24px; right: 24px;
-        z-index: 9999;
+        z-index: 1999;
         cursor: grab;
         user-select: none;
         animation: gb-float 3.2s ease-in-out infinite;
@@ -505,7 +530,7 @@
         border-radius: 24px;
         display: flex;
         flex-direction: column;
-        z-index: 10000;
+        z-index: 2000;
         overflow: hidden;
         opacity: 0;
         pointer-events: none;
@@ -891,6 +916,25 @@
         .skiptranslate > iframe,
         .goog-te-menu-frame { display: none !important; visibility: hidden !important; }
         body { top: 0 !important; margin-top: 0 !important; }
+
+        /* ── Currency picker ── */
+        .currency-picker { position: relative; display: flex; align-items: center; }
+        .currency-toggle {
+            background: transparent;
+            border: 1px solid rgba(255,153,0,0.35);
+            border-radius: 6px;
+            padding: 4px 9px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            cursor: pointer;
+            color: var(--amazon-orange);
+            font-family: inherit;
+            transition: border-color .2s, background .2s;
+            white-space: nowrap;
+        }
+        .currency-toggle:hover { border-color: var(--amazon-orange); background: rgba(255,153,0,.1); }
+        .currency-code { display: inline-block; }
 
         /* ── Custom language picker ── */
         .lang-picker { position: relative; display: flex; align-items: center; }
