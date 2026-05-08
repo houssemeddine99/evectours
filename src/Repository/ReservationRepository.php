@@ -129,7 +129,10 @@ class ReservationRepository extends ServiceEntityRepository
         return (int) ($result ?? 0);
     }
 
-    /** @param int[] $voyageIds @return array<int,int> voyageId => bookedCount */
+    /**
+     * @param int[] $voyageIds
+     * @return array<int, int>
+     */
     public function sumBookedPeopleByVoyageIds(array $voyageIds): array
     {
         if (empty($voyageIds)) {

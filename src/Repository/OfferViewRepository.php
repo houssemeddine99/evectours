@@ -136,7 +136,7 @@ class OfferViewRepository extends ServiceEntityRepository
 
     /**
      * Find most viewed offers
-     * @return array
+     * @return array<int, array{offerId: mixed, viewCount: mixed}>
      */
     public function findMostViewedOffers(int $limit = 10): array
     {

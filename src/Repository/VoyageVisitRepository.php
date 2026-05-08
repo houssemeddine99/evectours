@@ -118,6 +118,7 @@ class VoyageVisitRepository extends ServiceEntityRepository
     /**
      * Find most visited voyages
      * @return array
+     * @return array<mixed>
      */
     public function findMostVisitedVoyages(int $limit = 10): array
     {
@@ -183,6 +184,7 @@ class VoyageVisitRepository extends ServiceEntityRepository
  */
 /**
  * Find most visited voyages with their titles
+ * @return array<mixed>
  */
 public function findMostVisitedVoyagesWithNames(int $limit = 10): array
 {
@@ -199,6 +201,7 @@ public function findMostVisitedVoyagesWithNames(int $limit = 10): array
 
 /**
  * Get paginated visits with voyage titles
+ * @return array<mixed>
  */
 public function findPaginatedWithNames(int $offset, int $limit): array
 {
@@ -212,6 +215,7 @@ public function findPaginatedWithNames(int $offset, int $limit): array
         ->getResult();
 }
 
+/** @return array<mixed> */
 public function getSourceBreakdown(): array
 {
     return $this->createQueryBuilder('vv')
@@ -222,6 +226,7 @@ public function getSourceBreakdown(): array
         ->getResult();
 }
 
+/** @return array<mixed> */
 public function getVisitsByDay(int $days = 30): array
 {
     $conn = $this->getEntityManager()->getConnection();

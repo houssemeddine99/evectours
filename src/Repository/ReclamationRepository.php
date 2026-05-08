@@ -74,6 +74,7 @@ class ReclamationRepository extends ServiceEntityRepository
     }
 // src/Repository/ReclamationRepository.php
 
+/** @return array<mixed> */
 public function findPaginated(int $page, int $limit, ?int $userId = null): array
 {
     $qb = $this->createQueryBuilder('r')

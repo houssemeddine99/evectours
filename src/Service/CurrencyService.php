@@ -131,6 +131,7 @@ class CurrencyService
         }
     }
 
+    /** @return array<mixed> */
     private function getExchangeRates(): array
     {
         return $this->cache->get('exchange_rates', function (ItemInterface $item): array {

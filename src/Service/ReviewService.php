@@ -33,7 +33,7 @@ class ReviewService
         return true;
     }
 
-    /** @return array<int, array{id:int,user_id:int,rating:int,comment:?string,created_at:string}> */
+    /** @return array<int, array<string, mixed>> */
     public function getReviewsForVoyage(int $voyageId): array
     {
         return array_map(
@@ -63,6 +63,7 @@ class ReviewService
         return $this->reviewRepository->countByVoyageId($voyageId);
     }
 
+    /** @return array<mixed> */
     public function getUserReview(int $userId, int $voyageId): ?array
     {
         $r = $this->reviewRepository->findByUserAndVoyage($userId, $voyageId);

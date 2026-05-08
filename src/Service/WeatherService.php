@@ -18,7 +18,7 @@ class WeatherService
 
     /**
      * Returns current weather for a city, cached for 30 minutes.
-     * @return array{temp: float, description: string, icon: string, city: string}|null
+     * @return array<string, mixed>|null
      */
     public function getCurrentWeather(string $city): ?array
     {
@@ -32,6 +32,7 @@ class WeatherService
         });
     }
 
+    /** @return array<string, mixed>|null */
     private function doFetchWeather(string $city): ?array
     {
         $url = 'https://api.openweathermap.org/data/2.5/weather?q='

@@ -17,6 +17,11 @@ class NvidiaAIClient
 // src/Service/Analytics/NvidiaAIClient.php
 
 // src/Service/Analytics/NvidiaAIClient.php
+/**
+ * @param array<mixed> $messages
+ * @param array<mixed> $tools
+ * @return array<mixed>
+ */
 public function chat(array $messages, array $tools = []): array 
 {
     $body = [

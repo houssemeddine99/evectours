@@ -64,9 +64,9 @@ class OfferController extends AbstractController
             $this->validationService->validateRequired($data, ['voyage_id', 'discount_percentage', 'start_date', 'end_date']);
             $this->validationService->validateNumber($data['voyage_id'] ?? '', 'voyage_id', 1);
             $this->validationService->validateNumber($data['discount_percentage'] ?? '', 'discount_percentage', 1, 100);
-            $this->validationService->validateDate($data['start_date'] ?? '', 'start_date');
-            $this->validationService->validateDate($data['end_date'] ?? '', 'end_date');
-            $this->validationService->validateDateRange($data['start_date'] ?? '', $data['end_date'] ?? '');
+            $this->validationService->validateDate(is_string($data['start_date'] ?? '') ? ($data['start_date'] ?? '') : '', 'start_date');
+            $this->validationService->validateDate(is_string($data['end_date'] ?? '') ? ($data['end_date'] ?? '') : '', 'end_date');
+            $this->validationService->validateDateRange(is_string($data['start_date'] ?? '') ? ($data['start_date'] ?? '') : '', is_string($data['end_date'] ?? '') ? ($data['end_date'] ?? '') : '');
 
             if (!$this->validationService->isValid()) {
                 $errors = $this->validationService->getErrors();

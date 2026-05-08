@@ -122,7 +122,7 @@ $totalItems = (int) $countQueryBuilder
 
     /**
      * Get most popular search queries
-     * @return array
+     * @return array<int, array{searchQuery: mixed, searchCount: mixed}>
      */
     public function findMostPopularQueries(int $limit = 10): array
     {
@@ -137,7 +137,7 @@ $totalItems = (int) $countQueryBuilder
 
     /**
      * Get search analytics by type
-     * @return array
+     * @return array<int, array{searchType: mixed, totalSearches: mixed, totalResults: mixed}>
      */
     public function getSearchAnalyticsByType(): array
     {

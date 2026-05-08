@@ -15,6 +15,7 @@ class CloudinaryService
     ) {
     }
 
+    /** @return array<mixed> */
     public function uploadImageFile(UploadedFile $file, ?string $publicId = null, ?string $folder = null): array
     {
         $this->ensureConfigured();
@@ -66,6 +67,7 @@ class CloudinaryService
         return $response;
     }
 
+    /** @param array<mixed> $params */
     private function buildSignature(array $params): string
     {
         unset($params['api_key']);
@@ -82,6 +84,7 @@ class CloudinaryService
         return sha1(implode('&', $parts) . $this->apiSecret);
     }
 
+    /** @param array<mixed> $postFields */
     private function sendRequest(array $postFields): string
     {
         $endpoint = sprintf('https://api.cloudinary.com/v1_1/%s/image/upload', $this->cloudName);
@@ -104,7 +107,7 @@ class CloudinaryService
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($responseBody === false || $curlError !== '') {
+        if ($responseBody === false || !is_string($responseBody) || $curlError !== '') {
             $this->logger?->error('Cloudinary upload failed', ['error' => $curlError]);
             throw new \RuntimeException('Cloudinary request failed: ' . $curlError);
         }

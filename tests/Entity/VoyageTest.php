@@ -40,10 +40,9 @@ class VoyageTest extends TestCase
         $voyage->setPrice('199.99');
         $this->assertSame('199.99', $voyage->getPrice());
 
-        // Image URL (currently not implemented, should return null)
+        // Image URL
         $this->assertNull($voyage->getImageUrl());
         $voyage->setImageUrl(['http://example.com/image.jpg']);
-        // Setter does nothing, getter still null – this is the current behaviour.
-        $this->assertNull($voyage->getImageUrl());
+        $this->assertSame(['http://example.com/image.jpg'], $voyage->getImageUrl());
     }
 }

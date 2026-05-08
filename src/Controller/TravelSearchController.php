@@ -28,12 +28,12 @@ class TravelSearchController extends AbstractController
             return $this->json(['success' => false, 'error' => 'Too many requests. Please wait a moment.'], 429);
         }
 
-        $fromId    = trim($request->request->get('fromId', ''));
-        $toId      = trim($request->request->get('toId', ''));
-        $depart    = trim($request->request->get('departDate', ''));
-        $return    = trim($request->request->get('returnDate', '')) ?: null;
+        $fromId    = trim((string) $request->request->get('fromId', ''));
+        $toId      = trim((string) $request->request->get('toId', ''));
+        $depart    = trim((string) $request->request->get('departDate', ''));
+        $return    = trim((string) $request->request->get('returnDate', '')) ?: null;
         $adults    = max(1, (int) $request->request->get('adults', 1));
-        $cabin     = $request->request->get('cabinClass', 'ECONOMY');
+        $cabin     = (string) $request->request->get('cabinClass', 'ECONOMY');
 
         if (!$fromId || !$toId || !$depart) {
             return $this->json(['success' => false, 'error' => 'Please fill in all required fields.'], 400);
@@ -62,10 +62,10 @@ class TravelSearchController extends AbstractController
             return $this->json(['success' => false, 'error' => 'Too many requests. Please wait a moment.'], 429);
         }
 
-        $destId    = trim($request->request->get('dest_id', ''));
-        $searchType= trim($request->request->get('search_type', 'city'));
-        $checkin   = trim($request->request->get('arrival_date', ''));
-        $checkout  = trim($request->request->get('departure_date', ''));
+        $destId    = trim((string) $request->request->get('dest_id', ''));
+        $searchType= trim((string) $request->request->get('search_type', 'city'));
+        $checkin   = trim((string) $request->request->get('arrival_date', ''));
+        $checkout  = trim((string) $request->request->get('departure_date', ''));
         $adults    = max(1, (int) $request->request->get('adults', 2));
         $rooms     = max(1, (int) $request->request->get('rooms', 1));
 

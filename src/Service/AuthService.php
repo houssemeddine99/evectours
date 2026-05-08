@@ -17,6 +17,7 @@ class AuthService
     ) {
     }
 
+    /** @return array<mixed> */
     public function authenticate(string $email, string $plainPassword): ?array
     {
         $email = strtolower(trim($email));
@@ -61,7 +62,7 @@ class AuthService
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
-                'is_admin' => $this->isAdmin($user->getId()),
+                'is_admin' => $this->isAdmin((int) $user->getId()),
             ];
         }
 
@@ -118,6 +119,7 @@ class AuthService
     // Fallback authentication is disabled for security; use persistent users only.
 
 
+    /** @return array<mixed> */
     public function register(string $username, string $email, string $plainPassword): ?array
     {
         $email = strtolower(trim($email));
@@ -153,6 +155,7 @@ class AuthService
         }
     }
 
+    /** @return array<mixed> */
     public function getUserById(int $userId): ?array
     {
         $user = $this->userRepository->find($userId);
@@ -167,9 +170,10 @@ class AuthService
             'tel' => $user->getTel(),
             'image_url' => $user->getImageUrl(),
             'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
-            'is_admin' => $this->isAdmin($user->getId()),
+            'is_admin' => $this->isAdmin((int) $user->getId()),
         ];
     }
+/** @return array<mixed> */
 public function getUserByEmail(string $email): ?array
 {
     // 1. Ask the repository to find the user entity by email
@@ -188,7 +192,7 @@ public function getUserByEmail(string $email): ?array
         'tel' => $user->getTel(),
         'image_url' => $user->getImageUrl(),
         'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
-        'is_admin' => $this->isAdmin($user->getId()),
+        'is_admin' => $this->isAdmin((int) $user->getId()),
     ];
 }
  public function isAdmin(int $userId): bool
@@ -207,6 +211,7 @@ public function getUserByEmail(string $email): ?array
         return $this->isPasswordValid($plainPassword, $user->getPassword());
     }
 
+    /** @return array<mixed> */
     public function updateProfile(int $userId, string $username, string $email, ?string $tel = null, ?string $imageUrl = null, ?string $newPassword = null, ?string $currentPassword = null): ?array
     {
         $username = trim($username);
@@ -261,6 +266,7 @@ public function getUserByEmail(string $email): ?array
         }
     }
 
+    /** @return array<mixed> */
     public function listUsers(): array
     {
         $users = $this->userRepository->findAll();

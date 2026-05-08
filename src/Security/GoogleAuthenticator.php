@@ -53,7 +53,7 @@ class GoogleAuthenticator extends OAuth2Authenticator
                 // 2) S'il n'existe pas, on le crée
                 if (!$user) {
                     $user = new User();
-                    $user->setEmail($email);
+                    $user->setEmail($email ?? '');
                     // On utilise le nom Google comme username
                     $user->setUsername($name);
 
@@ -91,7 +91,7 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
 
     // Enregistrement du log de connexion (comme tu le fais en classique)
     $this->userLoginService->recordLogin(
-        $user->getId(),
+        (int) $user->getId(),
         'google',
         $request->getClientIp(),
         $request->headers->get('User-Agent')

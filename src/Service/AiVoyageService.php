@@ -66,6 +66,7 @@ class AiVoyageService
         });
     }
 
+    /** @param array<mixed> $payload */
     private function callApi(array $payload): ?string
     {
         $body = json_encode($payload, JSON_UNESCAPED_SLASHES);

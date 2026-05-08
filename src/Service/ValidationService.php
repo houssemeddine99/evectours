@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 
 class ValidationService
 {
+    /** @var array<mixed> */
     private array $errors = [];
 
     public function __construct(
@@ -15,6 +16,8 @@ class ValidationService
 
     /**
      * Validate required fields
+     * @param array<mixed> $data
+      * @param array<mixed> $requiredFields
      */
     public function validateRequired(array $data, array $requiredFields): self
     {
@@ -42,7 +45,7 @@ class ValidationService
     /**
      * Validate date format and range
      */
-    public function validateDate(string $date, string $fieldName = 'date', ?string $format = 'Y-m-d'): self
+    public function validateDate(string $date, string $fieldName = 'date', string $format = 'Y-m-d'): self
     {
         $d = \DateTime::createFromFormat($format, $date);
         if (!$d || $d->format($format) !== $date) {
@@ -55,7 +58,7 @@ class ValidationService
     /**
      * Validate date is not in the past
      */
-    public function validateDateNotPast(string $date, string $fieldName = 'date', ?string $format = 'Y-m-d'): self
+    public function validateDateNotPast(string $date, string $fieldName = 'date', string $format = 'Y-m-d'): self
     {
         $d = \DateTime::createFromFormat($format, $date);
         if ($d && $d < new \DateTime('today')) {
@@ -68,7 +71,7 @@ class ValidationService
     /**
      * Validate end date is after start date
      */
-    public function validateDateRange(string $startDate, string $endDate, string $startField = 'start_date', string $endField = 'end_date', ?string $format = 'Y-m-d'): self
+    public function validateDateRange(string $startDate, string $endDate, string $startField = 'start_date', string $endField = 'end_date', string $format = 'Y-m-d'): self
     {
         $start = \DateTime::createFromFormat($format, $startDate);
         $end = \DateTime::createFromFormat($format, $endDate);
@@ -189,6 +192,7 @@ class ValidationService
 
     /**
      * Get all validation errors
+     * @return array<mixed>
      */
     public function getErrors(): array
     {
@@ -197,6 +201,7 @@ class ValidationService
 
     /**
      * Get errors for a specific field
+     * @return array<mixed>
      */
     public function getFieldErrors(string $field): array
     {
@@ -224,6 +229,7 @@ class ValidationService
 
     /**
      * Validate voyage data (business rules)
+     * @param array<mixed> $data
      */
     public function validateVoyage(array $data): self
     {
@@ -264,6 +270,7 @@ class ValidationService
 
     /**
      * Validate user registration data
+     * @param array<mixed> $data
      */
     public function validateUserRegistration(array $data): self
     {
@@ -294,6 +301,7 @@ class ValidationService
 
     /**
      * Validate login data
+     * @param array<mixed> $data
      */
     public function validateLogin(array $data): self
     {

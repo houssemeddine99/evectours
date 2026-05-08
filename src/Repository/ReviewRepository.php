@@ -52,7 +52,7 @@ class ReviewRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
-    /** @return array<int, array{id:int,user_id:int,voyage_id:int,rating:int,comment:?string,created_at:string}> */
+    /** @return array<int, array<string, mixed>> */
     public function findAllWithVoyage(): array
     {
         $reviews = $this->createQueryBuilder('r')

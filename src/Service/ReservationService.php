@@ -70,6 +70,7 @@ class ReservationService
         return ['eligible' => true];
     }
 
+    /** @return array<mixed> */
     public function createReservation(int $userId, int $voyageId, ?int $offerId, int $numberOfPeople, float $totalPrice): ?array
     {
         if ($numberOfPeople <= 0 || $totalPrice < 0) {
@@ -114,13 +115,14 @@ class ReservationService
             $entityManager->persist($reservation);
             $entityManager->flush();
 
-            return $this->getReservationById($reservation->getId(), $userId);
+            return $this->getReservationById((int) $reservation->getId(), $userId);
         } catch (\Throwable $e) {
             $this->logger->error('Failed to create reservation', ['error' => $e->getMessage(), 'user_id' => $userId]);
             return null;
         }
     }
 
+    /** @return array<mixed> */
     public function getReservationsForUser(int $userId): array
     {
         try {
@@ -129,10 +131,13 @@ class ReservationService
                 return [];
             }
 
-            $voyageIds = array_unique(array_map(fn ($r) => $r->getVoyageId(), $reservations));
+            $voyageIds = array_values(array_unique(array_map(fn ($r) => $r->getVoyageId(), $reservations)));
             $voyageMap = [];
             foreach ($this->voyageRepository->findByIds($voyageIds) as $v) {
-                $voyageMap[$v->getId()] = $v;
+                $vid = $v->getId();
+                if ($vid !== null) {
+                    $voyageMap[$vid] = $v;
+                }
             }
 
             return array_map(function ($reservation) use ($voyageMap) {
@@ -153,6 +158,7 @@ class ReservationService
             return [];
         }
     }
+    /** @return array<mixed> */
     public function getReservationById(int $reservationId, int $userId): ?array
     {
         try {
@@ -168,6 +174,7 @@ class ReservationService
         }
     }
 
+    /** @return array<mixed> */
     public function getReservationByUserAndVoyage(int $userId, int $voyageId): ?array
     {
         try {
@@ -264,6 +271,7 @@ class ReservationService
         }
     }
 
+    /** @return array<mixed> */
     public function listAllReservations(): array
     {
         try {
@@ -278,11 +286,17 @@ class ReservationService
 
             $userMap = [];
             foreach ($this->userRepository->findByIds($userIds) as $u) {
-                $userMap[$u->getId()] = $u;
+                $uid = $u->getId();
+                if ($uid !== null) {
+                    $userMap[$uid] = $u;
+                }
             }
             $voyageMap = [];
             foreach ($this->voyageRepository->findByIds($voyageIds) as $v) {
-                $voyageMap[$v->getId()] = $v;
+                $vid = $v->getId();
+                if ($vid !== null) {
+                    $voyageMap[$vid] = $v;
+                }
             }
 
             $result = [];
@@ -347,6 +361,7 @@ class ReservationService
         }
     }
 
+    /** @return array<mixed> */
     public function getReservationByIdAdmin(int $reservationId): ?array
     {
         try {
@@ -396,6 +411,7 @@ class ReservationService
 
     /**
      * Convert Reservation entity to array with basic fields
+     * @return array<mixed>
      */
     private function reservationToArray(Reservation $reservation): array
     {
@@ -416,6 +432,7 @@ class ReservationService
 
     /**
      * Convert Reservation entity to array with voyage details
+     * @return array<mixed>
      */
     private function reservationToArrayWithVoyage(Reservation $reservation): array
     {
@@ -440,6 +457,7 @@ class ReservationService
 
     /**
      * Convert Reservation entity to array with user and voyage details
+     * @return array<mixed>
      */
     private function reservationToArrayWithUserAndVoyage(Reservation $reservation): array
     {

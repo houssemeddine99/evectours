@@ -17,6 +17,7 @@ class FlouciPaymentService
     /**
      * Returns ['payment_id' => '...', 'link' => 'https://...'] or null on error.
      * Amount is in TND; Flouci receives it as millimes (1 TND = 1000 millimes).
+     * @return array<mixed>
      */
     public function createPayment(
         int    $reservationId,
@@ -32,13 +33,14 @@ class FlouciPaymentService
         $millimes = (int) round($amountTnd * 1000);
         $millimes = max(100, $millimes); // Flouci minimum
 
-        $body = json_encode([
+        $encodedBody = json_encode([
             'amount'                => $millimes,
             'success_link'          => $successUrl,
             'fail_link'             => $failUrl,
             'developer_tracking_id' => 'reservation_' . $reservationId,
             'accept_card'           => true,
         ]);
+        $body = $encodedBody !== false ? $encodedBody : null;
 
         $raw = $this->request('POST', self::BASE . '/generate_payment', $body);
         if ($raw === null) {
@@ -89,12 +91,12 @@ class FlouciPaymentService
             if ($ch === false) {
                 return null;
             }
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_CUSTOMREQUEST  => $method,
-                CURLOPT_HTTPHEADER     => $headers,
-                CURLOPT_TIMEOUT        => 15,
-            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            if ($method !== '') {
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+            }
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             if ($jsonBody !== null) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
             }

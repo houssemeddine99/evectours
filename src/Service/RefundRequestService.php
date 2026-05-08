@@ -18,6 +18,7 @@ class RefundRequestService
 
     /**
      * Create a new refund request
+     * @param array<mixed> $data
      */
     public function createRefundRequest(array $data): RefundRequest
     {
@@ -54,6 +55,7 @@ class RefundRequestService
 
     /**
      * Get pending refund requests
+     * @return array<mixed>
      */
     public function getPendingRequests(): array
     {
@@ -62,6 +64,7 @@ class RefundRequestService
 
     /**
      * Get refund requests by requester
+     * @return array<mixed>
      */
     public function getRequestsByRequester(int $requesterId): array
     {
@@ -86,6 +89,7 @@ class RefundRequestService
 
     /**
      * Get all refund requests for a given reclamation
+     * @return array<mixed>
      */
     public function getRequestsByReclamation(int $reclamationId): array
     {

@@ -73,6 +73,7 @@ class ReclamationService
 
     /**
      * Create a new reclamation
+     * @param array<mixed> $data
      */
     public function createReclamation(array $data): Reclamation
     {
@@ -148,6 +149,7 @@ class ReclamationService
         $this->entityManager->flush();
         return $reclamation;
     }
+/** @return array<mixed> */
 public function getPaginatedReclamations(int $page, int $limit, ?string $email = null): array
 {
     return $this->safeExecute(function() use ($page, $limit, $email) {
@@ -167,6 +169,7 @@ public function getPaginatedReclamations(int $page, int $limit, ?string $email =
 }
     /**
      * Get all open reclamations
+     * @return array<mixed>
      */
     public function getOpenReclamations(): array
     {
@@ -175,6 +178,7 @@ public function getPaginatedReclamations(int $page, int $limit, ?string $email =
 
     /**
      * Get urgent reclamations
+     * @return array<mixed>
      */
     public function getUrgentReclamations(): array
     {
@@ -183,6 +187,7 @@ public function getPaginatedReclamations(int $page, int $limit, ?string $email =
 
     /**
      * Get reclamations by user
+     * @return array<mixed>
      */
     public function getReclamationsByUser(int $userId): array
     {

@@ -16,6 +16,7 @@ class WaitlistEntryRepository extends ServiceEntityRepository
         parent::__construct($registry, WaitlistEntry::class);
     }
 
+    /** @return array<mixed> */
     public function findByVoyageId(int $voyageId): array
     {
         return $this->createQueryBuilder('w')

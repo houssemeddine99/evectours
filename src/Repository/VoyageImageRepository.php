@@ -34,6 +34,7 @@ class VoyageImageRepository extends ServiceEntityRepository
 
     /**
      * Get default images when no voyage images are found
+ * @return array<mixed>
      */
 private function getDefaultImages(): array
 {

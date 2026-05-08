@@ -52,7 +52,7 @@ class ImageController extends AbstractController
             $this->validationService->clearErrors();
             $this->validationService->validateRequired($data, ['voyage_id', 'image_url']);
             $this->validationService->validateNumber($data['voyage_id'] ?? '', 'voyage_id', 1);
-            $this->validationService->validateString($data['image_url'] ?? '', 'image_url', 5, 500);
+            $this->validationService->validateString(is_string($data['image_url'] ?? '') ? ($data['image_url'] ?? '') : '', 'image_url', 5, 500);
 
             if (!$this->validationService->isValid()) {
                 $errors = $this->validationService->getErrors();
@@ -128,9 +128,10 @@ unset($data['id']);
             }
 
             try {
+                $pubId = $data['cloudinary_public_id'] ?? null;
                 $uploadResult = $this->cloudinaryService->uploadImageFile(
                     $file,
-                    $data['cloudinary_public_id'] ?? null,
+                    is_string($pubId) ? $pubId : null,
                     'voyage_images'
                 );
             } catch (\Throwable $e) {

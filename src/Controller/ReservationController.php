@@ -532,7 +532,7 @@ class ReservationController extends AbstractController
                                 )
                             ));
                         }
-                        $this->waitlistService->markNotified($nextEntry->getId());
+                        $this->waitlistService->markNotified((int) $nextEntry->getId());
                     }
                     $this->addFlash('success', 'Reservation successfully cancelled.');
                     return $this->redirectToRoute('account_bookings');

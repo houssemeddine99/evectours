@@ -18,6 +18,7 @@ class BookingComService
         private readonly LoggerInterface $logger,
     ) {}
 
+    /** @return array<mixed> */
     public function searchFlightDestinations(string $query): array
     {
         return $this->cache->get('flight_dest_' . md5($query), function (ItemInterface $item) use ($query) {
@@ -27,6 +28,7 @@ class BookingComService
         });
     }
 
+    /** @return array<mixed> */
     public function searchHotelDestinations(string $query): array
     {
         return $this->cache->get('hotel_dest_' . md5($query), function (ItemInterface $item) use ($query) {
@@ -36,6 +38,10 @@ class BookingComService
         });
     }
 
+    /**
+     * @param array<mixed> $params
+     * @return array<mixed>
+     */
     public function searchFlights(array $params): array
     {
         $data = $this->request('/api/v1/flights/searchFlights', array_filter([
@@ -52,6 +58,10 @@ class BookingComService
         return array_map([$this, 'mapFlight'], $offers);
     }
 
+    /**
+     * @param array<mixed> $params
+     * @return array<mixed>
+     */
     public function searchHotels(array $params): array
     {
         $data = $this->request('/api/v1/hotels/searchHotels', array_filter([
@@ -68,6 +78,10 @@ class BookingComService
         return array_map([$this, 'mapHotel'], $hotels);
     }
 
+    /**
+     * @param array<mixed> $offer
+     * @return array<mixed>
+     */
     private function mapFlight(array $offer): array
     {
         $segments = $offer['segments'] ?? [];
@@ -102,6 +116,10 @@ class BookingComService
         ];
     }
 
+    /**
+     * @param array<mixed> $item
+     * @return array<mixed>
+     */
     private function mapHotel(array $item): array
     {
         $prop  = $item['property'] ?? [];
@@ -131,11 +149,19 @@ class BookingComService
         return $h . 'h ' . str_pad((string)$m, 2, '0', STR_PAD_LEFT) . 'm';
     }
 
+    /**
+     * @param array<mixed> $params
+     * @return array<mixed>
+     */
     private function request(string $path, array $params = []): array
     {
         $url = self::BASE_URL . $path . '?' . http_build_query($params);
 
         $ch = curl_init($url);
+        if ($ch === false) {
+            $this->logger->error('BookingComService failed to initialise cURL');
+            return [];
+        }
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 15,
@@ -157,6 +183,11 @@ class BookingComService
 
         if ($code !== 200) {
             $this->logger->warning('BookingComService HTTP ' . $code . ' for ' . $path);
+            return [];
+        }
+
+        if (!is_string($body)) {
+            $this->logger->error('BookingComService unexpected non-string response for ' . $path);
             return [];
         }
 

@@ -17,6 +17,7 @@ class UserLoginService
     }
 // src/Service/UserLoginService.php
 
+/** @return array<mixed> */
 public function getPaginatedLogins(int $page = 1, int $limit = 25): array
 {
     $logins = $this->userLoginRepository->findPaginatedLogins($page, $limit);
@@ -51,6 +52,7 @@ public function getPaginatedLogins(int $page = 1, int $limit = 25): array
 
     /**
      * Get user's login history
+     * @return array<mixed>
      */
     public function getUserLogins(int $userId): array
     {
@@ -67,6 +69,7 @@ public function getPaginatedLogins(int $page = 1, int $limit = 25): array
 
     /**
      * Get login statistics
+     * @return array<mixed>
      */
     public function getLoginStatistics(): array
     {
@@ -75,6 +78,7 @@ public function getPaginatedLogins(int $page = 1, int $limit = 25): array
 
     /**
      * Get all login records (admin view)
+     * @return array<mixed>
      */
     public function getAllLogins(): array
     {

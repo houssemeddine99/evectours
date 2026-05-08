@@ -178,8 +178,8 @@ class VoyageController extends AbstractController
             return $this->json(['error' => 'Unauthorized'], 403);
         }
 
-        $title = $request->request->get('title', '');
-        $destination = $request->request->get('destination', '');
+        $title = (string) $request->request->get('title', '');
+        $destination = (string) $request->request->get('destination', '');
         $existing = $request->request->get('description');
         $duration = $request->request->getInt('duration_days', 5);
 
@@ -187,7 +187,8 @@ class VoyageController extends AbstractController
             return $this->json(['error' => 'Title and destination are required'], 400);
         }
 
-        $description = $this->aiVoyageService->generateDescription($title, $destination, $duration, $existing ?: null);
+        $existingStr = is_string($existing) ? $existing : null;
+        $description = $this->aiVoyageService->generateDescription($title, $destination, $duration, $existingStr ?: null);
 
         if ($description === null) {
             return $this->json(['error' => 'AI service unavailable'], 503);
@@ -415,6 +416,7 @@ class VoyageController extends AbstractController
 
     // ==================== HELPER METHODS ====================
 
+    /** @return array<string, mixed>|null */
     private function fetchCountryInfo(string $destination): ?array
     {
         $parts = array_map('trim', explode(',', $destination));
@@ -458,6 +460,7 @@ class VoyageController extends AbstractController
         });
     }
 
+    /** @return array<string, mixed> */
     private function buildSearchFilters(Request $request): array
     {
         $search = $request->query->get('search', '');
@@ -493,6 +496,7 @@ class VoyageController extends AbstractController
         return $filters;
     }
 
+    /** @param array<string, mixed> $filters */
     private function hasActiveSearchFilters(array $filters): bool
     {
         return !empty($filters['title'])
@@ -503,6 +507,10 @@ class VoyageController extends AbstractController
             || !empty($filters['start_date_to']);
     }
 
+    /**
+     * @param array<int, array<string, mixed>> $entities
+     * @return array<int, array<string, mixed>>
+     */
     private function filterByEntityId(array $entities, int $voyageId): array
     {
         return array_values(array_filter($entities, fn($e) => (int) $e['voyage_id'] === $voyageId));

@@ -229,7 +229,7 @@ class ReclamationController extends AbstractController
         if ($adminResp = $this->adminController->ensureIsAdmin($request)) {
             return $adminResp;
         }
-        $responseText = $request->request->get('response', '');
+        $responseText = (string) $request->request->get('response', '');
         $reclamation  = $this->reclamationService->addResponse($id, $responseText);
 
         if ($reclamation) {
@@ -252,7 +252,7 @@ class ReclamationController extends AbstractController
         if ($adminResp = $this->adminController->ensureIsAdmin($request)) {
             return $adminResp;
         }
-        $status      = $request->request->get('status', 'OPEN');
+        $status      = (string) $request->request->get('status', 'OPEN');
         $reclamation = $this->reclamationService->updateStatus($id, $status);
 
         if ($reclamation && in_array($status, ['IN_PROGRESS', 'RESOLVED', 'CLOSED'], true)) {

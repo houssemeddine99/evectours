@@ -1,8 +1,14 @@
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+
 parameters:
-    level: 6
+    level: 8
     paths:
         - bin/
         - config/
         - public/
         - src/
         - tests/
+    doctrine:
+        objectManagerLoader: tests/object-manager.php

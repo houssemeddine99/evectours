@@ -23,6 +23,7 @@ class MetricsService
     // 1. Event & usage metrics (based on unified_events)
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getEventTypeDistribution(string $startDate, string $endDate): array
     {
         $sql = '
@@ -38,6 +39,7 @@ class MetricsService
         return array_column($rows, 'count', 'type');
     }
 
+    /** @return array<mixed> */
     public function getSearchToViewConversionRate(string $startDate, string $endDate): array
     {
         if ($this->isMySQL()) {
@@ -58,8 +60,8 @@ class MetricsService
             ';
         }
         $result    = $this->connection->fetchAssociative($sql, ['start' => $startDate, 'end' => $endDate]);
-        $searchers = (int) $result['searchers'];
-        $viewers   = (int) $result['viewers'];
+        $searchers = (int) ($result !== false ? $result['searchers'] : 0);
+        $viewers   = (int) ($result !== false ? $result['viewers'] : 0);
         return [
             'searchers'       => $searchers,
             'viewers'         => $viewers,
@@ -79,6 +81,7 @@ class MetricsService
         return (float) ($result['avg_duration'] ?? 0);
     }
 
+    /** @return array<mixed> */
     public function getTopSearchedDestinations(int $limit = 5): array
     {
         if ($this->isMySQL()) {
@@ -108,6 +111,7 @@ class MetricsService
         return $this->connection->fetchAllAssociative($sql, ['limit' => $limit]);
     }
 
+    /** @return array<mixed> */
     public function getUnmetDemandDestinations(int $limit = 5): array
     {
         if ($this->isMySQL()) {
@@ -147,6 +151,7 @@ class MetricsService
     // 2. Voyage & destination metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getTopVoyagesByVisits(int $limit = 10): array
     {
         $sql = '
@@ -161,12 +166,14 @@ class MetricsService
         return $this->connection->fetchAllAssociative($sql, ['limit' => $limit]);
     }
 
+    /** @return array<mixed> */
     public function getBestVoyage(): ?array
     {
         $top = $this->getTopVoyagesByVisits(1);
         return $top[0] ?? null;
     }
 
+    /** @return array<mixed> */
     public function getVoyageDetails(string $identifier): ?array
     {
         if ($this->isMySQL()) {
@@ -195,6 +202,7 @@ class MetricsService
         return $result ?: null;
     }
 
+    /** @return array<mixed> */
     public function getTopDestinations(int $limit = 5): array
     {
         $sql = '
@@ -212,6 +220,7 @@ class MetricsService
     // 3. User & login metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getUserGrowthStats(string $startDate, string $endDate): array
     {
         $totalUsers = (int) $this->connection->fetchOne('SELECT COUNT(*) FROM users');
@@ -261,6 +270,7 @@ class MetricsService
         return (int) $this->connection->fetchOne($sql, ['start' => $startDate, 'end' => $endDate]);
     }
 
+    /** @return array<mixed> */
     public function getAllUsers(int $limit = 50): array
     {
         $sql = 'SELECT id, username, email, tel, created_at FROM users ORDER BY id LIMIT :limit';
@@ -271,6 +281,7 @@ class MetricsService
     // 4. Reservation & revenue metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getReservationSummary(string $startDate, string $endDate): array
     {
         if ($this->isMySQL()) {
@@ -297,12 +308,13 @@ class MetricsService
             ";
         }
         $result = $this->connection->fetchAssociative($sql, ['start' => $startDate, 'end' => $endDate]);
+        $row = $result !== false ? $result : [];
         return [
-            'total_reservations' => (int)   $result['total_reservations'],
-            'confirmed'          => (int)   $result['confirmed'],
-            'pending'            => (int)   $result['pending'],
-            'cancelled'          => (int)   $result['cancelled'],
-            'total_revenue'      => (float) $result['total_revenue'],
+            'total_reservations' => (int)   ($row['total_reservations'] ?? 0),
+            'confirmed'          => (int)   ($row['confirmed'] ?? 0),
+            'pending'            => (int)   ($row['pending'] ?? 0),
+            'cancelled'          => (int)   ($row['cancelled'] ?? 0),
+            'total_revenue'      => (float) ($row['total_revenue'] ?? 0),
         ];
     }
 
@@ -320,6 +332,7 @@ class MetricsService
     // 5. Payment metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getPaymentStatusDistribution(string $startDate, string $endDate): array
     {
         $sql = '
@@ -356,8 +369,8 @@ class MetricsService
             ";
         }
         $result = $this->connection->fetchAssociative($sql, ['start' => $startDate, 'end' => $endDate]);
-        $total  = (int) $result['total'];
-        $paid   = (int) $result['paid'];
+        $total  = (int) ($result !== false ? $result['total'] : 0);
+        $paid   = (int) ($result !== false ? $result['paid'] : 0);
         return $total > 0 ? round(100 * $paid / $total, 1) : 0;
     }
 
@@ -365,6 +378,7 @@ class MetricsService
     // 6. Reclamation & refund metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getReclamationSummary(string $startDate, string $endDate): array
     {
         if ($this->isMySQL()) {
@@ -391,12 +405,13 @@ class MetricsService
             ";
         }
         $result = $this->connection->fetchAssociative($sql, ['start' => $startDate, 'end' => $endDate]);
+        $row = $result !== false ? $result : [];
         return [
-            'total'         => (int) $result['total'],
-            'open'          => (int) $result['open'],
-            'in_progress'   => (int) $result['in_progress'],
-            'resolved'      => (int) $result['resolved'],
-            'high_priority' => (int) $result['high_priority'],
+            'total'         => (int) ($row['total'] ?? 0),
+            'open'          => (int) ($row['open'] ?? 0),
+            'in_progress'   => (int) ($row['in_progress'] ?? 0),
+            'resolved'      => (int) ($row['resolved'] ?? 0),
+            'high_priority' => (int) ($row['high_priority'] ?? 0),
         ];
     }
 
@@ -418,6 +433,7 @@ class MetricsService
         return (float) ($this->connection->fetchOne($sql) ?: 0);
     }
 
+    /** @return array<mixed> */
     public function getRefundRequestSummary(string $startDate, string $endDate): array
     {
         if ($this->isMySQL()) {
@@ -444,12 +460,13 @@ class MetricsService
             ";
         }
         $result = $this->connection->fetchAssociative($sql, ['start' => $startDate, 'end' => $endDate]);
+        $row = $result !== false ? $result : [];
         return [
-            'total'                 => (int)   $result['total'],
-            'pending'               => (int)   $result['pending'],
-            'approved'              => (int)   $result['approved'],
-            'rejected'              => (int)   $result['rejected'],
-            'total_approved_amount' => (float) $result['total_approved_amount'],
+            'total'                 => (int)   ($row['total'] ?? 0),
+            'pending'               => (int)   ($row['pending'] ?? 0),
+            'approved'              => (int)   ($row['approved'] ?? 0),
+            'rejected'              => (int)   ($row['rejected'] ?? 0),
+            'total_approved_amount' => (float) ($row['total_approved_amount'] ?? 0),
         ];
     }
 
@@ -457,6 +474,7 @@ class MetricsService
     // 7. Offer & activity metrics
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getActiveOffersStats(): array
     {
         $sql = "
@@ -475,6 +493,7 @@ class MetricsService
         ];
     }
 
+    /** @return array<mixed> */
     public function getTopClaimedOffers(int $limit = 5): array
     {
         $sql = '
@@ -488,6 +507,7 @@ class MetricsService
         return $this->connection->fetchAllAssociative($sql, ['limit' => $limit]);
     }
 
+    /** @return array<mixed> */
     public function getMostPopularActivities(int $limit = 5): array
     {
         $sql = '
@@ -502,6 +522,7 @@ class MetricsService
         return $this->connection->fetchAllAssociative($sql, ['limit' => $limit]);
     }
 
+    /** @return array<mixed> */
     public function getVoyagesWithMostReclamations(int $limit = 5): array
     {
         $sql = '
@@ -520,10 +541,12 @@ class MetricsService
     // 8. Comprehensive snapshot for AI / dashboard
     // -------------------------------------------------------------------------
 
+    /** @return array<mixed> */
     public function getFullAnalyticsSnapshot(?string $startDate = null, ?string $endDate = null): array
     {
         $endDate   = $endDate   ?? date('Y-m-d');
-        $startDate = $startDate ?? date('Y-m-d', strtotime('-30 days', strtotime($endDate)));
+        $endTs     = strtotime($endDate);
+        $startDate = $startDate ?? date('Y-m-d', (int) strtotime('-30 days', $endTs !== false ? $endTs : time()));
 
         return [
             'period' => ['start' => $startDate, 'end' => $endDate],

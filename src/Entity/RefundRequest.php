@@ -15,8 +15,8 @@ class RefundRequest
 
     private ?int $id = null;
 
-    #[ORM\Column(name: 'reclamation_id')]
-    private int $reclamationId;
+    #[ORM\Column(name: 'reclamation_id', nullable: true)]
+    private ?int $reclamationId = null;
 
     #[ORM\Column(name: 'requester_id')]
     private int $requesterId;

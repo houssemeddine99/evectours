@@ -21,7 +21,11 @@ class DynamicPricingService
         return $this->reservationRepository->sumBookedPeopleByVoyageIds($voyageIds);
     }
 
-    /** Same as calculate() but uses a pre-loaded booked count. */
+    /**
+     * Same as calculate() but uses a pre-loaded booked count.
+     * @param array<int, int> $bookedMap
+     * @return array<string, mixed>
+     */
     public function calculateWithBooked(float $basePrice, int $voyageId, ?\DateTimeInterface $departureDate, array $bookedMap): array
     {
         $booked = $bookedMap[$voyageId] ?? 0;
@@ -38,6 +42,7 @@ class DynamicPricingService
         return $this->buildResult($basePrice, $booked, $departureDate);
     }
 
+    /** @return array{price: float, base_price: float, scarcity_label: string, scarcity_level: string, booked: int} */
     private function buildResult(float $basePrice, int $booked, ?\DateTimeInterface $departureDate): array
     {
         $demandPct = $this->demandFactor($booked);

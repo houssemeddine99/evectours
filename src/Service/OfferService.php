@@ -6,7 +6,6 @@ use App\Entity\Offer;
 use App\Repository\OfferRepository;
 use App\Repository\VoyageImageRepository;
 use App\Repository\VoyageRepository;
-use App\Service\VoyageService;
 use Doctrine\ORM\EntityManagerInterface;
 
 use Psr\Log\LoggerInterface;
@@ -20,13 +19,13 @@ class OfferService
         private readonly VoyageRepository $voyageRepository,
         private readonly VoyageImageRepository $voyageImageRepository,
         private readonly EntityManagerInterface $entityManager,
-        private readonly VoyageService $voyageService,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
     /**
      * Create a new offer
+     * @param array<mixed> $data
      */
     public function createOffer(array $data): ?Offer
     {
@@ -52,6 +51,7 @@ class OfferService
 
     /**
      * Update an existing offer
+     * @param array<mixed> $data
      */
     public function updateOffer(int $id, array $data): ?Offer
     {
@@ -108,6 +108,7 @@ class OfferService
 
     /**
      * Get all offers for admin
+     * @return array<mixed>
      */
     public function getAllOffersForAdmin(): array
     {
@@ -118,10 +119,11 @@ class OfferService
 
     /**
      * Get offer by ID for admin
+     * @return array<mixed>
      */
     public function getOfferByIdForAdmin(int $id): ?array
     {
-        $offer = $this->safeExecute(fn () => $this->offerRepository->find($id));
+        $offer = $this->safeExecute(fn () => $this->offerRepository->find($id), null);
 
         if ($offer === null) {
             return null;
@@ -130,6 +132,7 @@ class OfferService
         return $this->normalizeOffer($offer, false);
     }
 
+    /** @return array<mixed> */
     public function getActiveOffers(): array
     {
         $offers = $this->safeExecute(fn () => $this->offerRepository->findActiveOffers(), []);
@@ -141,6 +144,7 @@ class OfferService
      * Normalize offers for output
      * @param Offer[] $offers
      * @return array
+     * @return array<mixed>
      */
     private function normalizeOffers(array $offers, bool $includePriceAndImage): array
     {
@@ -183,7 +187,8 @@ class OfferService
 
             if ($includePriceAndImage) {
                 $data['price'] = (float) ($voyage->getPrice() ?? 0);
-                $data['image_url'] = $imageMap[$voyage->getId()] ?? self::DEFAULT_IMAGE;
+                $vid = $voyage->getId();
+                $data['image_url'] = ($vid !== null ? ($imageMap[$vid] ?? null) : null) ?? self::DEFAULT_IMAGE;
             }
 
             // Days until expiry
@@ -205,6 +210,7 @@ class OfferService
 
     /**
      * Normalize a single offer for output
+     * @return array<mixed>
      */
     private function normalizeOffer(Offer $offer, bool $includePriceAndImage): array
     {

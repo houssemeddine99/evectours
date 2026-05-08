@@ -119,6 +119,7 @@ class UserLoginRepository extends ServiceEntityRepository
     /**
      * Get login statistics
      * @return array
+     * @return array<mixed>
      */
     public function getLoginStatistics(): array
     {
@@ -130,6 +131,7 @@ class UserLoginRepository extends ServiceEntityRepository
     }
 // src/Repository/UserLoginRepository.php
 
+/** @return array<mixed> */
 public function findPaginatedLogins(int $page, int $limit): array
 {
     $offset = ($page - 1) * $limit;
@@ -144,7 +146,7 @@ public function findPaginatedLogins(int $page, int $limit): array
 
 public function countAllLogins(): int
 {
-    return $this->createQueryBuilder('ul')
+    return (int) $this->createQueryBuilder('ul')
         ->select('count(ul.id)')
         ->getQuery()
         ->getSingleScalarResult();

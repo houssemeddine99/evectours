@@ -17,6 +17,7 @@ class SearchHistoryService
     }
 /**
  * Get paginated search history records (admin view)
+ * @return array<mixed>
  */
 public function getPaginatedSearchHistory(int $page, int $limit): array
 {
@@ -45,6 +46,7 @@ public function getPaginatedSearchHistory(int $page, int $limit): array
 
     /**
      * Get user's search history
+     * @return array<mixed>
      */
     public function getUserSearchHistory(int $userId): array
     {
@@ -53,6 +55,7 @@ public function getPaginatedSearchHistory(int $page, int $limit): array
 
     /**
      * Get all search history records (admin view)
+     * @return array<mixed>
      */
     public function getAllSearchHistory(): array
     {
@@ -61,6 +64,7 @@ public function getPaginatedSearchHistory(int $page, int $limit): array
 
     /**
      * Get recent searches for a user
+     * @return array<mixed>
      */
     public function getRecentSearches(int $userId, int $limit = 10): array
     {
@@ -69,6 +73,7 @@ public function getPaginatedSearchHistory(int $page, int $limit): array
 
     /**
      * Get most popular search queries
+     * @return array<mixed>
      */
     public function getPopularQueries(int $limit = 10): array
     {

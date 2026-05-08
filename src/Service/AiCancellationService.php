@@ -20,6 +20,7 @@ class AiCancellationService
     /**
      * Generates a persuasive warning when a user is about to cancel a confirmed reservation.
      * @param array $reservation with keys: voyage_title, destination, voyage_start, total_price, number_of_people
+     * @param array<mixed> $reservation
      */
     public function getWarning(array $reservation): ?string
     {

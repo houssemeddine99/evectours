@@ -7,7 +7,9 @@
       "Bash(python3 -c \"import rembg; print\\('rembg ready'\\)\")",
       "PowerShell(pip install rembg 2>&1)",
       "PowerShell(pip install rembg)",
-      "Bash(python3 -c \"import rembg; print\\('ready'\\)\")"
+      "Bash(python3 -c \"import rembg; print\\('ready'\\)\")",
+      "Bash(grep -rn \"ORM\\\\\\\\\\\\Column\\\\|ORM\\\\\\\\\\\\Id\\\\|GeneratedValue\\\\|type.*json\\\\|type.*array\\\\|TINYINT\\\\|BIGINT\\\\|LONGTEXT\\\\|ENUM\" src/Entity/ --include=\"*.php\")",
+      "Bash(grep -v \"//\\\\|\\\\.php:.*function\\\\|\\\\.php:.*return\\\\|\\\\.php:.*\\\\$\\\\|->fetch\")"
     ]
   }
 }

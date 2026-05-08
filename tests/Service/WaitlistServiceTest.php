@@ -9,14 +9,18 @@ use App\Repository\ReservationRepository;
 use App\Repository\WaitlistEntryRepository;
 use App\Service\WaitlistService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 class WaitlistServiceTest extends TestCase
 {
+    /** @var WaitlistEntryRepository&MockObject */
     private WaitlistEntryRepository $waitlistRepo;
-    private ReservationRepository   $reservationRepo;
-    private EntityManagerInterface  $em;
+    /** @var ReservationRepository&MockObject */
+    private ReservationRepository $reservationRepo;
+    /** @var EntityManagerInterface&MockObject */
+    private EntityManagerInterface $em;
     private WaitlistService         $service;
 
     protected function setUp(): void
@@ -262,7 +266,7 @@ class WaitlistServiceTest extends TestCase
         return $list;
     }
 
-    /** @param int[] $userIds */
+    /** @param int[] $userIds @return WaitlistEntry[] */
     private function buildEntries(array $userIds): array
     {
         return array_map(

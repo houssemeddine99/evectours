@@ -23,6 +23,9 @@ class AiBudgetPlannerService
      * @param array $voyages  normalized voyage arrays
      * @param array $offers   normalized active offer arrays
      * @return array{recommendations: array, explanation: string}|null
+     * @param array<mixed> $offers
+       * @return array<mixed>
+      * @param array<mixed> $voyages
      */
     public function plan(string $userInput, array $voyages, array $offers): ?array
     {

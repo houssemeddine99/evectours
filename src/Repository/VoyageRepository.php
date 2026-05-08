@@ -81,7 +81,10 @@ class VoyageRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /** @param int[] $ids @return array<int,int> voyageId => activityCount */
+    /**
+     * @param int[] $ids
+     * @return array<int, int>
+     */
     public function countActivitiesByVoyageIds(array $ids): array
     {
         if (empty($ids)) {
@@ -103,7 +106,10 @@ class VoyageRepository extends ServiceEntityRepository
         return $map;
     }
 
-    /** @param int[] $ids @return array<int,int> voyageId => offerCount */
+    /**
+     * @param int[] $ids
+     * @return array<int, int>
+     */
     public function countOffersByVoyageIds(array $ids): array
     {
         if (empty($ids)) {
@@ -138,6 +144,7 @@ class VoyageRepository extends ServiceEntityRepository
     /**
      * Advanced search with filters
      * @return Voyage[]
+     * @param array<mixed> $filters
      */
     public function search(array $filters): array
     {
@@ -151,6 +158,7 @@ class VoyageRepository extends ServiceEntityRepository
 
     /**
      * Count search results
+     * @param array<mixed> $filters
      */
     public function countSearch(array $filters): int
     {
@@ -176,6 +184,7 @@ class VoyageRepository extends ServiceEntityRepository
 
     /**
      * Apply search and filter conditions to the query builder
+     * @param array<mixed> $filters
      */
     private function applyFilters(QueryBuilder $qb, array $filters): void
     {
@@ -224,6 +233,7 @@ class VoyageRepository extends ServiceEntityRepository
 
     /**
      * Apply sorting to the query builder
+     * @param array<mixed> $filters
      */
     private function applySorting(QueryBuilder $qb, array $filters): void
     {
@@ -241,6 +251,7 @@ class VoyageRepository extends ServiceEntityRepository
 
     /**
      * Apply pagination to the query builder
+     * @param array<mixed> $filters
      */
     private function applyPagination(QueryBuilder $qb, array $filters): void
     {

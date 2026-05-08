@@ -18,6 +18,7 @@ class AssociationService
 
     /**
      * Create a new association
+     * @param array<mixed> $data
      */
     public function createAssociation(array $data): Association
     {
@@ -42,6 +43,7 @@ class AssociationService
 
     /**
      * Get all associations
+     * @return array<mixed>
      */
     public function getAllAssociations(): array
     {
@@ -50,6 +52,7 @@ class AssociationService
 
     /**
      * Get associations with discount
+     * @return array<mixed>
      */
     public function getAssociationsWithDiscount(): array
     {

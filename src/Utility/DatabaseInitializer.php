@@ -28,11 +28,18 @@ class DatabaseInitializer
             : 'SERIAL PRIMARY KEY';
     }
 
+    /** Returns the JSON column type for the current driver */
+    private function jsonType(): string
+    {
+        return $this->isMySQL() ? 'JSON' : 'JSON';
+    }
+
     public function ensureSchema(): void
     {
         try {
             $pk = $this->pk();
 
+            $jsonType = $this->jsonType();
             $this->connection->executeStatement("
 CREATE TABLE IF NOT EXISTS voyages (
     id $pk,
@@ -42,8 +49,9 @@ CREATE TABLE IF NOT EXISTS voyages (
     start_date DATE,
     end_date DATE,
     price DECIMAL(10,2),
-    image_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    image_url $jsonType,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    slug VARCHAR(255) UNIQUE
 )");
 
             $this->connection->executeStatement("
@@ -66,6 +74,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    roles $jsonType NOT NULL DEFAULT ('[]'),
     tel VARCHAR(20),
     image_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
