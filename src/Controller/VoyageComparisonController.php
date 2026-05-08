@@ -87,12 +87,11 @@ class VoyageComparisonController extends AbstractController
     public function show(Request $request): Response
     {
         $list = $request->getSession()->get('compare_list', []);
+        $map  = $this->voyageService->getVoyagesByIds(array_map('intval', $list));
         $voyages = [];
-
         foreach ($list as $id) {
-            $voyage = $this->voyageService->getVoyageById((int) $id);
-            if ($voyage !== null) {
-                $voyages[] = $voyage;
+            if (isset($map[(int) $id])) {
+                $voyages[] = $map[(int) $id];
             }
         }
 

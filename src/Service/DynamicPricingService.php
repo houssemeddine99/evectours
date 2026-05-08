@@ -11,13 +11,35 @@ class DynamicPricingService
     ) {}
 
     /**
+     * Pre-load booked counts for a list of voyage IDs to avoid N+1 queries.
+     * Pass the returned map to calculateWithBooked().
+     * @param int[] $voyageIds
+     * @return array<int,int>
+     */
+    public function preloadBookedCounts(array $voyageIds): array
+    {
+        return $this->reservationRepository->sumBookedPeopleByVoyageIds($voyageIds);
+    }
+
+    /** Same as calculate() but uses a pre-loaded booked count. */
+    public function calculateWithBooked(float $basePrice, int $voyageId, ?\DateTimeInterface $departureDate, array $bookedMap): array
+    {
+        $booked = $bookedMap[$voyageId] ?? 0;
+        return $this->buildResult($basePrice, $booked, $departureDate);
+    }
+
+    /**
      * @return array{price: float, base_price: float, scarcity_label: string, scarcity_level: string, booked: int}
      *   scarcity_level: 'none' | 'low' | 'medium' | 'high' | 'urgent'
      */
     public function calculate(float $basePrice, int $voyageId, ?\DateTimeInterface $departureDate): array
     {
         $booked = $this->reservationRepository->sumBookedPeopleByVoyageId($voyageId);
+        return $this->buildResult($basePrice, $booked, $departureDate);
+    }
 
+    private function buildResult(float $basePrice, int $booked, ?\DateTimeInterface $departureDate): array
+    {
         $demandPct = $this->demandFactor($booked);
         $timePct   = $this->timeFactor($departureDate);
         $surchargePct = min(50, $demandPct + $timePct);

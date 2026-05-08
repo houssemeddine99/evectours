@@ -81,6 +81,50 @@ class VoyageRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** @param int[] $ids @return array<int,int> voyageId => activityCount */
+    public function countActivitiesByVoyageIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $rows = $this->createQueryBuilder('v')
+            ->select('v.id as vid, COUNT(a.id) as cnt')
+            ->leftJoin('v.activities', 'a')
+            ->where('v.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->groupBy('v.id')
+            ->getQuery()
+            ->getArrayResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row['vid']] = (int) $row['cnt'];
+        }
+        return $map;
+    }
+
+    /** @param int[] $ids @return array<int,int> voyageId => offerCount */
+    public function countOffersByVoyageIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $rows = $this->createQueryBuilder('v')
+            ->select('v.id as vid, COUNT(o.id) as cnt')
+            ->leftJoin('v.offers', 'o')
+            ->where('v.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->groupBy('v.id')
+            ->getQuery()
+            ->getArrayResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row['vid']] = (int) $row['cnt'];
+        }
+        return $map;
+    }
+
     /** @return Voyage[] */
     public function findAllOrdered(): array
     {

@@ -99,8 +99,10 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllOrdered());
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $actCounts = $this->safeExecute(fn () => $this->voyageRepository->countActivitiesByVoyageIds($ids), []);
+        $offerCounts = $this->safeExecute(fn () => $this->voyageRepository->countOffersByVoyageIds($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyageForAdmin($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyageForAdmin($voyage, $preloaded, $actCounts, $offerCounts), $voyages);
     }
 
     /**
@@ -117,7 +119,7 @@ class VoyageService
         return null;
     }
 
-    private function mapVoyageForAdmin(object $voyage, ?array $preloadedImages = null): array
+    private function mapVoyageForAdmin(object $voyage, ?array $preloadedImages = null, ?array $actCounts = null, ?array $offerCounts = null): array
     {
         if ($preloadedImages !== null) {
             $imgs = $preloadedImages[$voyage->getId()] ?? [];
@@ -142,8 +144,8 @@ class VoyageService
             'price' => $voyage->getPrice(),
             'image_url' => $imageUrls,
             'created_at' => $voyage->getCreatedAt()?->format('Y-m-d H:i:s'),
-            'activities_count' => $voyage->getActivities()->count(),
-            'offers_count' => $voyage->getOffers()->count(),
+            'activities_count' => $actCounts !== null ? ($actCounts[$voyage->getId()] ?? 0) : $voyage->getActivities()->count(),
+            'offers_count' => $offerCounts !== null ? ($offerCounts[$voyage->getId()] ?? 0) : $voyage->getOffers()->count(),
         ];
     }
 
@@ -152,8 +154,9 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findFeatured($limit));
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded, $bookedMap), $voyages);
     }
 
     public function getAllVoyages(): array
@@ -161,8 +164,9 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllOrdered());
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded, $bookedMap), $voyages);
     }
 
     /**
@@ -186,8 +190,9 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findPublicPaginated($limit, ($page - 1) * $limit));
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded, $bookedMap), $voyages);
     }
 
     public function getTotalVoyages(): int
@@ -200,8 +205,30 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->findAllActive());
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded, $bookedMap), $voyages);
+    }
+
+    /**
+     * Batch-load voyages by IDs. Returns map of id => voyage array.
+     * @param int[] $ids
+     * @return array<int, array>
+     */
+    public function getVoyagesByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $voyages  = $this->safeExecute(fn () => $this->voyageRepository->findByIds($ids), []);
+        $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
+
+        $result = [];
+        foreach ($voyages as $voyage) {
+            $result[$voyage->getId()] = $this->mapVoyage($voyage, $preloaded, $bookedMap);
+        }
+        return $result;
     }
 
     public function getVoyageById(int $id): ?array
@@ -227,7 +254,7 @@ class VoyageService
         return null;
     }
 
-    private function mapVoyage(object $voyage, ?array $preloadedImages = null): array
+    private function mapVoyage(object $voyage, ?array $preloadedImages = null, ?array $bookedMap = null): array
     {
         $slug = $voyage->getSlug();
         if ($slug === '') {
@@ -243,7 +270,9 @@ class VoyageService
         }
 
         $basePrice = (float) ($voyage->getPrice() ?? 0);
-        $pricing   = $this->dynamicPricingService->calculate($basePrice, $voyage->getId(), $voyage->getStartDate());
+        $pricing   = $bookedMap !== null
+            ? $this->dynamicPricingService->calculateWithBooked($basePrice, $voyage->getId(), $voyage->getStartDate(), $bookedMap)
+            : $this->dynamicPricingService->calculate($basePrice, $voyage->getId(), $voyage->getStartDate());
 
         return [
             'id'              => $voyage->getId(),
@@ -324,8 +353,9 @@ class VoyageService
         $voyages = $this->safeExecute(fn () => $this->voyageRepository->search($filters));
         $ids = array_map(fn ($v) => $v->getId(), $voyages);
         $preloaded = $this->safeExecute(fn () => $this->voyageImageRepository->findImagesByVoyageIds($ids), []);
+        $bookedMap = $this->safeExecute(fn () => $this->dynamicPricingService->preloadBookedCounts($ids), []);
 
-        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded), $voyages);
+        return array_map(fn ($voyage) => $this->mapVoyage($voyage, $preloaded, $bookedMap), $voyages);
     }
 
     /**

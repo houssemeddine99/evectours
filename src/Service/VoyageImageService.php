@@ -135,17 +135,23 @@ public function createVoyageImage(array $data): ?VoyageImage
      */
     private function normalizeImages(array $images, bool $includeVoyageInfo): array
     {
+        $voyageMap = [];
+        if ($includeVoyageInfo && !empty($images)) {
+            $ids = array_unique(array_map(fn ($img) => $img->getVoyageId(), $images));
+            $voyages = $this->safeExecute(fn () => $this->voyageRepository->findByIds($ids), []);
+            foreach ($voyages as $v) {
+                $voyageMap[$v->getId()] = $v;
+            }
+        }
+
         $normalized = [];
         foreach ($images as $image) {
-            $normalized[] = $this->normalizeImage($image, $includeVoyageInfo);
+            $normalized[] = $this->normalizeImage($image, $includeVoyageInfo, $voyageMap);
         }
         return $normalized;
     }
 
-    /**
-     * Normalize a single image for output
-     */
-    private function normalizeImage(VoyageImage $image, bool $includeVoyageInfo): array
+    private function normalizeImage(VoyageImage $image, bool $includeVoyageInfo, array $voyageMap = []): array
     {
         $data = [
             'id' => $image->getId(),
@@ -157,7 +163,7 @@ public function createVoyageImage(array $data): ?VoyageImage
         ];
 
         if ($includeVoyageInfo) {
-            $voyage = $this->safeExecute(fn () => $this->voyageRepository->find($image->getVoyageId()));
+            $voyage = $voyageMap[$image->getVoyageId()] ?? null;
             $data['voyage_title'] = $voyage?->getTitle() ?? 'Unknown';
         }
 
