@@ -26,10 +26,10 @@ class FavoriteController extends AbstractController
         $voyages = [];
         if ($userId > 0) {
             $voyageIds = $this->favoriteService->getFavoriteVoyageIds($userId);
+            $map = $this->voyageService->getVoyagesByIds(array_map('intval', $voyageIds));
             foreach ($voyageIds as $voyageId) {
-                $voyage = $this->voyageService->getVoyageById($voyageId);
-                if ($voyage !== null) {
-                    $voyages[] = $voyage;
+                if (isset($map[(int) $voyageId])) {
+                    $voyages[] = $map[(int) $voyageId];
                 }
             }
         }

@@ -121,18 +121,38 @@ class ReservationService
         }
     }
 
- public function getReservationsForUser(int $userId): array
-{
-    try {
-        $reservations = $this->reservationRepository->findByUserId($userId);
-        return array_map(function ($reservation) {
-            return $this->reservationToArrayWithVoyage($reservation);  // ← Changed!
-        }, $reservations);
-    } catch (\Throwable $e) {
-        $this->logger->error('Failed to get reservations for user', ['error' => $e->getMessage(), 'user_id' => $userId]);
-        return [];
+    public function getReservationsForUser(int $userId): array
+    {
+        try {
+            $reservations = $this->reservationRepository->findByUserId($userId);
+            if (empty($reservations)) {
+                return [];
+            }
+
+            $voyageIds = array_unique(array_map(fn ($r) => $r->getVoyageId(), $reservations));
+            $voyageMap = [];
+            foreach ($this->voyageRepository->findByIds($voyageIds) as $v) {
+                $voyageMap[$v->getId()] = $v;
+            }
+
+            return array_map(function ($reservation) use ($voyageMap) {
+                $result = $this->reservationToArray($reservation);
+                $voyage = $voyageMap[$reservation->getVoyageId()] ?? null;
+                if ($voyage) {
+                    $result['voyage_title']       = $voyage->getTitle();
+                    $result['voyage_description'] = $voyage->getDescription();
+                    $result['destination']        = $voyage->getDestination();
+                    $result['voyage_start']       = $voyage->getStartDate()?->format('Y-m-d');
+                    $result['voyage_end']         = $voyage->getEndDate()?->format('Y-m-d');
+                    $result['voyage_price']       = $voyage->getPrice();
+                }
+                return $result;
+            }, $reservations);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to get reservations for user', ['error' => $e->getMessage(), 'user_id' => $userId]);
+            return [];
+        }
     }
-}
     public function getReservationById(int $reservationId, int $userId): ?array
     {
         try {

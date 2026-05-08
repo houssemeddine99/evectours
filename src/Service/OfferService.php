@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Offer;
 use App\Repository\OfferRepository;
+use App\Repository\VoyageImageRepository;
 use App\Repository\VoyageRepository;
 use App\Service\VoyageService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,8 +18,9 @@ class OfferService
     public function __construct(
         private readonly OfferRepository $offerRepository,
         private readonly VoyageRepository $voyageRepository,
+        private readonly VoyageImageRepository $voyageImageRepository,
         private readonly EntityManagerInterface $entityManager,
-         private readonly VoyageService $voyageService,
+        private readonly VoyageService $voyageService,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
@@ -142,6 +144,22 @@ class OfferService
      */
     private function normalizeOffers(array $offers, bool $includePriceAndImage): array
     {
+        // Pre-batch image URLs to avoid N+1 (one query for all voyages)
+        $imageMap = [];
+        if ($includePriceAndImage) {
+            $voyageIds = array_values(array_unique(array_filter(array_map(
+                fn ($o) => $o->getVoyage()?->getId(),
+                $offers
+            ))));
+            if (!empty($voyageIds)) {
+                $preloaded = $this->voyageImageRepository->findImagesByVoyageIds($voyageIds);
+                foreach ($voyageIds as $vid) {
+                    $imgs = $preloaded[$vid] ?? [];
+                    $imageMap[$vid] = !empty($imgs) ? $imgs[0]->getImageUrl() : self::DEFAULT_IMAGE;
+                }
+            }
+        }
+
         $normalized = [];
         foreach ($offers as $offer) {
             $voyage = $offer->getVoyage();
@@ -165,7 +183,7 @@ class OfferService
 
             if ($includePriceAndImage) {
                 $data['price'] = (float) ($voyage->getPrice() ?? 0);
-                $data['image_url'] = ($this->voyageService->extractImageUrls($voyage->getId())[0] ?? null) ?? self::DEFAULT_IMAGE;
+                $data['image_url'] = $imageMap[$voyage->getId()] ?? self::DEFAULT_IMAGE;
             }
 
             // Days until expiry
