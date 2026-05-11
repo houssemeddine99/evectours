@@ -50,10 +50,7 @@ class CurrencyService
             return $detected;
         }
 
-        $currency = $this->detectFromIp();
-        $session->set('detected_currency', $currency);
-
-        return $currency;
+        return self::BASE_CURRENCY;
     }
 
     public function setOverride(string $currency): void
