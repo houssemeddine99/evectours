@@ -257,11 +257,6 @@
     {# Hidden Google Translate widget — must stay in DOM for Google to initialise #}
     <div id="google_translate_element" style="display:none;position:absolute;"></div>
     <script>
-        // Default to French if user has no language preference
-        if (!document.cookie.includes('googtrans')) {
-            document.cookie = 'googtrans=/en/fr; path=/';
-        }
-
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
