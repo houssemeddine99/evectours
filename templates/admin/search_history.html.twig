@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'search' %}
 
 {% block title %}Admin – Search History{% endblock %}
 
-{% block body %}
+{% block admin_body %}
     <h1>Search History</h1>
     {% if histories is empty %}
         <p>No search history records found.</p>
@@ -112,7 +113,7 @@
         </table>
         </div>
     {% endif %}
-{% block stylesheets %}
+{% block admin_stylesheets %}
     {{ parent() }}
     <style>
         .table-controls {

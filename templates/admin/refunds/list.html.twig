@@ -1,7 +1,8 @@
-{% extends 'base.html.twig' %}
-{% block title %}Admin – Refund Requests{% endblock %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'refunds' %}
+{% block title %}Refunds | Evec Tours Admin{% endblock %}
 
-{% block stylesheets %}
+{% block admin_stylesheets %}
 <style>
 .rf-header {
     display: flex;
@@ -116,7 +117,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="rf-header">
     <div>
         <h1>Refund Requests</h1>
@@ -169,7 +170,13 @@
                     'background:rgba(255,193,7,0.15);color:#fde047;border-color:rgba(255,193,7,0.3)' %}
                 <tr>
                     <td style="color:var(--text-primary);font-weight:600;">#{{ r.id }}</td>
-                    <td>User #{{ r.requesterId|default('—') }}</td>
+                    <td>
+                        {% if user_map is defined and user_map[r.requesterId] is defined %}
+                            <span title="{{ user_map[r.requesterId].email }}">{{ user_map[r.requesterId].username }}</span>
+                        {% else %}
+                            #{{ r.requesterId|default('—') }}
+                        {% endif %}
+                    </td>
                     <td>#{{ r.reservationId|default('—') }}</td>
                     <td style="color:#febd69;font-weight:700;">{{ r.amount|default('0.00') }} TND</td>
                     <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.reason|default('') }}">

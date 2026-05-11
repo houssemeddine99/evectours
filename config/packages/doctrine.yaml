@@ -4,6 +4,7 @@ doctrine:
         profiling_collect_backtrace: '%kernel.debug%'
         # server_version is intentionally omitted here so Doctrine auto-detects
         # the connected database (MySQL 8, MariaDB 10.x, PostgreSQL 16, etc.)
+        schema_filter: '~^(?!neon_auth\.)~'
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware

@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'images' %}
 
 {% block title %}{% if image %}Edit Image{% else %}New Image{% endif %} | Admin{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="admin-page">
     <div class="page-header">
         <div class="header-content">

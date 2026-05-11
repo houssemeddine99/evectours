@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'activities' %}
 
 {% block title %}Admin – Activities{% endblock %}
 
-{% block body %}
+{% block admin_body %}
     <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Activities Overview</h1>
         <a href="{{ path('admin_activity_new') }}" class="btn btn-primary" style="padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 4px;">

@@ -364,16 +364,17 @@ class ReservationController extends AbstractController
             throw $this->createNotFoundException('Reservation not found');
         }
 
-        if ($reservation['status'] !== 'CONFIRMED') {
-            $this->addFlash('error', 'Ticket is only available for confirmed reservations.');
+        if (!in_array($reservation['status'], ['CONFIRMED', 'PENDING'], true)) {
+            $this->addFlash('error', 'Ticket is only available for confirmed or pending reservations.');
             return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
         }
 
         $baseUrl = $this->resolveBaseUrl($request);
 
         return $this->render('travel/ticket_print.html.twig', [
-            'reservation' => $reservation,
-            'base_url'    => $baseUrl,
+            'reservation'    => $reservation,
+            'passenger_name' => $user['username'] ?? '',
+            'base_url'       => $baseUrl,
         ]);
     }
 
@@ -408,8 +409,8 @@ class ReservationController extends AbstractController
             throw $this->createNotFoundException('Reservation not found');
         }
 
-        if ($reservation['status'] !== 'CONFIRMED') {
-            $this->addFlash('error', 'PDF ticket is only available for confirmed reservations.');
+        if (!in_array($reservation['status'], ['CONFIRMED', 'PENDING'], true)) {
+            $this->addFlash('error', 'PDF ticket is only available for confirmed or pending reservations.');
             return $this->redirectToRoute('account_reservation_detail', ['id' => $id]);
         }
 
@@ -418,11 +419,12 @@ class ReservationController extends AbstractController
             $baseUrl = $request->getSchemeAndHttpHost();
         }
         $pdfUrl = $baseUrl . $this->generateUrl('account_reservation_ticket_pdf', ['id' => $id]);
-        $qrUrl  = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($pdfUrl);
+        $qrUrl  = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . urlencode($pdfUrl);
 
         $html = $this->renderView('travel/ticket_pdf.html.twig', [
-            'reservation' => $reservation,
-            'qr_url'      => $qrUrl,
+            'reservation'    => $reservation,
+            'passenger_name' => $user['username'] ?? '',
+            'qr_url'         => $qrUrl,
         ]);
 
         $options = new Options();
@@ -437,7 +439,7 @@ class ReservationController extends AbstractController
 
         return new Response($dompdf->output(), 200, [
             'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="travagir-ticket-' . $id . '.pdf"',
+            'Content-Disposition' => 'inline; filename="evectours-ticket-' . $id . '.pdf"',
         ]);
     }
 

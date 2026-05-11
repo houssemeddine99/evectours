@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'users' %}
 
-{% block title %}User Details | Travagir{% endblock %}
+{% block title %}User Details | Evec Tours{% endblock %}
 
-{% block body %}
+{% block admin_body %}
     <section>
         <h1>User Details</h1>
 
@@ -11,8 +12,8 @@
                 <p><strong>ID:</strong> {{ user.id }}</p>
                 <p><strong>Username:</strong> {{ user.username }}</p>
                 <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Phone:</strong> {{ user.tel ?: 'â€”' }}</p>
-                <p><strong>Created At:</strong> {{ user.created_at ?: 'â€”' }}</p>
+                <p><strong>Phone:</strong> {{ user.tel ?: '—' }}</p>
+                <p><strong>Created At:</strong> {{ user.created_at ?: '—' }}</p>
                 {% if user.image_url %}
                     <p><strong>Profile Image:</strong></p>
                     <img src="{{ user.image_url }}" alt="{{ user.username }}" class="user-avatar"/>

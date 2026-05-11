@@ -9,7 +9,20 @@
       "PowerShell(pip install rembg)",
       "Bash(python3 -c \"import rembg; print\\('ready'\\)\")",
       "Bash(grep -rn \"ORM\\\\\\\\\\\\Column\\\\|ORM\\\\\\\\\\\\Id\\\\|GeneratedValue\\\\|type.*json\\\\|type.*array\\\\|TINYINT\\\\|BIGINT\\\\|LONGTEXT\\\\|ENUM\" src/Entity/ --include=\"*.php\")",
-      "Bash(grep -v \"//\\\\|\\\\.php:.*function\\\\|\\\\.php:.*return\\\\|\\\\.php:.*\\\\$\\\\|->fetch\")"
+      "Bash(grep -v \"//\\\\|\\\\.php:.*function\\\\|\\\\.php:.*return\\\\|\\\\.php:.*\\\\$\\\\|->fetch\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\SIGMA IT\\\\.claude\\\\projects\\\\c--Users-SIGMA-IT-Desktop-travigirPHP\\\\memory\")",
+      "PowerShell(cd \"c:\\\\Users\\\\SIGMA IT\\\\Desktop\\\\travigirPHP\" ; php bin/console doctrine:schema:update --dump-sql 2>&1 | Where-Object { $_ -notmatch \"neon_auth\" })",
+      "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 8000)",
+      "PowerShell(Get-Command symfony -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command php -ErrorAction SilentlyContinue)",
+      "Bash(symfony server:status)",
+      "PowerShell(Get-Process | Where-Object { $_.Name -match \"symfony|php\" } | Select-Object Id, Name, Path)",
+      "PowerShell(Start-Process -FilePath \"symfony.exe\" -ArgumentList \"server:start\", \"--no-tls\" -WorkingDirectory \"c:\\\\Users\\\\SIGMA IT\\\\Desktop\\\\travigirPHP\" -PassThru -WindowStyle Normal)",
+      "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 8000 -WarningAction SilentlyContinue)",
+      "PowerShell(cd \"c:\\\\Users\\\\SIGMA IT\\\\Desktop\\\\travigirPHP\"; php bin/console doctrine:query:sql \"INSERT INTO users \\(username, email, password, roles, created_at\\) VALUES \\('evec_admin', 'admin@evectours.com', '\\\\$2y\\\\$12\\\\$7drAFPgMACiWCxscRjgzg.rEptx.YNRu1N8bXsP9YkYUu8nNTOwNu', '[\"\"ROLE_ADMIN\"\"]', NOW\\(\\)\\) RETURNING id;\" 2>&1)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\SIGMA IT\\.claude\\projects\\c--Users-SIGMA-IT-Desktop-travigirPHP\\memory"
     ]
   }
 }

@@ -138,7 +138,7 @@ class AuthService
         $user = new \App\Entity\User();
         $user->setUsername($username);
         $user->setEmail($email);
-        $user->setPassword($plainPassword); // setPassword() now hashes automatically
+        $user->setPassword(password_hash($plainPassword, PASSWORD_DEFAULT));
         $user->setCreatedAt(new \DateTime());
 
             $entityManager = $this->entityManager;
@@ -246,7 +246,7 @@ public function getUserByEmail(string $email): ?array
         $user->setImageUrl($imageUrl);
 
     if ($newPassword !== null && $newPassword !== '') {
-        $user->setPassword($newPassword); // setPassword() now hashes automatically
+        $user->setPassword(password_hash($newPassword, PASSWORD_DEFAULT));
     }
 
         try {
@@ -279,6 +279,7 @@ public function getUserByEmail(string $email): ?array
                 'tel' => $user->getTel(),
                 'image_url' => $user->getImageUrl(),
                 'created_at' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'is_admin' => $this->isAdmin((int) $user->getId()),
             ];
         }, $users);
     }

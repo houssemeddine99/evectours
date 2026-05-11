@@ -1,7 +1,8 @@
-{% extends 'base.html.twig' %}
-{% block title %}{{ is_edit ? 'Edit User' : 'Create User' }} | Travagir{% endblock %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'users' %}
+{% block title %}{{ is_edit ? 'Edit User' : 'Create User' }} | Evec Tours{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="settings-page">
     <div class="page-header">
         <div class="header-content">
@@ -12,7 +13,7 @@
 
     {% if error %}
     <div class="alert alert-error">
-        <span class="alert-icon">⚠</span>
+        <span class="alert-icon">?</span>
         {{ error }}
     </div>
     {% endif %}
@@ -25,7 +26,7 @@
                 <div class="form-group">
                     <label for="username">Username</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">👤</span>
+                        <span class="input-icon">??</span>
                         <input type="text" id="username" name="username" value="{{ formData.username }}" required placeholder="Enter username">
                     </div>
                 </div>
@@ -33,7 +34,7 @@
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">✉</span>
+                        <span class="input-icon">?</span>
                         <input type="email" id="email" name="email" value="{{ formData.email }}" required placeholder="user@example.com">
                     </div>
                 </div>
@@ -41,7 +42,7 @@
                 <div class="form-group">
                     <label for="tel">Phone Number</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">📱</span>
+                        <span class="input-icon">??</span>
                         <input type="tel" id="tel" name="tel" value="{{ formData.tel }}" placeholder="+1 555 555 5555">
                     </div>
                 </div>
@@ -49,7 +50,7 @@
                 <div class="form-group">
                     <label for="image_url">Profile Image URL</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🖼</span>
+                        <span class="input-icon">??</span>
                         <input type="url" id="image_url" name="image_url" value="{{ formData.image_url }}" placeholder="https://example.com/image.jpg">
                     </div>
                 </div>
@@ -62,7 +63,7 @@
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔒</span>
+                        <span class="input-icon">??</span>
                         <input type="password" id="password" name="password" required placeholder="Enter password">
                     </div>
                     <span class="input-hint">Must be at least 6 characters</span>
@@ -71,7 +72,7 @@
                 <div class="form-group">
                     <label for="confirm_password">Confirm Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔐</span>
+                        <span class="input-icon">??</span>
                         <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm password">
                     </div>
                 </div>
@@ -79,7 +80,7 @@
                 <div class="form-group">
                     <label for="current_password">Current Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔑</span>
+                        <span class="input-icon">??</span>
                         <input type="password" id="current_password" name="current_password" value="{{ formData.current_password }}" placeholder="Required to change password">
                     </div>
                     <span class="input-hint">Leave blank to keep current password</span>
@@ -88,7 +89,7 @@
                 <div class="form-group">
                     <label for="new_password">New Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔒</span>
+                        <span class="input-icon">??</span>
                         <input type="password" id="new_password" name="new_password" value="{{ formData.new_password }}" placeholder="Enter new password">
                     </div>
                 </div>
@@ -96,7 +97,7 @@
                 <div class="form-group">
                     <label for="confirm_password">Confirm New Password</label>
                     <div class="input-wrapper">
-                        <span class="input-icon">🔐</span>
+                        <span class="input-icon">??</span>
                         <input type="password" id="confirm_password" name="confirm_password" value="{{ formData.confirm_password }}" placeholder="Confirm new password">
                     </div>
                 </div>
@@ -105,7 +106,7 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    <span>✓</span>
+                    <span>?</span>
                     {{ is_edit ? 'Save Changes' : 'Create User' }}
                 </button>
                 <a href="{{ path('admin_users') }}" class="btn btn-secondary">

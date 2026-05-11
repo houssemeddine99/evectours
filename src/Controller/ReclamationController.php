@@ -107,9 +107,12 @@ class ReclamationController extends AbstractController
             }
         }
 
+        $reservations = $this->reservationService->getReservationsForUser($userId);
+
         return $this->render('reclamation/form.html.twig', [
-            'data' => $data,
-            'errors' => $error,
+            'data'         => $data,
+            'errors'       => $error,
+            'reservations' => $reservations,
         ]);
     }
 
@@ -186,8 +189,16 @@ class ReclamationController extends AbstractController
 
         $pagination = $this->reclamationService->getPaginatedReclamations($page, $limit, $email);
 
+        // Enrich with user info so the list shows names instead of raw IDs
+        $userIds = array_unique(array_filter(array_map(fn ($r) => $r->getUserId(), $pagination['data'])));
+        $userMap = [];
+        foreach ($this->userRepository->findBy(['id' => $userIds]) as $u) {
+            $userMap[$u->getId()] = $u;
+        }
+
         return $this->render('admin/reclamations/list.html.twig', [
             'reclamations' => $pagination['data'],
+            'user_map'     => $userMap,
             'totalItems'   => $pagination['totalItems'],
             'totalPages'   => $pagination['totalPages'],
             'currentPage'  => $pagination['currentPage'],

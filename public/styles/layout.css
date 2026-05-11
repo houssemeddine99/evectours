@@ -4,11 +4,11 @@
 
 /* Site Header */
 .site-header {
-  border-bottom: 1px solid var(--border-dark);
+  border-bottom: 1px solid rgba(30, 122, 224, 0.2);
   position: sticky;
   top: 0;
   z-index: 9000;
-  background: rgba(15, 23, 34, 0.88);
+  background: rgba(8, 14, 28, 0.92);
 }
 
 /* menus are portalled to <body> by JS — these rules position them */
@@ -40,7 +40,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0;
+  padding: 10px 0;
 }
 
 .logo {
@@ -70,8 +70,8 @@ nav a {
 }
 
 nav a.active, nav a:hover {
-  color: var(--amazon-orange);
-  border-color: var(--amazon-orange);
+  color: var(--evec-blue-light);
+  border-color: var(--evec-blue-light);
 }
 
 /* Auth Buttons */
@@ -105,104 +105,166 @@ nav a.active, nav a:hover {
   border-color: var(--amazon-orange-soft);
 }
 
-/* Account Dropdown */
-.account-dropdown {
-  position: relative;
-  margin-left: 8px;
-}
+/* ── Account Dropdown ─────────────────────────────────── */
+.account-dropdown { position: relative; margin-left: 8px; }
 
+/* Trigger — clean round avatar */
 .account-btn {
-  background: transparent;
-  border: 1px solid var(--amazon-orange-soft);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.2rem;
+  background: linear-gradient(135deg, #ff9900 0%, #e07800 100%);
+  border: 2px solid transparent;
+  padding: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: box-shadow .18s, border-color .18s;
+}
+.account-btn:hover,
+.account-btn.active {
+  border-color: rgba(255,153,0,0.55);
+  box-shadow: 0 0 0 3px rgba(255,153,0,0.18);
+}
+.acct-initial {
+  color: #000;
+  font-weight: 800;
+  font-size: 0.84rem;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
 }
 
-.account-btn:hover {
-  background: var(--amazon-orange-soft);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
-}
-
+/* Dropdown panel — hidden by default, shown when parent has .active */
 .account-menu {
+  display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   right: 0;
-  background: var(--amazon-white);
-  border: 1px solid var(--border-dark);
+  min-width: 248px;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.09);
   border-radius: 12px;
-  padding: 0;
-  min-width: 220px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.2s ease;
-  z-index: 99999;
-  margin-top: 8px;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.55);
+  overflow: hidden;
+  z-index: 10000;
 }
-
-/* dropdown open state handled by JS portal */
-
-.account-info {
-  padding: 16px;
-  text-align: center;
-}
-
-.account-info strong {
+.account-dropdown.active .account-menu {
   display: block;
-  color: var(--text-primary);
+  animation: acctIn .14s ease;
+}
+@keyframes acctIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.acct-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.acct-avatar-lg {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9900, #e07800);
+  color: #000;
   font-size: 1rem;
-  margin-bottom: 4px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-
-.account-info span {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.account-menu hr {
-  border: none;
-  border-top: 1px solid var(--border-dark);
-  margin: 0;
-}
-
-.account-link {
+.acct-header-info { min-width: 0; }
+.acct-header-info strong {
   display: block;
-  padding: 12px 16px;
-  color: var(--text-primary);
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acct-header-info span {
+  display: block;
+  color: #64748b;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.acct-role {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background: rgba(255,153,0,0.12);
+  color: #ff9900;
+  border: 1px solid rgba(255,153,0,0.25);
+}
+
+/* Sections */
+.acct-section { padding: 5px 0; }
+.acct-divider { height: 1px; background: rgba(255,255,255,0.07); }
+.acct-section-label {
+  padding: 8px 16px 3px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+/* Links */
+.account-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  color: #cbd5e1;
   text-decoration: none;
-  transition: background 0.2s ease;
+  font-size: 0.86rem;
+  transition: background .12s, color .12s;
 }
+.account-link svg { flex-shrink: 0; opacity: .55; transition: opacity .12s; }
+.account-link:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
+.account-link:hover svg { opacity: .9; }
 
-.account-link:hover {
-  background: var(--amazon-slate);
-  color: var(--amazon-orange);
-}
+.account-link--admin { color: #93c5fd; }
+.account-link--admin svg { opacity: .5; }
+.account-link--admin:hover { background: rgba(68,121,207,0.12); color: #bfdbfe; }
+.account-link--admin:hover svg { opacity: .85; }
 
+/* Logout */
+.acct-footer { border-top: 1px solid rgba(255,255,255,0.07); padding: 5px 0; }
 .logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   width: 100%;
-  padding: 12px 16px;
+  padding: 9px 16px;
   background: transparent;
   border: none;
-  color: var(--text-primary);
+  color: #f87171;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.86rem;
+  font-family: inherit;
   text-align: left;
-  transition: background 0.2s ease;
+  transition: background .12s;
 }
-
-.logout-btn:hover {
-  background: var(--amazon-slate);
-  color: var(--amazon-orange);
-}
+.logout-btn svg { opacity: .7; flex-shrink: 0; }
+.logout-btn:hover { background: rgba(239,68,68,0.1); }
 
 /* Site Footer */
 .site-footer {
@@ -296,24 +358,10 @@ nav a.active, nav a:hover {
   .lang-picker { padding: 10px 20px; }
   .account-dropdown { margin: 4px 16px 0; width: calc(100% - 32px); position: static; }
   .account-btn {
-    width: 100%;
-    border-radius: 10px;
-    justify-content: flex-start;
-    padding-left: 14px;
-    gap: 8px;
-    background: rgba(255,255,255,.05);
-    border-color: var(--border-dark);
-    height: auto;
-    min-height: 44px;
-    font-size: .95rem;
-    color: var(--text-primary);
+    width: 36px; height: 36px;
+    border-radius: 50%;
   }
-  .account-btn:hover {
-    background: rgba(255,153,0,.1);
-    box-shadow: none;
-    transform: none;
-  }
-  .account-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 1px solid var(--border-dark); margin-top: 8px; }
+  .account-dropdown.active .account-menu { position: static; animation: none; box-shadow: none; border: 1px solid rgba(255,255,255,0.1); margin-top: 8px; }
   .btn-login, .btn-register { margin: 4px 20px 0; width: calc(100% - 40px); display: block; text-align: center; }
 }
 

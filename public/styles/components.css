@@ -22,23 +22,23 @@ COMPONENT STYLES
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 20% 80%, rgba(68, 121, 207, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 153, 0, 0.1) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    background: radial-gradient(circle at 20% 80%, rgba(30, 122, 224, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 195, 0, 0.08) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
     animation: heroGlow 6s ease-in-out infinite alternate;
 }
 
 @keyframes heroGlow {
     0% { opacity: 0.3; }
-    100% { opacity: 0.7; }
+    100% { opacity: 0.8; }
 }
 
 .hero .eyebrow {
-    color: var(--amazon-orange);
+    color: var(--evec-blue-light);
     font-size: 0.9rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;
-    text-shadow: 0 0 10px rgba(255, 153, 0, 0.5);
+    text-shadow: 0 0 12px rgba(30, 122, 224, 0.6);
 }
 
 .hero h1 {
@@ -48,7 +48,7 @@ COMPONENT STYLES
     margin: 0 0 16px 0;
     line-height: 1.2;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(135deg, #ffffff 0%, var(--amazon-orange-soft) 100%);
+    background: linear-gradient(135deg, #ffffff 0%, var(--amazon-orange-soft) 60%, var(--evec-blue-light) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -97,15 +97,16 @@ COMPONENT STYLES
 }
 
 .hero-actions .btn-primary {
-    background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
-    color: var(--amazon-dark);
-    box-shadow: 0 8px 25px rgba(255, 153, 0, 0.3);
-    border: 1px solid rgba(255, 153, 0, 0.3);
+    background: linear-gradient(135deg, var(--evec-blue), var(--evec-blue-light));
+    color: #ffffff;
+    box-shadow: 0 8px 25px rgba(30, 122, 224, 0.4);
+    border: 1px solid rgba(30, 122, 224, 0.4);
 }
 
 .hero-actions .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(255, 153, 0, 0.4);
+    box-shadow: 0 12px 35px rgba(30, 122, 224, 0.55);
+    background: linear-gradient(135deg, var(--evec-blue-light), var(--evec-blue));
 }
 
 .hero-actions .btn-secondary {

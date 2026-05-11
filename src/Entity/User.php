@@ -102,8 +102,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setPassword(string $password): self
     {
-        // Hash the password automatically using bcrypt (default algorithm)
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
+        $this->password = $password;
 
         return $this;
     }

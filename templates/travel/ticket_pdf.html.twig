@@ -2,106 +2,292 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket #{{ reservation.id }}</title>
+    <title>Evec Tours · Ticket #{{ reservation.id }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #1a1a2e; font-size: 13px; }
+        body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f9; color: #1a1a2e; font-size: 13px; }
 
-        .ticket { border: 2px solid #1a1a2e; border-radius: 12px; overflow: hidden; max-width: 680px; margin: 20px auto; }
+        /* ── Outer wrapper ── */
+        .page { padding: 28px; }
 
-        .ticket-header { background: #1a1a2e; color: white; padding: 24px 32px; display: table; width: 100%; }
-        .header-left { display: table-cell; vertical-align: middle; }
-        .header-right { display: table-cell; vertical-align: middle; text-align: right; }
-        .header-left h1 { font-size: 22px; letter-spacing: 3px; }
-        .header-left p { font-size: 11px; color: #aaa; margin-top: 4px; }
-        .status-badge { background: #22c55e; color: white; padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .ticket-num { font-size: 11px; color: #aaa; margin-top: 6px; }
+        /* ── Ticket card ── */
+        .ticket {
+            max-width: 680px;
+            margin: 0 auto;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #c8d3e0;
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
 
-        .ticket-body { padding: 24px 32px; }
-        .fields-grid { display: table; width: 100%; border-collapse: collapse; }
-        .field-row { display: table-row; }
-        .field-cell { display: table-cell; width: 50%; padding: 10px 0; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-        .field-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 4px; }
-        .field-value { font-size: 14px; font-weight: bold; color: #1a1a2e; }
+        /* ── HEADER ── */
+        .tkt-header {
+            background: #0a1628;
+            color: #ffffff;
+            padding: 22px 32px;
+            display: table;
+            width: 100%;
+        }
+        .tkt-header-left  { display: table-cell; vertical-align: middle; }
+        .tkt-header-right { display: table-cell; vertical-align: middle; text-align: right; }
+        .brand-name  { font-size: 21px; font-weight: bold; letter-spacing: 2px; color: #ff9900; }
+        .brand-tagline { font-size: 10px; color: #8a9bbf; margin-top: 3px; letter-spacing: 0.5px; }
+        .tkt-num { font-size: 11px; color: #8a9bbf; margin-bottom: 6px; }
 
-        .ticket-footer { background: #f8fafc; border-top: 2px dashed #e2e8f0; padding: 20px 32px; display: table; width: 100%; }
-        .footer-left { display: table-cell; vertical-align: middle; text-align: center; width: 140px; }
-        .footer-center { display: table-cell; vertical-align: middle; text-align: center; }
-        .footer-right { display: table-cell; vertical-align: middle; text-align: right; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .badge-confirmed { background: #16a34a; color: #ffffff; }
+        .badge-pending   { background: #ca8a04; color: #ffffff; }
+        .badge-cancelled { background: #dc2626; color: #ffffff; }
+        .badge-default   { background: #475569; color: #ffffff; }
 
-        .qr-img { width: 100px; height: 100px; border: 2px solid #e2e8f0; border-radius: 6px; }
-        .qr-label { font-size: 9px; color: #64748b; margin-top: 4px; }
+        /* ── PASSENGER BANNER ── */
+        .tkt-passenger {
+            background: #ff9900;
+            padding: 14px 32px;
+            display: table;
+            width: 100%;
+        }
+        .pass-label { display: table-cell; vertical-align: middle; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #7a4000; font-weight: bold; width: 90px; }
+        .pass-name  { display: table-cell; vertical-align: middle; font-size: 18px; font-weight: bold; color: #0a1628; letter-spacing: 0.5px; }
 
+        /* ── ROUTE BAR ── */
+        .tkt-route {
+            background: #f0f4fa;
+            border-top: 1px solid #dde4ef;
+            border-bottom: 1px solid #dde4ef;
+            padding: 18px 32px;
+            display: table;
+            width: 100%;
+        }
+        .route-from  { display: table-cell; vertical-align: middle; text-align: left; width: 40%; }
+        .route-arrow { display: table-cell; vertical-align: middle; text-align: center; width: 20%; }
+        .route-to    { display: table-cell; vertical-align: middle; text-align: right; width: 40%; }
+        .route-city  { font-size: 20px; font-weight: bold; color: #0a1628; letter-spacing: 0.5px; }
+        .route-date  { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .route-dir   { font-size: 10px; color: #94a3b8; font-style: italic; }
+        .arrow-line  { display: block; font-size: 22px; color: #ff9900; }
 
-        .price-label { font-size: 10px; color: #64748b; margin-bottom: 4px; }
-        .price-value { font-size: 24px; font-weight: bold; color: #0f3460; }
-        .price-ref { font-size: 10px; color: #64748b; margin-top: 4px; }
+        /* ── DETAILS GRID ── */
+        .tkt-details { padding: 22px 32px; }
+        .details-grid { display: table; width: 100%; border-collapse: collapse; }
+        .details-row  { display: table-row; }
+        .detail-cell  {
+            display: table-cell;
+            width: 33.33%;
+            padding: 12px 16px 12px 0;
+            border-bottom: 1px solid #e8edf5;
+            vertical-align: top;
+        }
+        .detail-cell:last-child { padding-right: 0; }
+        .detail-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: #94a3b8; margin-bottom: 5px; font-weight: bold; }
+        .detail-value { font-size: 13px; font-weight: bold; color: #1a1a2e; }
+        .detail-sub   { font-size: 10px; color: #64748b; margin-top: 2px; }
 
-        .barcode { text-align: center; padding: 12px 32px; border-top: 1px solid #e2e8f0; font-family: monospace; font-size: 10px; letter-spacing: 5px; color: #94a3b8; }
+        /* ── TEAR LINE ── */
+        .tear-line {
+            margin: 0 24px;
+            border: none;
+            border-top: 2px dashed #c8d3e0;
+            position: relative;
+        }
+        .tear-circle-left  { position: absolute; left: -36px; top: -10px; width: 20px; height: 20px; background: #f4f6f9; border-radius: 50%; border: 1px solid #c8d3e0; }
+        .tear-circle-right { position: absolute; right: -36px; top: -10px; width: 20px; height: 20px; background: #f4f6f9; border-radius: 50%; border: 1px solid #c8d3e0; }
+
+        /* ── FOOTER STUB ── */
+        .tkt-stub {
+            padding: 18px 32px 22px;
+            display: table;
+            width: 100%;
+        }
+        .stub-qr     { display: table-cell; vertical-align: middle; width: 140px; text-align: center; }
+        .stub-center { display: table-cell; vertical-align: middle; padding: 0 20px; }
+        .stub-price  { display: table-cell; vertical-align: middle; text-align: right; }
+
+        .qr-img     { width: 110px; height: 110px; border: 2px solid #e2e8f0; border-radius: 8px; }
+        .qr-caption { font-size: 8px; color: #94a3b8; margin-top: 5px; letter-spacing: 0.5px; }
+
+        .stub-heading { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 10px; font-weight: bold; }
+        .ref-row { margin-bottom: 6px; display: table; width: 100%; }
+        .ref-label { display: table-cell; font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; width: 80px; }
+        .ref-val   { display: table-cell; font-size: 11px; color: #334155; font-weight: bold; }
+
+        .price-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 6px; font-weight: bold; }
+        .price-value { font-size: 28px; font-weight: bold; color: #0a1628; line-height: 1; }
+        .price-curr  { font-size: 13px; color: #64748b; }
+        .price-note  { font-size: 9px; color: #94a3b8; margin-top: 5px; }
+
+        /* ── BARCODE FOOTER ── */
+        .tkt-barcode {
+            background: #0a1628;
+            padding: 10px 32px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 9px;
+            letter-spacing: 6px;
+            color: #3a4f6e;
+        }
+        .tkt-barcode span { color: #ff9900; font-size: 8px; letter-spacing: 1px; margin-right: 12px; font-family: Arial, sans-serif; }
     </style>
 </head>
 <body>
+<div class="page">
 <div class="ticket">
-    <div class="ticket-header">
-        <div class="header-left">
-            <h1>✈ TRAVAGIR</h1>
-            <p>Official Travel Confirmation</p>
+
+    {# ── HEADER ── #}
+    <div class="tkt-header">
+        <div class="tkt-header-left">
+            <div class="brand-name">✈ EVEC TOURS</div>
+            <div class="brand-tagline">Official Travel Confirmation &amp; Boarding Pass</div>
         </div>
-        <div class="header-right">
-            <div class="status-badge">✓ CONFIRMED</div>
-            <div class="ticket-num">Ticket #{{ reservation.id }}</div>
+        <div class="tkt-header-right">
+            <div class="tkt-num">TICKET #{{ '%06d'|format(reservation.id) }}</div>
+            {% set s = reservation.status|upper %}
+            {% if s == 'CONFIRMED' %}
+                <span class="status-badge badge-confirmed">✓ CONFIRMED</span>
+            {% elseif s == 'PENDING' %}
+                <span class="status-badge badge-pending">◷ PENDING</span>
+            {% elseif s == 'CANCELLED' %}
+                <span class="status-badge badge-cancelled">✕ CANCELLED</span>
+            {% else %}
+                <span class="status-badge badge-default">{{ s }}</span>
+            {% endif %}
         </div>
     </div>
 
-    <div class="ticket-body">
-        <div class="fields-grid">
-            <div class="field-row">
-                <div class="field-cell">
-                    <div class="field-label">Voyage</div>
-                    <div class="field-value">{{ reservation.voyage_title|default('—') }}</div>
+    {# ── PASSENGER ── #}
+    <div class="tkt-passenger">
+        <div class="pass-label">Passenger</div>
+        <div class="pass-name">{{ passenger_name|default('Guest')|upper }}</div>
+    </div>
+
+    {# ── ROUTE BAR ── #}
+    <div class="tkt-route">
+        <div class="route-from">
+            <div class="route-city">Tunisia</div>
+            <div class="route-date">
+                {% if reservation.voyage_start %}
+                    {{ reservation.voyage_start|date('d M Y') }}
+                {% else %}
+                    TBD
+                {% endif %}
+            </div>
+            <div class="route-dir">Departure</div>
+        </div>
+        <div class="route-arrow">
+            <span class="arrow-line">→</span>
+        </div>
+        <div class="route-to">
+            <div class="route-city">{{ reservation.destination|default('Destination')|upper }}</div>
+            <div class="route-date">
+                {% if reservation.voyage_end %}
+                    {{ reservation.voyage_end|date('d M Y') }}
+                {% else %}
+                    TBD
+                {% endif %}
+            </div>
+            <div class="route-dir">Return</div>
+        </div>
+    </div>
+
+    {# ── DETAILS GRID ── #}
+    <div class="tkt-details">
+        <div class="details-grid">
+            <div class="details-row">
+                <div class="detail-cell">
+                    <div class="detail-label">Voyage</div>
+                    <div class="detail-value">{{ reservation.voyage_title|default('—') }}</div>
                 </div>
-                <div class="field-cell">
-                    <div class="field-label">Destination</div>
-                    <div class="field-value">{{ reservation.destination|default('—') }}</div>
+                <div class="detail-cell">
+                    <div class="detail-label">Passengers</div>
+                    <div class="detail-value">{{ reservation.number_of_people }}</div>
+                    <div class="detail-sub">person{{ reservation.number_of_people > 1 ? 's' : '' }}</div>
+                </div>
+                <div class="detail-cell">
+                    <div class="detail-label">Booked On</div>
+                    <div class="detail-value">
+                        {% if reservation.reservation_date %}
+                            {{ reservation.reservation_date|date('d M Y') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            <div class="field-row">
-                <div class="field-cell">
-                    <div class="field-label">Departure</div>
-                    <div class="field-value">{{ reservation.voyage_start ? reservation.voyage_start|date('d M Y') : 'TBD' }}</div>
+            <div class="details-row">
+                <div class="detail-cell" style="border-bottom:none;">
+                    <div class="detail-label">Payment Status</div>
+                    <div class="detail-value">{{ reservation.payment_status|default('—')|upper }}</div>
                 </div>
-                <div class="field-cell">
-                    <div class="field-label">Return</div>
-                    <div class="field-value">{{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</div>
+                <div class="detail-cell" style="border-bottom:none;">
+                    <div class="detail-label">Duration</div>
+                    {% if reservation.voyage_start and reservation.voyage_end %}
+                        {% set diff = reservation.voyage_end|date('U') - reservation.voyage_start|date('U') %}
+                        {% set days = (diff / 86400)|round(0, 'ceil') %}
+                        <div class="detail-value">{{ days }} day{{ days != 1 ? 's' : '' }}</div>
+                    {% else %}
+                        <div class="detail-value">—</div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="field-row">
-                <div class="field-cell">
-                    <div class="field-label">Passengers</div>
-                    <div class="field-value">{{ reservation.number_of_people }} person{{ reservation.number_of_people > 1 ? 's' : '' }}</div>
-                </div>
-                <div class="field-cell">
-                    <div class="field-label">Booked On</div>
-                    <div class="field-value">{{ reservation.reservation_date ? reservation.reservation_date|date('d M Y') : '—' }}</div>
+                <div class="detail-cell" style="border-bottom:none;">
+                    <div class="detail-label">Voyage ID</div>
+                    <div class="detail-value">#{{ reservation.voyage_id }}</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="ticket-footer">
-        <div class="footer-left">
-            <img class="qr-img" src="{{ qr_url }}" alt="QR">
-            <div class="qr-label">Scan to verify</div>
+    {# ── TEAR LINE ── #}
+    <div style="margin: 0 16px; position: relative; overflow: visible;">
+        <hr class="tear-line">
+        <div class="tear-circle-left"></div>
+        <div class="tear-circle-right"></div>
+    </div>
+
+    {# ── STUB ── #}
+    <div class="tkt-stub">
+        <div class="stub-qr">
+            <img class="qr-img" src="{{ qr_url }}" alt="QR Code">
+            <div class="qr-caption">SCAN TO VERIFY</div>
         </div>
-        <div class="footer-center"></div>
-        <div class="footer-right">
-            <div class="price-label">Total Amount Paid</div>
-            <div class="price-value">{{ reservation.total_price|number_format(2, '.', ',') }} TND</div>
-            <div class="price-ref">Ref: {{ reservation.payment_reference|default('N/A') }}</div>
+        <div class="stub-center">
+            <div class="stub-heading">Booking Reference</div>
+            <div class="ref-row">
+                <div class="ref-label">Ref No.</div>
+                <div class="ref-val">{{ reservation.payment_reference|default('N/A') }}</div>
+            </div>
+            <div class="ref-row">
+                <div class="ref-label">Booking</div>
+                <div class="ref-val">TRV-{{ '%06d'|format(reservation.id) }}</div>
+            </div>
+            <div class="ref-row">
+                <div class="ref-label">Issued</div>
+                <div class="ref-val">{{ "now"|date('d M Y') }}</div>
+            </div>
+        </div>
+        <div class="stub-price">
+            <div class="price-label">Total Amount</div>
+            <div class="price-value">{{ reservation.total_price|number_format(2, '.', ',') }} <span class="price-curr">TND</span></div>
+            <div class="price-note">All taxes included</div>
         </div>
     </div>
 
-    <div class="barcode">| TRV-{{ reservation.id }}-{{ reservation.voyage_id }}-{{ reservation.user_id ?? '??' }} |</div>
+    {# ── BARCODE ── #}
+    <div class="tkt-barcode">
+        <span>EVEC TOURS</span>
+        {{ ('TRV' ~ reservation.id ~ reservation.voyage_id)|upper }}
+        ||| {{ reservation.id }}-{{ reservation.voyage_id }}-{{ reservation.number_of_people }}P |||
+        {{ ('TRV' ~ reservation.id ~ reservation.voyage_id)|upper }}
+    </div>
+
+</div>
 </div>
 </body>
 </html>

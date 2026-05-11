@@ -1,11 +1,11 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
-{% block title %}{{ voyage.title|default('Voyage details') }} | Travagir{% endblock %}
-{% block meta_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Travagir — curated voyages and exclusive travel offers.')|striptags|slice(0,160) }}{% endblock %}
-{% block og_title %}{{ voyage.title|default('Voyage') }} — Travagir{% endblock %}
-{% block og_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Travagir.')|striptags|slice(0,200) }}{% endblock %}
+{% block title %}{{ voyage.title|default('Voyage details') }} | Evec Tours{% endblock %}
+{% block meta_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Evec Tours — curated voyages and exclusive travel offers.')|striptags|slice(0,160) }}{% endblock %}
+{% block og_title %}{{ voyage.title|default('Voyage') }} — Evec Tours{% endblock %}
+{% block og_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Evec Tours.')|striptags|slice(0,200) }}{% endblock %}
 {% block og_image %}{% set _img = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : '' %}{% if _img %}{{ _img }}{% else %}{{ parent() }}{% endif %}{% endblock %}
-{% block twitter_title %}{{ voyage.title|default('Voyage') }} — Travagir{% endblock %}
+{% block twitter_title %}{{ voyage.title|default('Voyage') }} — Evec Tours{% endblock %}
 {% block twitter_description %}{{ voyage.description|default('')|striptags|slice(0,200) }}{% endblock %}
 {% block twitter_image %}{% set _img = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : '' %}{% if _img %}{{ _img }}{% else %}{{ parent() }}{% endif %}{% endblock %}
 

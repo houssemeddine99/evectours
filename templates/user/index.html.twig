@@ -1,7 +1,8 @@
-{% extends 'base.html.twig' %}
-{% block title %}Manage Users | Travagir{% endblock %}
+﻿{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'users' %}
+{% block title %}Users | Evec Tours Admin{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="users-page">
     <!-- Page Header -->
     <div class="page-header">
@@ -532,4 +533,4 @@ function toggleFilters() {
     }
 }
 </style>
-{% endblock %}
+{% endblock admin_body %}

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boarding Ticket #{{ reservation.id }} | Travagir</title>
+    <title>Boarding Ticket #{{ reservation.id }} | Evec Tours</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; padding: 20px; color: #1a1a2e; }
@@ -12,10 +12,17 @@
 
         .ticket { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
 
-        .ticket-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; }
-        .ticket-header h1 { font-size: 1.8rem; letter-spacing: 2px; }
-        .ticket-header .status-badge { background: #22c55e; color: white; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
+        .ticket-header { background: linear-gradient(135deg, #0a1628 0%, #16213e 60%, #0f3460 100%); color: white; padding: 32px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .ticket-header h1 { font-size: 1.8rem; letter-spacing: 2px; color: #ff9900; }
+        .ticket-header .status-badge { padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
+        .badge-confirmed { background: #16a34a; color: #fff; }
+        .badge-pending   { background: #ca8a04; color: #fff; }
+        .badge-cancelled { background: #dc2626; color: #fff; }
+        .badge-default   { background: #475569; color: #fff; }
 
+        .passenger-bar { background: #ff9900; padding: 14px 40px; display: flex; align-items: center; gap: 14px; }
+        .passenger-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: #7a4000; font-weight: 700; }
+        .passenger-name  { font-size: 1.3rem; font-weight: 800; color: #0a1628; }
         .ticket-body { padding: 32px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-bottom: 2px dashed #e2e8f0; }
         .ticket-field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; display: block; margin-bottom: 4px; }
         .ticket-field span { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; }
@@ -49,13 +56,27 @@
     <div class="ticket">
         <div class="ticket-header">
             <div>
-                <h1>✈ TRAVAGIR</h1>
-                <p style="font-size:0.85rem;opacity:0.75;margin-top:4px;">Official Travel Confirmation</p>
+                <h1>✈ EVEC TOURS</h1>
+                <p style="font-size:0.85rem;opacity:0.75;margin-top:4px;">Official Travel Confirmation &amp; Boarding Pass</p>
             </div>
             <div>
-                <div class="status-badge">✓ Confirmed</div>
-                <p style="font-size:0.75rem;opacity:0.6;text-align:right;margin-top:6px;">Ticket #{{ reservation.id }}</p>
+                {% set s = reservation.status|upper %}
+                {% if s == 'CONFIRMED' %}
+                    <div class="status-badge badge-confirmed">✓ CONFIRMED</div>
+                {% elseif s == 'PENDING' %}
+                    <div class="status-badge badge-pending">◷ PENDING</div>
+                {% elseif s == 'CANCELLED' %}
+                    <div class="status-badge badge-cancelled">✕ CANCELLED</div>
+                {% else %}
+                    <div class="status-badge badge-default">{{ s }}</div>
+                {% endif %}
+                <p style="font-size:0.75rem;opacity:0.6;text-align:right;margin-top:6px;">Ticket #{{ '%06d'|format(reservation.id) }}</p>
             </div>
+        </div>
+
+        <div class="passenger-bar">
+            <span class="passenger-label">Passenger</span>
+            <span class="passenger-name">{{ passenger_name|default('Guest')|upper }}</span>
         </div>
 
         <div class="ticket-body">
@@ -73,7 +94,7 @@
             </div>
             <div class="ticket-field">
                 <label>Return</label>
-                <span>{{ reservation.voyage_end ? reservation.voyage_end|date('d MMM Y') : 'TBD' }}</span>
+                <span>{{ reservation.voyage_end ? reservation.voyage_end|date('d M Y') : 'TBD' }}</span>
             </div>
             <div class="ticket-field">
                 <label>Passengers</label>
@@ -104,10 +125,14 @@
         </div>
     </div>
 
-    <div class="print-btn">
-        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
-        <p style="text-align:center;margin-top:10px;font-size:0.8rem;color:#64748b;">Use Ctrl+P → "Save as PDF" to download</p>
+    <div class="print-btn" style="display:flex;gap:12px;justify-content:center;align-items:center;">
+        <button class="btn-print" onclick="window.print()">🖨 Print Ticket</button>
+        <a href="{{ path('account_reservation_ticket_pdf', {id: reservation.id}) }}"
+           style="background:#ff9900;color:#000;border:none;padding:12px 32px;border-radius:50px;font-size:1rem;font-weight:600;cursor:pointer;text-decoration:none;">
+            ⬇ Download PDF
+        </a>
     </div>
+    <p style="text-align:center;margin-top:10px;font-size:0.8rem;color:#64748b;">Or use Ctrl+P → "Save as PDF" to download</p>
 </div>
 
 <script>

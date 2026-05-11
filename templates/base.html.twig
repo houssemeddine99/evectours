@@ -1,28 +1,28 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Travagir — Discover the World{% endblock %}</title>
+    <title>{% block title %}Evec Tours — Discover the World{% endblock %}</title>
 
     {# ── SEO & Social meta ── #}
-    <meta name="description" content="{% block meta_description %}Travagir — curated travel voyages, exclusive offers, and AI-powered trip planning. Discover your next adventure.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Evec Tours — curated travel voyages, exclusive offers, and AI-powered trip planning. Discover your next adventure.{% endblock %}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
 
     {# Open Graph #}
     <meta property="og:type"        content="website">
-    <meta property="og:site_name"   content="Travagir">
-    <meta property="og:title"       content="{% block og_title %}{% block _title %}Travagir — Discover the World{% endblock %}{% endblock %}">
+    <meta property="og:site_name"   content="Evec Tours">
+    <meta property="og:title"       content="{% block og_title %}{% block _title %}Evec Tours — Discover the World{% endblock %}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Curated travel voyages, exclusive offers, and AI-powered trip planning.{% endblock %}">
-    <meta property="og:image"       content="{% block og_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+    <meta property="og:image"       content="{% block og_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png{% endblock %}">
     <meta property="og:url"         content="{{ app.request.scheme ~ '://' ~ app.request.httpHost ~ app.request.requestUri }}">
 
     {# Twitter Card #}
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="{% block twitter_title %}Travagir — Discover the World{% endblock %}">
+    <meta name="twitter:title"       content="{% block twitter_title %}Evec Tours — Discover the World{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Curated voyages, exclusive deals, AI trip planner.{% endblock %}">
-    <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/og-default.jpg{% endblock %}">
+    <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png{% endblock %}">
 
     <meta name="theme-color" content="#0f1722">
     <link rel="icon" href="/favicon.ico">
@@ -34,9 +34,9 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com">
 
     {# ── Critical CSS (single request) ── #}
-    <link rel="preload" href="/styles/bundle.css?v=4" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=4"></noscript>
-    <link rel="stylesheet" href="/styles/bundle.css?v=4">
+    <link rel="preload" href="/styles/bundle.css?v=5" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=5"></noscript>
+    <link rel="stylesheet" href="/styles/bundle.css?v=5">
 
     {# ── Fonts — non-blocking via media trick ── #}
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -48,7 +48,9 @@
 <div id="pg">
     <header class="site-header">
         <div class="container nav-wrap">
-            <a href="{{ path('travel_home') }}" class="logo">Travagir</a>
+            <a href="{{ path('travel_home') }}" class="logo" style="background:none;">
+                <img src="/images/logo.png" alt="Evec Tours" style="height:56px;width:auto;display:block;">
+            </a>
             <button class="mobile-nav-toggle" onclick="toggleMobileNav()">☰</button>
             <nav id="mainNav">
                 <a class="{{ active_nav|default('') == 'home' ? 'active' : '' }}" href="{{ path('travel_home') }}">Home</a>
@@ -85,29 +87,68 @@
                     </div>
                 </div>
                 {% if app.session.get('auth_user') %}
-                    <div class="account-dropdown">
-                        <button class="account-btn">👤</button>
+                    {% set authUser = app.session.get('auth_user') %}
+                    <div class="account-dropdown" id="accountDropdown">
+                        <button class="account-btn" aria-label="Account menu" title="{{ authUser.username }}">
+                            <span class="acct-initial">{{ authUser.username|slice(0,1)|upper }}</span>
+                        </button>
                         <div class="account-menu">
-                            <div class="account-info">
-                                <strong>{{ app.session.get('auth_user').username }}</strong>
-                                <span>{{ app.session.get('auth_user').email }}</span>
+                            <div class="acct-header">
+                                <div class="acct-avatar-lg">{{ authUser.username|slice(0,1)|upper }}</div>
+                                <div class="acct-header-info">
+                                    <strong>{{ authUser.username }}</strong>
+                                    <span>{{ authUser.email }}</span>
+                                    <em class="acct-role">{{ authUser.is_admin|default(false) ? 'Admin' : 'Member' }}</em>
+                                </div>
                             </div>
-                            <hr>
-                            <a href="{{ path('account_settings') }}" class="account-link">Account Settings</a>
-                             <a href="{{ path('account_bookings') }}" class="account-link">My Bookings</a>
-                             <a href="{{ path('user_reclamations') }}" class="account-link">My Reclamations</a>
-                             <a href="{{ path('account_favorites') }}" class="account-link">Favorites</a>
-                            {% set authUser = app.session.get('auth_user') %}
+                            <div class="acct-section">
+                                <a href="{{ path('account_settings') }}" class="account-link">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                                    Account Settings
+                                </a>
+                                <a href="{{ path('account_bookings') }}" class="account-link">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    My Bookings
+                                </a>
+                                <a href="{{ path('user_reclamations') }}" class="account-link">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                    My Reclamations
+                                </a>
+                                <a href="{{ path('account_favorites') }}" class="account-link">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                                    Favorites
+                                </a>
+                            </div>
                             {% if authUser is defined and authUser is not empty and authUser.is_admin|default(false) %}
-                                <a href="{{ path('admin_dashboard') }}" class="account-link">Admin Dashboard</a>
-                                <a href="{{ path('admin_users') }}" class="account-link">Manage Users</a>
-                                <a href="{{ path('admin_ai_assistant') }}" class="account-link">🤖 AI Assistant</a>
-                                <a href="{{ path('admin_reservations') }}" class="account-link">Manage Reservations</a>
+                            <div class="acct-divider"></div>
+                            <div class="acct-section-label">Administration</div>
+                            <div class="acct-section">
+                                <a href="{{ path('admin_dashboard') }}" class="account-link account-link--admin">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                    Admin Dashboard
+                                </a>
+                                <a href="{{ path('admin_users') }}" class="account-link account-link--admin">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                                    Manage Users
+                                </a>
+                                <a href="{{ path('admin_ai_assistant') }}" class="account-link account-link--admin">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                                    AI Assistant
+                                </a>
+                                <a href="{{ path('admin_reservations') }}" class="account-link account-link--admin">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                                    Manage Reservations
+                                </a>
+                            </div>
                             {% endif %}
-                            <hr>
-                            <form method="post" action="{{ path('auth_logout') }}">
-                                <button type="submit" class="logout-btn">Logout</button>
-                            </form>
+                            <div class="acct-footer">
+                                <form method="post" action="{{ path('auth_logout') }}">
+                                    <button type="submit" class="logout-btn">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                                        Sign Out
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 {% else %}
@@ -131,7 +172,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>© 2026 <strong style="color:var(--amazon-orange-soft)">Travagir</strong> — Crafted with Symfony 6.4 &amp; Twig</p>
+            <p>© 2026 <strong style="color:var(--amazon-orange-soft)">Evec Tours</strong></p>
         </div>
     </footer>
 
@@ -163,27 +204,36 @@
             if (window.innerWidth > 768 && nav) nav.classList.remove('active');
         });
 
-        // Portal: move menus to <body> so they escape the header's stacking context
+        // Account dropdown — simple class toggle (no portal)
+        (function () {
+            var dropdown = document.getElementById('accountDropdown');
+            if (!dropdown) return;
+            dropdown.querySelector('.account-btn').addEventListener('click', function (e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            });
+            document.addEventListener('click', function (e) {
+                if (!dropdown.contains(e.target)) dropdown.classList.remove('active');
+            });
+            window.addEventListener('resize', function () { dropdown.classList.remove('active'); });
+        })();
+
+        // Lang / currency — portal so they escape any overflow constraints
         document.addEventListener('DOMContentLoaded', function () {
             function makePortal(btnEl, menuEl) {
                 if (!btnEl || !menuEl) return;
-                // Move to body
-                menuEl.style.position   = 'fixed';
-                menuEl.style.zIndex     = '99999';
-                menuEl.style.opacity    = '1';
-                menuEl.style.visibility = 'visible';
-                menuEl.style.transform  = 'none';
-                menuEl.style.display    = 'none';
-                menuEl.style.marginTop  = '0';
+                menuEl.style.position  = 'fixed';
+                menuEl.style.zIndex    = '99999';
+                menuEl.style.display   = 'none';
+                menuEl.style.marginTop = '0';
                 document.body.appendChild(menuEl);
 
                 function place() {
-                    var r   = btnEl.getBoundingClientRect();
-                    var w   = menuEl.offsetWidth || 220;
+                    var r    = btnEl.getBoundingClientRect();
+                    var w    = menuEl.offsetWidth || 220;
                     var left = r.right - w;
-                    menuEl.style.top   = (r.bottom + 6) + 'px';
-                    menuEl.style.left  = Math.max(8, Math.min(left, window.innerWidth - w - 8)) + 'px';
-                    menuEl.style.right = 'auto';
+                    menuEl.style.top  = (r.bottom + 6) + 'px';
+                    menuEl.style.left = Math.max(8, Math.min(left, window.innerWidth - w - 8)) + 'px';
                 }
                 function open()  { menuEl.style.display = 'block'; place(); }
                 function close() { menuEl.style.display = 'none'; }
@@ -196,10 +246,9 @@
                     if (!menuEl.contains(e.target) && e.target !== btnEl) close();
                 });
                 window.addEventListener('scroll', close, { passive: true });
-                window.addEventListener('resize', function () { close(); }, { passive: true });
+                window.addEventListener('resize',  close, { passive: true });
             }
 
-            makePortal(document.querySelector('.account-btn'),    document.querySelector('.account-menu'));
             makePortal(document.getElementById('langToggle'),     document.getElementById('langMenu'));
             makePortal(document.getElementById('currencyToggle'), document.getElementById('currencyMenu'));
         });
@@ -264,7 +313,7 @@
 
 </div>{# /pg #}
 
-    {# ── Travagir Globe Mascot — user pages only (hidden on /admin/* routes) ── #}
+    {# ── Evec Tours Globe Mascot — user pages only (hidden on /admin/* routes) ── #}
     {% if not (app.request.pathInfo starts with '/admin') %}
     <canvas id="gb-canvas"></canvas>
     <div id="globe-bot" title="Double-click me to open the AI Trip Planner!">

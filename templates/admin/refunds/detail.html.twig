@@ -1,7 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'refunds' %}
 {% block title %}Admin – Refund #{{ refund.id }}{% endblock %}
 
-{% block stylesheets %}
+{% block admin_stylesheets %}
 <style>
 .rfd-header {
     display: flex;
@@ -138,7 +139,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
+{% block admin_body %}
 {% for type, messages in app.flashes %}
     {% for message in messages %}
         <div class="alert alert-{{ type == 'error' ? 'danger' : type }}" style="margin-bottom:12px;">{{ message }}</div>
@@ -173,11 +174,27 @@
         </div>
         <div class="rfd-row">
             <div class="rfd-label">Requester</div>
-            <div class="rfd-value">User #{{ refund.requesterId|default('—') }}</div>
+            <div class="rfd-value">
+                {% if requester is defined and requester %}
+                    <strong>{{ requester.username }}</strong>
+                    <span style="display:block;font-size:.82em;color:var(--text-muted);">{{ requester.email }}</span>
+                    {% if requester.tel %}<span style="display:block;font-size:.82em;color:var(--text-muted);">{{ requester.tel }}</span>{% endif %}
+                {% else %}
+                    #{{ refund.requesterId|default('—') }}
+                {% endif %}
+            </div>
         </div>
         <div class="rfd-row">
             <div class="rfd-label">Reservation</div>
-            <div class="rfd-value">#{{ refund.reservationId|default('—') }}</div>
+            <div class="rfd-value">
+                {% if reservation is defined and reservation %}
+                    <span style="font-weight:600;">#{{ reservation.id }}</span>
+                    <span style="display:block;font-size:.82em;color:var(--text-muted);">Status: {{ reservation.status }}</span>
+                    <span style="display:block;font-size:.82em;color:var(--text-muted);">Payment: {{ reservation.paymentStatus }}</span>
+                {% else %}
+                    #{{ refund.reservationId|default('—') }}
+                {% endif %}
+            </div>
         </div>
         <div class="rfd-row">
             <div class="rfd-label">Reclamation</div>
@@ -235,7 +252,15 @@
                     </select>
                 </div>
 
+                <div id="approve-warning" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;font-size:.82em;color:#fde68a;">
+                    ⚠ Approving will automatically <strong>cancel the reservation</strong> and mark it as REFUNDED.
+                </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Save Changes</button>
+<script>
+document.getElementById('refund-status').addEventListener('change', function() {
+    document.getElementById('approve-warning').style.display = this.value === 'APPROVED' ? 'block' : 'none';
+});
+</script>
             </form>
         </div>
     </div>

@@ -13,9 +13,8 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 final class EscalateReclamationsHandler
 {
     private const ESCALATION_MAP = [
-        'LOW'    => 'NORMAL',
-        'MEDIUM' => 'NORMAL',
-        'NORMAL' => 'HIGH',
+        'LOW'    => 'MEDIUM',
+        'MEDIUM' => 'HIGH',
         'HIGH'   => 'URGENT',
     ];
 

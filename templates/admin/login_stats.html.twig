@@ -1,8 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'login_stats' %}
 
 {% block title %}Admin – Login Statistics{% endblock %}
 
-{% block body %}
+{% block admin_body %}
     <h1>Login Statistics</h1>
     {% if stats is empty %}
         <p>No login records available.</p>

@@ -58,7 +58,7 @@ class GoogleAuthenticator extends OAuth2Authenticator
                     $user->setUsername($name);
 
                     // On met un mot de passe aléatoire car le champ est souvent non-nul en DB
-                    $user->setPassword(bin2hex(random_bytes(16)));
+                    $user->setPassword(password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT));
 
                     $this->entityManager->persist($user);
                     $this->entityManager->flush();

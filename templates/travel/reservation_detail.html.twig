@@ -1,6 +1,6 @@
-{% extends 'base.html.twig' %}
+﻿{% extends 'base.html.twig' %}
 
-{% block title %}Reservation Detail | Travagir{% endblock %}
+{% block title %}Reservation Detail | Evec Tours{% endblock %}
 
 {% block body %}
 <section>
@@ -189,7 +189,7 @@
     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.onload = function () {
         fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(dest) + '&format=json&limit=1', {
-            headers: { 'User-Agent': 'TravagirApp/1.0' }
+            headers: { 'User-Agent': 'Evec ToursApp/1.0' }
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {

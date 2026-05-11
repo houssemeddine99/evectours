@@ -44,6 +44,19 @@
 
             {% if data.reservation_id is defined and data.reservation_id is not empty %}
                 <input type="hidden" name="reservation_id" value="{{ data.reservation_id }}">
+            {% elseif reservations is defined and reservations|length > 0 %}
+                <div class="rf-field">
+                    <label for="reservation_id" class="rf-label">Reservation <span class="rf-required">*</span></label>
+                    <select name="reservation_id" id="reservation_id" class="rf-input" required>
+                        <option value="">— Select a reservation —</option>
+                        {% for res in reservations %}
+                        <option value="{{ res.id }}" {% if data.reservation_id|default('') == res.id ~ '' %}selected{% endif %}>
+                            #{{ res.id }} · {{ res.voyage_title|default('Voyage #' ~ res.voyage_id) }}
+                            ({{ res.status }}) — {{ res.total_price }} TND
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             {% else %}
                 <div class="rf-field">
                     <label for="reservation_id" class="rf-label">Reservation ID <span class="rf-required">*</span></label>

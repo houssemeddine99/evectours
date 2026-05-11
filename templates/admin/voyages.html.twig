@@ -1,247 +1,190 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'voyages' %}
+{% block title %}Voyages | Evec Tours Admin{% endblock %}
 
-{% block title %}Manage Voyages | Admin{% endblock %}
-
-{% block body %}
-<div class="admin-page">
-    <div class="page-header">
-        <div class="header-content">
-            <h1>Manage Voyages</h1>
-            <p class="lead">Create, edit, and delete travel packages</p>
-        </div>
-        <div class="header-actions">
-            <a href="{{ path('admin_voyage_new') }}" class="btn btn-primary">
-                <span>➕</span> Add New Voyage
-            </a>
-            <a href="{{ path('admin_dashboard') }}" class="btn btn-secondary">
-                ← Back to Dashboard
-            </a>
-        </div>
+{% block admin_body %}
+<div class="av-page">
+  <div class="page-header">
+    <div>
+      <h1>Voyages</h1>
+      <p class="lead">Create, edit, and manage travel packages</p>
     </div>
+    <a href="{{ path('admin_voyage_new') }}" class="btn btn-primary">✈️ Add Voyage</a>
+  </div>
 
-    {% for message in app.flashes('success') %}
-        <div class="alert alert-success">{{ message }}</div>
-    {% endfor %}
+  {% for msg in app.flashes('success') %}
+    <div class="alert alert-success">✓ {{ msg }}</div>
+  {% endfor %}
+  {% for msg in app.flashes('error') %}
+    <div class="alert alert-error">⚠ {{ msg }}</div>
+  {% endfor %}
 
-    {% for message in app.flashes('error') %}
-        <div class="alert alert-error">{{ message }}</div>
-    {% endfor %}
-
-    <div class="admin-table-container">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Destination</th>
-                    <th>Price</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Activities</th>
-                    <th>Offers</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for voyage in voyages %}
-                <tr>
-                    <td>{{ voyage.id }}</td>
-                    <td>
-                        <strong>{{ voyage.title }}</strong>
-                        {% if voyage.image_url and voyage.image_url[0] %}
-                            <img src="{{ voyage.image_url[0] }}" alt="{{ voyage.title }}" class="table-thumb">
-                        {% endif %}
-                    </td>
-                    <td>{{ voyage.destination }}</td>
-                    <td>${{ voyage.price|number_format(2) }}</td>
-                    <td>{{ voyage.start_date }}</td>
-                    <td>{{ voyage.end_date }}</td>
-                    <td><span class="badge">{{ voyage.activities_count }}</span></td>
-                    <td><span class="badge">{{ voyage.offers_count }}</span></td>
-                    <td class="actions-cell">
-                        <a href="{{ path('admin_voyage_manage', {id: voyage.id}) }}" class="btn btn-sm btn-manage">Manage</a>
-                        <a href="{{ path('admin_voyage_edit', {id: voyage.id}) }}" class="btn btn-sm btn-edit">Edit</a>
-                        <a href="{{ path('admin_voyage_delete', {id: voyage.id}) }}" class="btn btn-sm btn-delete" onclick="return confirm('Are you sure you want to delete this voyage?');">Delete</a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="9" class="empty-state">No voyages found. Create your first voyage!</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div class="table-wrap">
+    <table class="av-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Photo</th>
+          <th>Title</th>
+          <th>Destination</th>
+          <th>Price</th>
+          <th>Dates</th>
+          <th>Acts</th>
+          <th>Offers</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in voyages %}
+        <tr>
+          <td class="td-id">#{{ v.id }}</td>
+          <td class="td-thumb">
+            {% if v.image_url and v.image_url[0] %}
+              <img src="{{ v.image_url[0] }}" alt="{{ v.title }}" class="v-thumb">
+            {% else %}
+              <div class="v-thumb-ph">✈</div>
+            {% endif %}
+          </td>
+          <td class="td-title"><strong>{{ v.title }}</strong></td>
+          <td class="td-dest">{{ v.destination }}</td>
+          <td class="td-price">{{ v.price|number_format(0) }} TND</td>
+          <td class="td-dates">
+            <span>{{ v.start_date }}</span>
+            <span class="dates-sep">→</span>
+            <span>{{ v.end_date }}</span>
+          </td>
+          <td><span class="count-badge">{{ v.activities_count }}</span></td>
+          <td><span class="count-badge offers">{{ v.offers_count }}</span></td>
+          <td class="td-actions">
+            <a href="{{ path('admin_voyage_manage', {id: v.id}) }}" class="btn-act btn-act-manage" title="Manage">⚙</a>
+            <a href="{{ path('admin_voyage_edit', {id: v.id}) }}" class="btn-act btn-act-edit" title="Edit">✏</a>
+            <form method="post" action="{{ path('admin_voyage_delete', {id: v.id}) }}" class="inline-form"
+                  onsubmit="return confirm('Delete "{{ v.title|e('html_attr') }}"? This cannot be undone.');">
+              <button type="submit" class="btn-act btn-act-delete" title="Delete">🗑</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" class="empty-row">No voyages found. <a href="{{ path('admin_voyage_new') }}">Create the first one.</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <style>
-.admin-page {
-    padding: 30px 20px;
+.av-page { max-width:1100px; }
+
+.page-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom:24px; }
+.page-header h1 { margin:0 0 4px; font-size:1.8rem; }
+.page-header .lead { margin:0; color:var(--text-muted); }
+
+.table-wrap {
+  background: #080e1c;
+  border: 1px solid var(--border-dark);
+  border-radius: 14px;
+  overflow-x: auto;
 }
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    gap: 20px;
+.av-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
 }
 
-.page-header h1 {
-    margin: 0 0 8px 0;
-    font-size: 2rem;
+.av-table th {
+  padding: 13px 14px;
+  background: rgba(15,23,34,.6);
+  color: var(--text-muted);
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-dark);
 }
 
-.page-header .lead {
-    margin: 0;
-    color: var(--text-muted);
+.av-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  vertical-align: middle;
 }
 
-.header-actions {
-    display: flex;
-    gap: 12px;
+.av-table tbody tr:hover { background: rgba(74,158,255,.04); }
+.av-table tbody tr:last-child td { border-bottom: none; }
+
+.td-id { font-family:monospace; color:var(--amazon-orange); font-weight:700; }
+
+.v-thumb {
+  width: 60px; height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.1);
+  display: block;
 }
 
-.btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.95rem;
+.v-thumb-ph {
+  width: 60px; height: 40px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items:center; justify-content:center;
+  font-size: 1.2rem;
+  color: var(--text-muted);
 }
 
-.btn-primary {
-    background: var(--amazon-orange);
-    color: #000;
+.td-title strong { color:var(--text-primary); }
+.td-dest { color:var(--text-muted); font-size:.9rem; }
+.td-price { color:var(--amazon-orange); font-weight:700; white-space:nowrap; }
+.td-dates { color:var(--text-muted); font-size:.85rem; white-space:nowrap; }
+.dates-sep { color:var(--border-dark); margin:0 4px; }
+
+.count-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: .78rem;
+  font-weight: 700;
+  background: rgba(74,158,255,.15);
+  color: var(--evec-blue-light);
+}
+.count-badge.offers {
+  background: rgba(245,195,0,.15);
+  color: var(--amazon-orange-soft);
 }
 
-.btn-primary:hover {
-    background: #e68a00;
+.td-actions { display:flex; gap:6px; align-items:center; }
+
+.btn-act {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex; align-items:center; justify-content:center;
+  font-size: .95rem;
+  text-decoration: none;
+  transition: all .18s ease;
+  background: transparent;
 }
 
-.btn-secondary {
-    background: var(--amazon-white);
-    color: var(--text-primary);
-    border: 1px solid var(--border-dark);
-}
+.btn-act-manage { background:rgba(74,158,255,.15); color:var(--evec-blue-light); }
+.btn-act-manage:hover { background:#3b82f6; color:#fff; }
 
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
+.btn-act-edit { background:rgba(251,191,36,.15); color:#fbbf24; }
+.btn-act-edit:hover { background:#d97706; color:#fff; }
 
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-}
+.btn-act-delete { background:rgba(239,68,68,.15); color:#ef4444; }
+.btn-act-delete:hover { background:#dc2626; color:#fff; }
 
-.btn-edit {
-    background: #3b82f6;
-    color: white;
-}
+.inline-form { display:inline; margin:0; padding:0; }
 
-.btn-delete {
-    background: #ef4444;
-    color: white;
+.empty-row {
+  text-align: center;
+  padding: 50px;
+  color: var(--text-muted);
+  font-size: .95rem;
 }
-
-.alert {
-    padding: 14px 20px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-}
-
-.alert-success {
-    background: rgba(34, 197, 94, 0.15);
-    border: 1px solid #22c55e;
-    color: #22c55e;
-}
-
-.alert-error {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-}
-
-.admin-table-container {
-    background: var(--amazon-white);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--border-dark);
-}
-
-.admin-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.admin-table th,
-.admin-table td {
-    padding: 14px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-dark);
-}
-
-.admin-table th {
-    background: rgba(15, 23, 34, 0.5);
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.admin-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.admin-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.table-thumb {
-    width: 60px;
-    height: 40px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-top: 6px;
-    display: block;
-}
-
-.badge {
-    background: rgba(255, 153, 0, 0.2);
-    color: var(--amazon-orange);
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.actions-cell {
-    display: flex;
-    gap: 8px;
-}
-
-.delete-form {
-    display: inline;
-}
-
-.empty-state {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 40px !important;
-}
-
-@media (max-width: 1024px) {
-    .admin-table {
-        display: block;
-        overflow-x: auto;
-    }
-}
+.empty-row a { color:var(--amazon-orange); }
 </style>
 {% endblock %}

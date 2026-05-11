@@ -1,7 +1,8 @@
-{% extends 'base.html.twig' %}
-{% block title %}Admin – Reclamations{% endblock %}
+{% extends 'admin/_layout.html.twig' %}
+{% set active_section = 'reclamations' %}
+{% block title %}Reclamations | Evec Tours Admin{% endblock %}
 
-{% block stylesheets %}
+{% block admin_stylesheets %}
 <style>
 /* ── Page ──────────────────────────────────────────────────── */
 .ar-page {
@@ -271,7 +272,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="ar-page">
 
 <div class="ar-header">
@@ -351,7 +352,13 @@
                 {% for rec in reclamations %}
                 <tr class="tr-s-{{ rec.status|lower|replace({'_': '-'}) }}">
                     <td class="td-id">#{{ rec.id }}</td>
-                    <td class="td-primary">User #{{ rec.userId }}</td>
+                    <td class="td-primary">
+                        {% if user_map[rec.userId] is defined %}
+                            <span title="{{ user_map[rec.userId].email }}">{{ user_map[rec.userId].username }}</span>
+                        {% else %}
+                            #{{ rec.userId }}
+                        {% endif %}
+                    </td>
                     <td>
                         <a href="{{ path('admin_reclamation_detail', {'id': rec.id}) }}" class="recl-title-link" title="{{ rec.title }}">
                             {{ rec.title }}

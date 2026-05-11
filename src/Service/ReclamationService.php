@@ -42,12 +42,8 @@ class ReclamationService
         }
 
         $reservationStatus = strtoupper((string) $reservation->getStatus());
-        if (!in_array($reservationStatus, ['CONFIRMED', 'COMPLETED', 'CANCELLED'], true)) {
-            return ['eligible' => false, 'reason' => 'Reservation status is not refundable.'];
-        }
-
-        if (strtoupper((string) $reservation->getPaymentStatus()) !== 'PAID') {
-            return ['eligible' => false, 'reason' => 'Only paid reservations are refundable.'];
+        if (!in_array($reservationStatus, ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'PENDING'], true)) {
+            return ['eligible' => false, 'reason' => 'Reservation status is not eligible for a refund.'];
         }
 
         try {
