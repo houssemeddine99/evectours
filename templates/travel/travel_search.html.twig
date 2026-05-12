@@ -437,10 +437,24 @@ function renderFlight(f, idx) {
             <div class="detail-item"><strong>Duration</strong>${f.duration || '—'}</div>
             <div class="detail-item"><strong>Baggage included</strong>${f.baggage ? 'Yes' : 'Check airline'}</div>
         </div>
-        <a href="{{ path('travel_contact') }}" class="flight-cta">📞 Contact agency to book</a>
+        <button class="flight-cta" onclick="openBookingModal('${f.airline} ${f.flight_no}', '${f.from_city} → ${f.to_city}', '${f.price != null ? '$'+Number(f.price).toLocaleString() : 'On request'}')">📞 Book via Agency</button>
     </div>
 </div>`;
 }
+
+// ── Booking modal ──────────────────────────────────────────
+function openBookingModal(item, detail, price) {
+    document.getElementById('bm-item').textContent   = item;
+    document.getElementById('bm-detail').textContent = detail;
+    document.getElementById('bm-price').textContent  = price;
+    document.getElementById('booking-modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeBookingModal() {
+    document.getElementById('booking-modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBookingModal(); });
 
 function toggleFlightDetail(idx) {
     const el  = document.getElementById('fd-' + idx);
@@ -477,10 +491,84 @@ function renderHotel(h) {
         ${price}
         ${dates}
         <div class="hotel-footer">
-            <a href="{{ path('travel_contact') }}" class="flight-cta">📞 Contact agency to book</a>
+            <button class="flight-cta" onclick="openBookingModal('${h.name}', 'Hotel • ${h.checkin || ''} → ${h.checkout || ''}', '${h.price != null ? '$'+Number(h.price).toFixed(0)+' total' : 'On request'}')">📞 Book via Agency</button>
         </div>
     </div>
 </div>`;
 }
 </script>
+
+{# ── Booking Modal ── #}
+<div id="booking-modal-overlay" onclick="if(event.target===this)closeBookingModal()">
+    <div id="booking-modal">
+        <div class="bm-header">
+            <div>
+                <div class="bm-eyebrow">Book via Evec Tours Agency</div>
+                <div id="bm-item" class="bm-item-name"></div>
+                <div id="bm-detail" class="bm-item-detail"></div>
+                <div class="bm-price-row">Price: <span id="bm-price" class="bm-price"></span></div>
+            </div>
+            <button onclick="closeBookingModal()" class="bm-close">✕</button>
+        </div>
+        <p class="bm-desc">Our travel experts will handle your booking end-to-end — best prices, seat selection, and full support.</p>
+        <div class="bm-methods">
+            <a href="tel:+21671000000" class="bm-method bm-phone">
+                <span class="bm-method-icon">📞</span>
+                <div>
+                    <strong>Call Us</strong>
+                    <span>+216 71 000 000</span>
+                    <small>Mon–Sat · 9 AM–7 PM</small>
+                </div>
+            </a>
+            <a href="https://wa.me/21671000000" target="_blank" rel="noopener" class="bm-method bm-whatsapp">
+                <span class="bm-method-icon">💬</span>
+                <div>
+                    <strong>WhatsApp</strong>
+                    <span>Chat with an agent</span>
+                    <small>Quick response guaranteed</small>
+                </div>
+            </a>
+            <a href="mailto:contact@evectours.site" class="bm-method bm-email">
+                <span class="bm-method-icon">✉️</span>
+                <div>
+                    <strong>Email Us</strong>
+                    <span>contact@evectours.site</span>
+                    <small>Reply within 24 hours</small>
+                </div>
+            </a>
+        </div>
+        <a href="{{ path('travel_contact') }}" class="bm-form-link">Or fill in our detailed travel request form →</a>
+    </div>
+</div>
+
+<style>
+#booking-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s}
+#booking-modal-overlay.open{opacity:1;pointer-events:auto}
+#booking-modal{background:#0d1528;border:1px solid rgba(30,122,224,.3);border-radius:20px;width:min(520px,100%);padding:32px;box-shadow:0 24px 64px rgba(0,0,0,.6);transform:translateY(16px) scale(.97);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+#booking-modal-overlay.open #booking-modal{transform:translateY(0) scale(1)}
+.bm-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
+.bm-eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;color:var(--amazon-orange);margin-bottom:6px;font-weight:700}
+.bm-item-name{font-size:1.1rem;font-weight:800;color:#f1f5f9;margin-bottom:3px}
+.bm-item-detail{font-size:.88rem;color:#8fa3c0;margin-bottom:6px}
+.bm-price-row{font-size:.85rem;color:#8fa3c0}
+.bm-price{color:var(--amazon-orange);font-weight:700}
+.bm-close{background:rgba(255,255,255,.07);border:none;color:#8fa3c0;width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.bm-close:hover{background:rgba(255,255,255,.14);color:#f1f5f9}
+.bm-desc{color:#64748b;font-size:.88rem;margin:0 0 20px;line-height:1.6}
+.bm-methods{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.bm-method{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;text-decoration:none;color:inherit;border:1px solid transparent;transition:border-color .18s,background .18s}
+.bm-method-icon{font-size:1.6rem;flex-shrink:0}
+.bm-method div{display:flex;flex-direction:column;gap:2px}
+.bm-method strong{font-size:.9rem;color:#f1f5f9}
+.bm-method span{font-size:.85rem;color:#8fa3c0}
+.bm-method small{font-size:.75rem;color:#64748b}
+.bm-phone{background:rgba(30,122,224,.08);border-color:rgba(30,122,224,.2)}
+.bm-phone:hover{background:rgba(30,122,224,.16);border-color:rgba(30,122,224,.5)}
+.bm-whatsapp{background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.2)}
+.bm-whatsapp:hover{background:rgba(37,211,102,.16);border-color:rgba(37,211,102,.5)}
+.bm-email{background:rgba(245,195,0,.08);border-color:rgba(245,195,0,.2)}
+.bm-email:hover{background:rgba(245,195,0,.16);border-color:rgba(245,195,0,.5)}
+.bm-form-link{display:block;text-align:center;color:#4a9eff;font-size:.85rem;font-weight:600;text-decoration:none}
+.bm-form-link:hover{text-decoration:underline}
+</style>
 {% endblock %}

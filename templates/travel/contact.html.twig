@@ -1663,6 +1663,26 @@
     }
 }
 
+/* ========== FORM FLASH MESSAGES ========== */
+.cf-flash {
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    font-size: .95rem;
+    animation: slideInUp .3s ease;
+}
+.cf-flash-success {
+    background: #1b2f2f;
+    border: 1px solid #39856d;
+    color: #b7f4da;
+}
+.cf-flash-error {
+    background: #301f24;
+    border: 1px solid #8b3b45;
+    color: #f8d7da;
+}
+
 /* ========== ACCESSIBILITY ========== */
 @media (prefers-reduced-motion: reduce) {
     *,
@@ -1746,29 +1766,46 @@ const contactForm = document.getElementById('contactForm');
 const submitBtn = document.getElementById('submitBtn');
 
 if (contactForm && submitBtn) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const btnContent = submitBtn.querySelector('.btn-content');
         const btnLoading = submitBtn.querySelector('.btn-loading');
-        
-        // Show loading state
+
         btnContent.style.display = 'none';
         btnLoading.style.display = 'flex';
         submitBtn.disabled = true;
-        
-        // Simulate form submission (replace with actual AJAX call)
-        setTimeout(() => {
+
+        // remove old messages
+        document.querySelectorAll('.cf-flash').forEach(el => el.remove());
+
+        try {
+            const res  = await fetch('/contact/send', { method: 'POST', body: new FormData(contactForm) });
+            const data = await res.json();
+
+            if (data.success) {
+                contactForm.reset();
+                if (charCount) charCount.textContent = '0';
+                showCfMsg('✅ Message sent! We\'ll get back to you within 24 hours.', 'success');
+            } else {
+                showCfMsg('⚠️ ' + (data.error || 'Something went wrong. Please try again.'), 'error');
+            }
+        } catch (_) {
+            showCfMsg('⚠️ Network error. Please check your connection.', 'error');
+        } finally {
             btnContent.style.display = 'flex';
             btnLoading.style.display = 'none';
             submitBtn.disabled = false;
-            
-            // Show success message (you can customize this)
-            alert('Thank you for your message! We will get back to you within 24 hours.');
-            contactForm.reset();
-            charCount.textContent = '0';
-        }, 2000);
+        }
     });
+
+    function showCfMsg(text, type) {
+        const el = document.createElement('div');
+        el.className = 'cf-flash cf-flash-' + type;
+        el.textContent = text;
+        contactForm.parentNode.insertBefore(el, contactForm);
+        setTimeout(() => el.remove(), 7000);
+    }
 }
 
 // Smooth scroll for anchor links

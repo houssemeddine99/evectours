@@ -3,9 +3,11 @@
 {% block title %}Voyages | Evec Tours{% endblock %}
 
 {% block body %}
-<section>
+<section class="voyages-page">
+<div class="container">
 <h1>Available Voyages</h1>
 <p class="lead">Choose your next destination from our curated travel collection.</p>
+</div>
 
 {# Filter Section #}
 <div class="filter-bar">
@@ -76,7 +78,8 @@
                 <span class="badge dates">{{ voyage.start_date ? voyage.start_date|date('d M Y') : 'TBD' }} → {{ voyage.end_date ? voyage.end_date|date('d M Y') : 'TBD' }}</span>
             </div>
             <h3>{{ voyage.title }}</h3>
-            <p>{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
+            <p class="voyage-card-desc">{{ voyage.description|default('No description available yet. Explore the journey details for more.') }}</p>
+            <button class="desc-toggle" onclick="var p=this.previousElementSibling;var e=p.classList.toggle('expanded');this.textContent=e?'See less ↑':'See more ↓'">See more ↓</button>
             <div class="card-footer">
                 <div class="card-price-wrap">
                     <strong>{{ voyage.price is not empty ? voyage.price|number_format(2, '.', ',') ~ ' TND' : 'Price on request' }}</strong>
@@ -227,6 +230,11 @@ document.addEventListener('keydown', function(e) {
 </div>
 
 <style>
+.voyages-page{padding:32px 0 0}
+.voyage-card-desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0 0 4px;line-height:1.6}
+.voyage-card-desc.expanded{display:block;-webkit-line-clamp:unset}
+.desc-toggle{background:none;border:none;color:var(--evec-blue-light,#4a9eff);cursor:pointer;font-size:.8rem;font-weight:600;padding:0 0 6px;line-height:1;display:block}
+.desc-toggle:hover{color:var(--amazon-orange-soft)}
 .card-image-wrap{position:relative;overflow:hidden}
 .fav-btn,.cmp-btn{position:absolute;top:10px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;line-height:1}
 .fav-btn{right:10px;background:rgba(0,0,0,.55);color:#fff}
