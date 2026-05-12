@@ -1,5 +1,6 @@
 ﻿{% extends 'base.html.twig' %}
 
+{% block stylesheets %}<link rel="stylesheet" href="/styles/voyage-detail.css">{% endblock %}
 {% block title %}{{ voyage.title|default('Voyage details') }} | Evec Tours{% endblock %}
 {% block meta_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Evec Tours — curated voyages and exclusive travel offers.')|striptags|slice(0,160) }}{% endblock %}
 {% block og_title %}{{ voyage.title|default('Voyage') }} — Evec Tours{% endblock %}
