@@ -345,13 +345,268 @@
   font-size: 0.85rem;
 }
 
+/* ========== DESCRIPTION LISTEN HEADER ========== */
+.desc-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.desc-section-header .section-title {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ========== LISTEN / GENERATE BUTTONS ========== */
+.btn-listen {
+  background: rgba(245, 195, 0, 0.12);
+  color: var(--amazon-orange-soft);
+  border: 1px solid rgba(245, 195, 0, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-listen:hover { background: rgba(245, 195, 0, 0.25); transform: translateY(-1px); }
+.btn-listen[data-playing="1"] {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.btn-itinerary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-itinerary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ========== ITINERARY SECTION ========== */
+.voyage-itinerary-section { margin: 28px 0; }
+.itinerary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.itin-btn-group { display: flex; gap: 8px; align-items: center; }
+
+.itinerary-content {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 6px 4px;
+}
+.itin-dest {
+  font-weight: 700;
+  color: var(--amazon-orange-soft);
+  font-size: 0.95rem;
+  padding: 12px 18px 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.itin-day {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 11px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+.itin-day:last-child { border-bottom: none; }
+.itin-day:hover { background: rgba(255, 255, 255, 0.035); border-radius: 10px; }
+.itin-badge {
+  background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
+  color: #0a0f1c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.itin-text { color: var(--text-secondary); font-size: 0.93rem; line-height: 1.65; }
+.itinerary-loading {
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-error { color: #ef4444; padding: 12px 18px; }
+
+/* ========== COUNTRY INFO ========== */
+.country-info-section { margin: 24px 0; }
+.country-grid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-dark);
+  border-radius: 12px;
+  padding: 20px;
+}
+.country-flag-wrap { flex-shrink: 0; }
+.country-flag { width: 100px; height: 66px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-dark); }
+.country-facts { display: flex; flex-wrap: wrap; gap: 12px; flex: 1; }
+.fact-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.fact-icon { font-size: 1rem; }
+.fact-label { color: var(--text-muted); font-size: 0.82rem; }
+.fact-value { font-weight: 600; }
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* ========== SKELETON LOADING ========== */
+.country-info-skeleton { padding: 20px 0; }
+.skeleton-line {
+  height: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+.skeleton-line--short { width: 40%; }
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== FAV / COMPARE BUTTONS ========== */
+.btn-fav {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.btn-fav-active, .btn-fav:hover { background: #ef4444; color: #fff; transform: translateY(-1px); }
+
+.btn-compare {
+  background: rgba(255, 153, 0, 0.12);
+  color: var(--amazon-orange);
+  border: 1px solid rgba(255, 153, 0, 0.4);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.btn-compare.cmp-active, .btn-compare:hover { background: var(--amazon-orange); color: #000; transform: translateY(-1px); }
+
+/* ========== REVIEWS SECTION ========== */
+.reviews-section {
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid var(--border-dark);
+  padding: 40px 0;
+}
+.reviews-container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+.reviews-header { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+.reviews-summary { display: flex; align-items: center; gap: 8px; }
+.avg-rating { font-size: 2rem; font-weight: 800; color: #f59e0b; }
+.avg-stars .star-filled { color: #f59e0b; }
+.avg-stars .star-half { color: #f59e0b; opacity: 0.5; }
+.avg-stars span:not(.star-filled):not(.star-half) { color: rgba(255,255,255,0.2); }
+.review-count { color: var(--text-muted); font-size: 0.9rem; }
+
+.review-form-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-dark);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+.review-form-card h3 { margin: 0 0 16px; font-size: 1.05rem; }
+.review-form { display: flex; flex-direction: column; gap: 14px; }
+.star-picker { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+.star-radio { display: none; }
+.star-picker label { font-size: 2rem; cursor: pointer; color: rgba(255,255,255,0.2); transition: color 0.15s; }
+.star-picker input:checked ~ label,
+.star-picker label:hover,
+.star-picker label:hover ~ label { color: #f59e0b; }
+.review-textarea {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  color: inherit;
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+.review-textarea:focus { outline: none; border-color: #6366f1; }
+.btn-review-submit { align-self: flex-start; padding: 10px 22px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.review-login-cta { color: var(--text-muted); margin-bottom: 24px; }
+.review-login-cta a { color: #6366f1; }
+.review-list { display: flex; flex-direction: column; gap: 16px; }
+.review-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-dark);
+  border-radius: 10px;
+  padding: 16px 20px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.review-card:hover { background: rgba(255,255,255,0.065); }
+.review-card--own { border-color: #6366f1; }
+.review-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.review-stars .star-filled { color: #f59e0b; }
+.review-stars .star-empty { color: rgba(255,255,255,0.2); }
+.review-date { color: var(--text-muted); font-size: 0.82rem; }
+.review-own-badge { background: #6366f1; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.review-comment { margin: 0; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); }
+.no-reviews { color: var(--text-muted); text-align: center; padding: 24px 0; }
+
 /* ========== VOYAGE ACTIONS ========== */
 .voyage-actions {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 32px;
   position: relative;
   z-index: 1;
+}
+.voyage-actions .btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-reserve {
@@ -645,20 +900,16 @@
     grid-template-columns: 1fr;
   }
   
-  .voyage-hero {
-    height: 300px;
-  }
-  
-  .offer-banner {
-    padding: 24px;
-  }
-  
-  .offer-title {
-    font-size: 1.2rem;
-  }
-  
-  .offer-details {
-    flex-direction: column;
-    gap: 12px;
-  }
+  .voyage-hero { height: 300px; }
+  .offer-banner { padding: 24px; }
+  .offer-title { font-size: 1.2rem; }
+  .offer-details { flex-direction: column; gap: 12px; }
+
+  .desc-section-header { flex-direction: column; align-items: flex-start; }
+  .itinerary-header { flex-direction: column; align-items: flex-start; }
+  .itin-btn-group { width: 100%; }
+  .btn-itinerary, .btn-listen { width: 100%; justify-content: center; }
+  .itin-day { padding: 10px 12px; gap: 10px; }
+  .reviews-header { flex-direction: column; align-items: flex-start; }
+  .voyage-actions .btn { width: 100%; justify-content: center; }
 }
