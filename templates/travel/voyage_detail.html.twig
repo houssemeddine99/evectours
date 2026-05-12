@@ -208,7 +208,7 @@
             </div>
 
             {# Review form #}
-            {% if user_id > 1 %}
+            {% if user_id > 0 %}
             <div class="review-form-card">
                 <h3>{{ user_review ? 'Update Your Review' : 'Leave a Review' }}</h3>
                 <form method="post" action="{{ path('voyage_submit_review', {id: voyage.id}) }}" class="review-form">

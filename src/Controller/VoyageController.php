@@ -130,7 +130,7 @@ class VoyageController extends AbstractController
         }
 
         $sessionUser = $request->getSession()->get('auth_user');
-        $userId = ($sessionUser && isset($sessionUser['id'])) ? (int) $sessionUser['id'] : 1;
+        $userId = ($sessionUser && isset($sessionUser['id'])) ? (int) $sessionUser['id'] : 0;
 
         $this->voyageVisitService->recordVisit($userId, $voyage['id'], 'detail');
 
@@ -138,7 +138,7 @@ class VoyageController extends AbstractController
         $offerForVoyage = array_filter($offers, fn($o) => (int) $o['voyage_id'] === $voyage['id']);
         $offer = $offerForVoyage ? array_values($offerForVoyage)[0] : null;
 
-        $isFavorite = $userId > 1 && $this->favoriteService->isFavorite($userId, $voyage['id']);
+        $isFavorite = $userId > 0 && $this->favoriteService->isFavorite($userId, $voyage['id']);
 
         $compareList = $request->getSession()->get('compare_list', []);
 
