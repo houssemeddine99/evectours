@@ -134,7 +134,10 @@
                 <div class="voyage-itinerary-section">
                     <div class="itinerary-header">
                         <h2 class="section-title">🗓 AI Itinerary Preview</h2>
-                        <button id="loadItineraryBtn" class="btn-itinerary" onclick="loadItinerary()">Generate Itinerary</button>
+                        <div class="itin-btn-group">
+                            <button id="listenBtn" class="btn-listen" onclick="toggleListen()" style="display:none">🔊 Listen</button>
+                            <button id="loadItineraryBtn" class="btn-itinerary" onclick="loadItinerary()">✨ Generate</button>
+                        </div>
                     </div>
                     <div id="itineraryContent" class="itinerary-content" style="display:none"></div>
                     <div id="itineraryLoading" class="itinerary-loading" style="display:none">✨ Generating your itinerary…</div>
@@ -345,10 +348,25 @@
             } catch(e) { console.error(e); }
         }
 
+        function renderItinerary(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            return lines.map(line => {
+                const m = line.match(/^Day\s+(\d+)\s*[:\-]\s*(.+)$/i);
+                if (m) {
+                    return `<div class="itin-day">
+                        <span class="itin-badge">Day ${m[1]}</span>
+                        <span class="itin-text">${m[2]}</span>
+                    </div>`;
+                }
+                return `<div class="itin-dest">${line}</div>`;
+            }).join('');
+        }
+
         async function loadItinerary() {
             const btn = document.getElementById('loadItineraryBtn');
             const content = document.getElementById('itineraryContent');
             const loading = document.getElementById('itineraryLoading');
+            const listenBtn = document.getElementById('listenBtn');
 
             btn.style.display = 'none';
             loading.style.display = 'block';
@@ -358,8 +376,9 @@
                 const data = await res.json();
                 loading.style.display = 'none';
                 if (data.itinerary) {
-                    content.innerHTML = data.itinerary.split('\n').map(line => line.trim() ? '<p>' + line + '</p>' : '').join('');
+                    content.innerHTML = renderItinerary(data.itinerary);
                     content.style.display = 'block';
+                    listenBtn.style.display = 'inline-flex';
                 } else {
                     content.innerHTML = '<p class="ai-error">Could not generate itinerary at this time.</p>';
                     content.style.display = 'block';
@@ -369,6 +388,26 @@
                 content.innerHTML = '<p class="ai-error">Network error.</p>';
                 content.style.display = 'block';
             }
+        }
+
+        let _ttsPlaying = false;
+        function toggleListen() {
+            const btn = document.getElementById('listenBtn');
+            if (!window.speechSynthesis) { alert('TTS not supported in your browser.'); return; }
+            if (_ttsPlaying) {
+                window.speechSynthesis.cancel();
+                _ttsPlaying = false;
+                btn.textContent = '🔊 Listen';
+                return;
+            }
+            const text = document.getElementById('itineraryContent').innerText;
+            const utt = new SpeechSynthesisUtterance(text);
+            utt.lang = 'en-US';
+            utt.rate = 0.92;
+            utt.onend = () => { _ttsPlaying = false; btn.textContent = '🔊 Listen'; };
+            window.speechSynthesis.speak(utt);
+            _ttsPlaying = true;
+            btn.textContent = '⏹ Stop';
         }
     </script>
 
@@ -384,11 +423,21 @@
         .fact-value { font-weight: 600; }
         .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
         .voyage-itinerary-section { margin: 28px 0; }
-        .itinerary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .btn-itinerary { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; font-weight: 600; font-size: .9rem; }
-        .itinerary-content p { margin: 6px 0; line-height: 1.6; font-size: .95rem; }
-        .itinerary-loading { color: var(--text-muted); font-style: italic; padding: 12px 0; }
-        .ai-error { color: #ef4444; }
+        .itinerary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .itin-btn-group { display: flex; gap: 8px; align-items: center; }
+        .btn-itinerary { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; font-weight: 600; font-size: .88rem; transition: opacity .2s; }
+        .btn-itinerary:hover { opacity: .85; }
+        .btn-listen { background: rgba(245,195,0,.15); color: var(--amazon-orange-soft); border: 1px solid rgba(245,195,0,.35); border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 600; font-size: .88rem; display: inline-flex; align-items: center; gap: 6px; transition: background .2s; }
+        .btn-listen:hover { background: rgba(245,195,0,.28); }
+        .itinerary-content { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 6px 4px; }
+        .itin-dest { font-weight: 700; color: var(--amazon-orange-soft); font-size: .95rem; padding: 12px 18px 6px; letter-spacing: .5px; text-transform: uppercase; }
+        .itin-day { display: flex; align-items: flex-start; gap: 14px; padding: 11px 18px; border-bottom: 1px solid rgba(255,255,255,.05); transition: background .15s; }
+        .itin-day:last-child { border-bottom: none; }
+        .itin-day:hover { background: rgba(255,255,255,.03); }
+        .itin-badge { background: linear-gradient(135deg,var(--amazon-orange),var(--amazon-orange-soft)); color: #0a0f1c; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+        .itin-text { color: var(--text-secondary); font-size: .93rem; line-height: 1.65; }
+        .itinerary-loading { color: var(--text-muted); font-style: italic; padding: 12px 0; display: flex; align-items: center; gap: 8px; }
+        .ai-error { color: #ef4444; padding: 12px 18px; }
         .btn-fav { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid #ef4444; }
         .btn-fav-active,.btn-fav:hover { background: #ef4444; color: #fff; }
         .btn-compare { background: rgba(255,153,0,.15); color: var(--amazon-orange); border: 1px solid var(--amazon-orange); }
