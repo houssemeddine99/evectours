@@ -359,7 +359,7 @@
       <div class="gbc-messages" id="gbc-messages"></div>
       <form class="gbc-form" id="gbc-form" autocomplete="off">
         <input class="gbc-input" id="gbc-input" type="text" placeholder="Tell me your dream trip… ✈️" maxlength="300"/>
-        <button class="gbc-send" type="submit" aria-label="Send">
+        <button class="gbc-send" type="submit" aria-label="Send" data-no-loading-state>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </form>
@@ -825,6 +825,21 @@
         border-radius: 6px;
         padding: 2px 8px;
       }
+      .gbc-rec-btn {
+        display: block;
+        margin-top: 10px;
+        padding: 7px 0;
+        text-align: center;
+        background: linear-gradient(135deg, #4f6ef7, #6d28d9);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 8px;
+        text-decoration: none;
+        letter-spacing: 0.03em;
+        transition: opacity .18s, transform .18s;
+      }
+      .gbc-rec-btn:hover { opacity: .88; transform: translateY(-1px); }
 
       /* typing indicator */
       .gbc-typing {
