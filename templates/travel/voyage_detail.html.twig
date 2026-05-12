@@ -126,8 +126,11 @@
                 {% endif %}
 
                 <div class="voyage-description-section">
-                    <h2 class="section-title">About This Journey</h2>
-                    <p class="voyage-description">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
+                    <div class="desc-section-header">
+                        <h2 class="section-title">About This Journey</h2>
+                        <button class="btn-listen" onclick="speakText('desc-text')">🔊 Listen</button>
+                    </div>
+                    <p class="voyage-description" id="desc-text">{{ voyage.description|default('No description available yet. Please check the full itinerary for more details.') }}</p>
                 </div>
 
                 {# AI Itinerary Section #}
@@ -390,24 +393,100 @@
             }
         }
 
-        let _ttsPlaying = false;
-        function toggleListen() {
-            const btn = document.getElementById('listenBtn');
-            if (!window.speechSynthesis) { alert('TTS not supported in your browser.'); return; }
-            if (_ttsPlaying) {
+        // ── TTS engine ────────────────────────────────────────────
+        let _ttsBtn = null;
+
+        function detectLang(text) {
+            if (/[؀-ۿ]/.test(text)) return 'ar';
+            if (/[一-鿿]/.test(text)) return 'zh-CN';
+            if (/[Ѐ-ӿ]/.test(text)) return 'ru';
+            return 'en-US';
+        }
+
+        function getBestVoice(lang) {
+            const voices = window.speechSynthesis.getVoices();
+            const base   = lang.split('-')[0];
+            const ranked = ['Enhanced', 'Premium', 'Natural', 'Neural', 'Google', 'Microsoft'];
+            for (const kw of ranked) {
+                const v = voices.find(v => v.lang.startsWith(base) && v.name.includes(kw));
+                if (v) return v;
+            }
+            return voices.find(v => v.lang.startsWith(base)) || null;
+        }
+
+        function speakText(elementId) {
+            if (!window.speechSynthesis) { alert('Text-to-speech is not supported in your browser.'); return; }
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            // find the button that triggered this
+            const btn = event.currentTarget;
+
+            if (btn.dataset.playing === '1') {
                 window.speechSynthesis.cancel();
-                _ttsPlaying = false;
-                btn.textContent = '🔊 Listen';
+                btn.dataset.playing = '0';
+                btn.innerHTML = '🔊 Listen';
                 return;
             }
-            const text = document.getElementById('itineraryContent').innerText;
-            const utt = new SpeechSynthesisUtterance(text);
-            utt.lang = 'en-US';
-            utt.rate = 0.92;
-            utt.onend = () => { _ttsPlaying = false; btn.textContent = '🔊 Listen'; };
-            window.speechSynthesis.speak(utt);
-            _ttsPlaying = true;
-            btn.textContent = '⏹ Stop';
+
+            // stop any other playing
+            window.speechSynthesis.cancel();
+            document.querySelectorAll('[data-playing="1"]').forEach(b => { b.dataset.playing='0'; b.innerHTML='🔊 Listen'; });
+
+            const text = el.innerText.trim();
+            const lang = detectLang(text);
+            const utt  = new SpeechSynthesisUtterance(text);
+            utt.lang  = lang;
+            utt.rate  = lang === 'ar' ? 0.85 : 0.92;
+            utt.pitch = 1.05;
+
+            // Wait for voices to load then pick best
+            function doSpeak() {
+                const voice = getBestVoice(lang);
+                if (voice) utt.voice = voice;
+                window.speechSynthesis.speak(utt);
+                btn.dataset.playing = '1';
+                btn.innerHTML = '⏹ Stop';
+                utt.onend = () => { btn.dataset.playing = '0'; btn.innerHTML = '🔊 Listen'; };
+            }
+
+            if (window.speechSynthesis.getVoices().length > 0) {
+                doSpeak();
+            } else {
+                window.speechSynthesis.onvoiceschanged = doSpeak;
+            }
+        }
+
+        // Itinerary listen button wires to speakText
+        function toggleListen() {
+            speakText.call(document.getElementById('listenBtn'), { currentTarget: document.getElementById('listenBtn') });
+            // override to use itineraryContent
+            const btn = document.getElementById('listenBtn');
+            if (!window.speechSynthesis) return;
+            if (btn.dataset.playing === '1') {
+                window.speechSynthesis.cancel();
+                btn.dataset.playing = '0';
+                btn.innerHTML = '🔊 Listen';
+                return;
+            }
+            window.speechSynthesis.cancel();
+            document.querySelectorAll('[data-playing="1"]').forEach(b => { b.dataset.playing='0'; b.innerHTML='🔊 Listen'; });
+            const text = document.getElementById('itineraryContent').innerText.trim();
+            const lang = detectLang(text);
+            const utt  = new SpeechSynthesisUtterance(text);
+            utt.lang  = lang;
+            utt.rate  = lang === 'ar' ? 0.85 : 0.92;
+            utt.pitch = 1.05;
+            function doSpeak() {
+                const voice = getBestVoice(lang);
+                if (voice) utt.voice = voice;
+                window.speechSynthesis.speak(utt);
+                btn.dataset.playing = '1';
+                btn.innerHTML = '⏹ Stop';
+                utt.onend = () => { btn.dataset.playing='0'; btn.innerHTML='🔊 Listen'; };
+            }
+            if (window.speechSynthesis.getVoices().length > 0) doSpeak();
+            else window.speechSynthesis.onvoiceschanged = doSpeak;
         }
     </script>
 
@@ -442,6 +521,8 @@
         .btn-fav-active,.btn-fav:hover { background: #ef4444; color: #fff; }
         .btn-compare { background: rgba(255,153,0,.15); color: var(--amazon-orange); border: 1px solid var(--amazon-orange); }
         .btn-compare.cmp-active,.btn-compare:hover { background: var(--amazon-orange); color: #000; }
+        .desc-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+        .desc-section-header .section-title { margin: 0; }
         .voyage-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
         .voyage-actions .btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
         /* Country info skeleton */
