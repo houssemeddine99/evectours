@@ -8,4 +8,4 @@ cmds = [
 ]
 
 [start]
-cmd = "php -S 0.0.0.0:$PORT -t public"
+cmd = "sh -c 'php -S 0.0.0.0:$PORT -t public'"
