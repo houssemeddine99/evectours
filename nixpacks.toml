@@ -1,11 +1,16 @@
+[variables]
+APP_ENV = "prod"
+APP_DEBUG = "0"
+
 [phases.setup]
 nixPkgs = ["php82", "php82Extensions.pdo", "php82Extensions.pdo_mysql", "php82Extensions.mbstring", "php82Extensions.xml", "php82Extensions.curl", "php82Extensions.intl", "php82Extensions.zip", "php82Extensions.gd", "composer"]
 
 [phases.build]
 cmds = [
   "composer install --no-dev --optimize-autoloader --no-interaction",
+  "php bin/console cache:clear --env=prod --no-debug",
   "php bin/console cache:warmup --env=prod --no-debug"
 ]
 
 [start]
-cmd = "sh -c 'php -S 0.0.0.0:$PORT -t public'"
+cmd = "sh -c 'APP_ENV=prod php -S 0.0.0.0:$PORT -t public'"
