@@ -15,11 +15,53 @@ class MailerService
 
     public function sendMailTo(string $mailAddress): void
     {
+        $this->sendBookingConfirmation($mailAddress, [], []);
+    }
+
+    /** @param array<string,mixed> $reservation @param array<string,mixed> $voyage */
+    public function sendBookingConfirmation(string $mailAddress, array $reservation, array $voyage): void
+    {
+        $voyageTitle = htmlspecialchars($voyage['title'] ?? 'Your Voyage', ENT_QUOTES);
+        $destination = htmlspecialchars($voyage['destination'] ?? '', ENT_QUOTES);
+        $startDate   = isset($voyage['start_date']) ? date('d M Y', strtotime($voyage['start_date'])) : 'TBD';
+        $endDate     = isset($voyage['end_date'])   ? date('d M Y', strtotime($voyage['end_date']))   : 'TBD';
+        $people      = (int) ($reservation['number_of_people'] ?? 1);
+        $total       = number_format((float)($reservation['total_price'] ?? 0), 2) . ' TND';
+        $refId       = '#' . ($reservation['id'] ?? 'N/A');
+
+        $html = <<<HTML
+        <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;background:#060d1e;color:#e5e7eb;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">
+          <div style="background:linear-gradient(135deg,#0a1628,#1a3050);padding:32px;text-align:center;border-bottom:1px solid rgba(255,153,0,.2)">
+            <p style="margin:0 0 4px;color:#f5c300;font-size:.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase">Booking Confirmed</p>
+            <h1 style="margin:0;color:#fff;font-size:1.6rem;font-weight:900">✈️ You're all set!</h1>
+          </div>
+          <div style="padding:32px">
+            <div style="background:rgba(255,153,0,.07);border:1px solid rgba(255,153,0,.2);border-radius:12px;padding:20px 24px;margin-bottom:24px">
+              <p style="margin:0 0 4px;color:#f5c300;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px">Voyage</p>
+              <h2 style="margin:0 0 8px;color:#fff;font-size:1.25rem">{$voyageTitle}</h2>
+              <p style="margin:0;color:#94a3b8;font-size:.9rem">📍 {$destination}</p>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+              <tr><td style="padding:8px 0;color:#8fa3c0;font-size:.88rem;width:120px">Booking Ref</td><td style="padding:8px 0;font-weight:700;color:#fff">{$refId}</td></tr>
+              <tr><td style="padding:8px 0;color:#8fa3c0;font-size:.88rem">Dates</td><td style="padding:8px 0;color:#fff">{$startDate} → {$endDate}</td></tr>
+              <tr><td style="padding:8px 0;color:#8fa3c0;font-size:.88rem">Travellers</td><td style="padding:8px 0;color:#fff">{$people} person(s)</td></tr>
+              <tr><td style="padding:8px 0;color:#8fa3c0;font-size:.88rem">Total Paid</td><td style="padding:8px 0;font-weight:800;font-size:1.1rem;color:#f5c300">{$total}</td></tr>
+            </table>
+            <div style="text-align:center;margin-top:28px">
+              <a href="https://evectours.com/account" style="display:inline-block;background:linear-gradient(135deg,#f5c300,#ffd740);color:#0a0f1c;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:800;font-size:1rem">View My Booking →</a>
+            </div>
+          </div>
+          <div style="padding:20px 32px;background:rgba(0,0,0,.2);text-align:center;font-size:.8rem;color:#64748b">
+            <p style="margin:0">© 2026 Evec Tours · <a href="https://evectours.com/contact" style="color:#64748b">Contact Support</a></p>
+          </div>
+        </div>
+HTML;
+
         $this->resend->emails->send([
-            'from'    => 'Travigir Bot <onboarding@resend.dev>',
+            'from'    => 'Evec Tours <onboarding@resend.dev>',
             'to'      => [$mailAddress],
-            'subject' => 'Message from Travigir Bot',
-            'html'    => '<p>Hello! you successfully registered in a voyage.</p>',
+            'subject' => '✈️ Booking Confirmed — ' . ($voyage['title'] ?? 'Your Voyage'),
+            'html'    => $html,
         ]);
     }
 

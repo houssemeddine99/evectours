@@ -1,0 +1,197 @@
+{% extends 'base.html.twig' %}
+{% block title %}My Account | Evec Tours{% endblock %}
+
+{% block body %}
+<section class="profile-page">
+
+    {# ── Header ── #}
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.username|first|upper }}</div>
+        <div class="profile-info">
+            <h1>{{ user.username }}</h1>
+            <p class="profile-email">{{ user.email }}</p>
+            <a href="{{ path('account_settings') }}" class="btn-edit-profile">✏️ Edit Profile</a>
+        </div>
+        <div class="profile-stats-row">
+            <div class="pstat">
+                <span class="pstat-val">{{ total_trips }}</span>
+                <span class="pstat-lbl">Total Trips</span>
+            </div>
+            <div class="pstat">
+                <span class="pstat-val">{{ confirmed }}</span>
+                <span class="pstat-lbl">Confirmed</span>
+            </div>
+            <div class="pstat">
+                <span class="pstat-val">{{ total_spent|number_format(0) }}</span>
+                <span class="pstat-lbl">TND Spent</span>
+            </div>
+            <div class="pstat">
+                <span class="pstat-val">{{ loyalty_bal }}</span>
+                <span class="pstat-lbl">⭐ Points</span>
+            </div>
+        </div>
+    </div>
+
+    {# ── Loyalty banner ── #}
+    <div class="loyalty-banner {{ can_redeem ? 'loyalty-banner--ready' : '' }}">
+        <div class="loyalty-banner-left">
+            <span class="lb-icon">⭐</span>
+            <div>
+                <p class="lb-title">{{ can_redeem ? 'You can redeem your points!' : 'Loyalty Points' }}</p>
+                <p class="lb-sub">{{ loyalty_bal }} / 100 pts — {{ can_redeem ? '5% discount ready to use on your next booking' : (100 - loyalty_bal) ~ ' more points for a 5% discount' }}</p>
+            </div>
+        </div>
+        <div class="loyalty-progress-wrap">
+            <div class="loyalty-progress-bar">
+                <div class="loyalty-progress-fill" style="width:{{ [loyalty_bal, 100]|min }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+
+        {# ── Recent Bookings ── #}
+        <section class="profile-card profile-card--wide">
+            <div class="pc-head">
+                <h2>🗺️ My Bookings</h2>
+                <a href="{{ path('account_favorites') }}" class="pc-link">View all →</a>
+            </div>
+            {% if reservations|length > 0 %}
+            <div class="bookings-list">
+                {% for r in reservations %}
+                <div class="booking-row">
+                    <div class="booking-info">
+                        <strong>{{ r.voyage_title ?? ('Voyage #' ~ r.voyage_id) }}</strong>
+                        <span class="booking-dest">📍 {{ r.destination ?? '' }}</span>
+                        <span class="booking-date">{{ r.reservation_date ? r.reservation_date|date('d M Y') : '' }}</span>
+                    </div>
+                    <div class="booking-meta">
+                        <span class="booking-price">{{ r.total_price|number_format(0) }} TND</span>
+                        <span class="status status-{{ r.status|lower }}">{{ r.status }}</span>
+                        <a href="{{ path('account_reservation_detail', {id: r.id}) }}" class="btn-booking-view">View →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="pc-empty">
+                <p>No bookings yet. <a href="{{ path('travel_voyages') }}">Explore voyages →</a></p>
+            </div>
+            {% endif %}
+        </section>
+
+        {# ── Saved Voyages ── #}
+        <section class="profile-card">
+            <div class="pc-head">
+                <h2>❤️ Saved Voyages</h2>
+                <a href="{{ path('account_favorites') }}" class="pc-link">View all →</a>
+            </div>
+            {% if favorites|length > 0 %}
+            <div class="saved-list">
+                {% for v in favorites %}
+                {% set thumb = v.image_url is iterable and v.image_url|length > 0 ? v.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=400&q=60' %}
+                <a href="{{ path('travel_voyage_detail', {slug: v.slug}) }}" class="saved-item">
+                    <img src="{{ thumb }}" alt="{{ v.title }}" loading="lazy">
+                    <div class="saved-info">
+                        <strong>{{ v.title }}</strong>
+                        <span>{{ v.destination }}</span>
+                    </div>
+                    <span class="saved-price">{{ v.price is not empty ? v.price|number_format(0) ~ ' TND' : '—' }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="pc-empty">
+                <p>No saved voyages. <a href="{{ path('travel_voyages') }}">Browse voyages →</a></p>
+            </div>
+            {% endif %}
+        </section>
+
+        {# ── Quick Links ── #}
+        <section class="profile-card">
+            <div class="pc-head"><h2>⚡ Quick Links</h2></div>
+            <div class="quick-links">
+                <a href="{{ path('travel_voyages') }}" class="qlink">✈️ Browse Voyages</a>
+                <a href="{{ path('trip_planner') }}" class="qlink">🤖 AI Trip Planner</a>
+                <a href="{{ path('travel_offers') }}" class="qlink">🏷️ Active Offers</a>
+                <a href="{{ path('account_settings') }}" class="qlink">⚙️ Account Settings</a>
+                <a href="{{ path('travel_contact') }}" class="qlink">📧 Contact Support</a>
+                <a href="{{ path('travel_faq') }}" class="qlink">❓ FAQ</a>
+            </div>
+        </section>
+
+    </div>
+</section>
+
+<style>
+.profile-page { max-width:1100px; margin:0 auto; padding:40px 24px 80px; }
+
+/* Header */
+.profile-header { display:flex; align-items:center; gap:24px; flex-wrap:wrap; background:linear-gradient(135deg,rgba(74,158,255,.08),rgba(255,153,0,.06)); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:28px 32px; margin-bottom:24px; }
+.profile-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--evec-blue),var(--amazon-orange)); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900; color:#fff; flex-shrink:0; }
+.profile-info { flex:1; min-width:160px; }
+.profile-info h1 { margin:0 0 4px; font-size:1.5rem; }
+.profile-email { color:var(--text-muted); font-size:.88rem; margin:0 0 10px; }
+.btn-edit-profile { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:6px 14px; color:inherit; text-decoration:none; font-size:.83rem; font-weight:600; transition:background .2s; }
+.btn-edit-profile:hover { background:rgba(255,255,255,.14); }
+.profile-stats-row { display:flex; gap:0; flex-shrink:0; background:rgba(0,0,0,.2); border-radius:14px; overflow:hidden; }
+.pstat { padding:14px 22px; text-align:center; border-right:1px solid rgba(255,255,255,.06); }
+.pstat:last-child { border-right:none; }
+.pstat-val { display:block; font-size:1.4rem; font-weight:900; color:var(--amazon-orange-soft); }
+.pstat-lbl { display:block; font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+
+/* Loyalty banner */
+.loyalty-banner { display:flex; align-items:center; justify-content:space-between; gap:20px; background:rgba(245,195,0,.07); border:1px solid rgba(245,195,0,.2); border-radius:14px; padding:16px 24px; margin-bottom:28px; flex-wrap:wrap; }
+.loyalty-banner--ready { background:rgba(34,197,94,.08); border-color:rgba(34,197,94,.3); }
+.loyalty-banner-left { display:flex; align-items:center; gap:14px; }
+.lb-icon { font-size:2rem; }
+.lb-title { margin:0 0 2px; font-weight:700; font-size:.95rem; }
+.lb-sub { margin:0; color:var(--text-muted); font-size:.83rem; }
+.loyalty-progress-wrap { flex:1; min-width:160px; max-width:260px; }
+.loyalty-progress-bar { height:8px; background:rgba(255,255,255,.1); border-radius:4px; overflow:hidden; }
+.loyalty-progress-fill { height:100%; background:linear-gradient(90deg,#f5c300,#fde68a); border-radius:4px; transition:width .5s ease; }
+
+/* Grid */
+.profile-grid { display:grid; grid-template-columns:2fr 1fr; gap:20px; }
+.profile-card { background:#080e1c; border:1px solid var(--border-dark); border-radius:16px; padding:22px; }
+.profile-card--wide { grid-column:1; grid-row:1/3; }
+.pc-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.pc-head h2 { margin:0; font-size:1rem; }
+.pc-link { color:var(--amazon-orange-soft); font-size:.83rem; text-decoration:none; }
+.pc-empty p { color:var(--text-muted); font-size:.9rem; }
+.pc-empty a { color:var(--amazon-orange-soft); }
+
+/* Bookings */
+.bookings-list { display:flex; flex-direction:column; gap:8px; }
+.booking-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 12px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid rgba(255,255,255,.05); transition:border-color .2s; flex-wrap:wrap; }
+.booking-row:hover { border-color:rgba(255,153,0,.2); }
+.booking-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.booking-info strong { font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px; }
+.booking-dest, .booking-date { font-size:.78rem; color:var(--text-muted); }
+.booking-meta { display:flex; align-items:center; gap:10px; flex-shrink:0; flex-wrap:wrap; }
+.booking-price { font-weight:700; color:var(--amazon-orange-soft); font-size:.88rem; }
+.btn-booking-view { color:var(--amazon-orange-soft); text-decoration:none; font-size:.82rem; font-weight:600; }
+
+/* Saved */
+.saved-list { display:flex; flex-direction:column; gap:8px; }
+.saved-item { display:flex; align-items:center; gap:10px; padding:8px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid rgba(255,255,255,.05); text-decoration:none; color:inherit; transition:border-color .2s; }
+.saved-item:hover { border-color:rgba(255,153,0,.25); }
+.saved-item img { width:52px; height:40px; object-fit:cover; border-radius:7px; flex-shrink:0; }
+.saved-info { flex:1; min-width:0; }
+.saved-info strong { display:block; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.saved-info span { font-size:.75rem; color:var(--text-muted); }
+.saved-price { font-size:.8rem; font-weight:700; color:var(--amazon-orange-soft); white-space:nowrap; flex-shrink:0; }
+
+/* Quick links */
+.quick-links { display:flex; flex-direction:column; gap:6px; }
+.qlink { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:9px; text-decoration:none; color:var(--text-secondary); font-size:.88rem; font-weight:500; transition:background .2s,border-color .2s,color .2s; }
+.qlink:hover { background:rgba(255,153,0,.08); border-color:rgba(255,153,0,.2); color:var(--amazon-orange-soft); }
+
+@media (max-width:768px) {
+    .profile-grid { grid-template-columns:1fr; }
+    .profile-card--wide { grid-row:auto; }
+    .profile-stats-row { width:100%; justify-content:space-around; }
+    .profile-header { flex-direction:column; align-items:flex-start; }
+}
+</style>
+{% endblock %}

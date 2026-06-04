@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
+use App\Service\FavoriteService;
+use App\Service\LoyaltyPointsService;
+use App\Service\ReservationService;
 use App\Service\VoyageService;
 use App\Service\ValidationService;
 use Psr\Log\LoggerInterface;
@@ -17,6 +20,9 @@ class UserController extends AbstractController
         private readonly AuthService $authService,
         private readonly VoyageService $voyageService,
         private readonly ValidationService $validationService,
+        private readonly ReservationService $reservationService,
+        private readonly FavoriteService $favoriteService,
+        private readonly LoyaltyPointsService $loyaltyPointsService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -277,6 +283,45 @@ class UserController extends AbstractController
         return $this->render('travel/favorites.html.twig', [
             'active_nav' => 'account',
             'favorites' => $voyages,
+        ]);
+    }
+
+    // ==================== PROFILE DASHBOARD ====================
+
+    #[Route('/account', name: 'account_profile', methods: ['GET'])]
+    public function profile(Request $request): Response
+    {
+        $user = $request->getSession()->get('auth_user');
+        if (!$user) {
+            return $this->redirectToRoute('auth_login');
+        }
+
+        $userId       = (int) $user['id'];
+        $reservations = $this->reservationService->getUserReservations($userId);
+        $favoriteIds  = $this->favoriteService->getFavoriteVoyageIds($userId);
+        $favorites    = array_filter(
+            array_map(fn($fid) => $this->voyageService->getVoyageById($fid), $favoriteIds),
+            fn($v) => $v !== null
+        );
+        $loyaltyBal   = $this->loyaltyPointsService->getBalance($userId);
+        $canRedeem    = $this->loyaltyPointsService->canRedeem($userId);
+
+        $confirmed  = count(array_filter($reservations, fn($r) => $r['status'] === 'CONFIRMED'));
+        $totalSpent = array_sum(array_map(
+            fn($r) => $r['status'] !== 'CANCELLED' ? (float)($r['total_price'] ?? 0) : 0,
+            $reservations
+        ));
+
+        return $this->render('travel/profile.html.twig', [
+            'active_nav'   => 'account',
+            'user'         => $user,
+            'reservations' => array_slice($reservations, 0, 10),
+            'favorites'    => array_slice(array_values($favorites), 0, 6),
+            'loyalty_bal'  => $loyaltyBal,
+            'can_redeem'   => $canRedeem,
+            'confirmed'    => $confirmed,
+            'total_spent'  => $totalSpent,
+            'total_trips'  => count($reservations),
         ]);
     }
 }

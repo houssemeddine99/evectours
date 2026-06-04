@@ -92,10 +92,25 @@
                     <span>Loyalty discount (–5%)</span>
                     <span id="loyalty-discount-amount">–0.00 TND</span>
                 </div>
+                <div class="breakdown-row promo-discount-row" id="promo-row" style="display:none;">
+                    <span>Promo discount (<span id="promo-code-label"></span>)</span>
+                    <span id="promo-discount-amount" style="color:#22c55e;">–0.00 TND</span>
+                </div>
                 <div class="breakdown-row total">
                     <span><strong>Estimated Total</strong></span>
                     <strong id="total-price">{{ voyage.price|number_format(2, '.', ',') }} TND</strong>
                 </div>
+            </div>
+
+            {# Promo code #}
+            <div class="promo-box">
+                <label for="promo_input">🏷️ Promo Code</label>
+                <div class="promo-input-row">
+                    <input type="text" id="promo_input" placeholder="Enter code (e.g. WELCOME10)" autocomplete="off" style="text-transform:uppercase">
+                    <button type="button" class="btn-promo-apply" onclick="applyPromo()">Apply</button>
+                </div>
+                <input type="hidden" name="promo_code" id="promo_code_hidden">
+                <p id="promo-msg" class="promo-msg"></p>
             </div>
 
             <button type="submit" class="btn btn-success" style="margin-top:16px;">Reserve Now &amp; Pay</button>
@@ -117,20 +132,34 @@
 .breakdown-row { display:flex; justify-content:space-between; padding:5px 0; font-size:0.92rem; }
 .breakdown-row.discount { color:#22c55e; }
 .breakdown-row.loyalty-discount-row { color:#f59e0b; }
+.breakdown-row.promo-discount-row { color:#22c55e; }
 .breakdown-row.total { border-top:1px solid var(--border-dark); margin-top:6px; padding-top:10px; font-size:1rem; }
+
+/* Promo box */
+.promo-box { background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.2); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
+.promo-box label { font-size:.88rem; font-weight:700; color:#22c55e; display:block; margin-bottom:8px; }
+.promo-input-row { display:flex; gap:8px; }
+.promo-input-row input { flex:1; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.15); border-radius:8px; padding:9px 14px; color:inherit; font-family:inherit; font-size:.9rem; font-weight:700; letter-spacing:1px; }
+.promo-input-row input:focus { outline:none; border-color:#22c55e; }
+.btn-promo-apply { background:#22c55e; color:#000; border:none; border-radius:8px; padding:9px 18px; font-weight:700; cursor:pointer; white-space:nowrap; transition:opacity .2s; }
+.btn-promo-apply:hover { opacity:.85; }
+.promo-msg { margin:6px 0 0; font-size:.83rem; min-height:18px; }
 </style>
 
 <script>
-var basePrice  = {{ voyage.price|default(0) }};
+var basePrice     = {{ voyage.price|default(0) }};
 var offerDiscount = {{ offer ? offer.discount_percentage : 0 }} / 100;
+var promoDiscount = 0;
 
 function updatePriceBreakdown() {
-    var n = parseInt(document.getElementById('number_of_people').value) || 1;
-    var usePoints = document.getElementById('use-points') ? document.getElementById('use-points').checked : false;
-    var loyaltyDiscount = usePoints ? 0.05 : 0;
+    var n          = parseInt(document.getElementById('number_of_people').value) || 1;
+    var usePoints  = document.getElementById('use-points') ? document.getElementById('use-points').checked : false;
+    var loyaltyD   = usePoints ? 0.05 : 0;
 
-    var base  = basePrice * n;
-    var after = base * (1 - offerDiscount) * (1 - loyaltyDiscount);
+    var base       = basePrice * n;
+    var afterOffer = base * (1 - offerDiscount);
+    var afterLoy   = afterOffer * (1 - loyaltyD);
+    var after      = Math.max(0, afterLoy - promoDiscount);
 
     document.getElementById('base-price').textContent = base.toFixed(2) + ' TND';
 
@@ -141,11 +170,53 @@ function updatePriceBreakdown() {
     var loyaltyRow = document.getElementById('loyalty-row');
     if (loyaltyRow) {
         loyaltyRow.style.display = usePoints ? 'flex' : 'none';
-        var afterOffer = base * (1 - offerDiscount);
         document.getElementById('loyalty-discount-amount').textContent = '–' + (afterOffer * 0.05).toFixed(2) + ' TND';
     }
 
+    var promoRow = document.getElementById('promo-row');
+    if (promoRow) {
+        promoRow.style.display = promoDiscount > 0 ? 'flex' : 'none';
+        document.getElementById('promo-discount-amount').textContent = '–' + promoDiscount.toFixed(2) + ' TND';
+    }
+
     document.getElementById('total-price').textContent = after.toFixed(2) + ' TND';
+}
+
+function applyPromo() {
+    var code = document.getElementById('promo_input').value.trim().toUpperCase();
+    var msg  = document.getElementById('promo-msg');
+    if (!code) { msg.textContent = 'Enter a promo code first.'; msg.style.color = '#f87171'; return; }
+
+    var n          = parseInt(document.getElementById('number_of_people').value) || 1;
+    var usePoints  = document.getElementById('use-points') ? document.getElementById('use-points').checked : false;
+    var subtotal   = basePrice * n * (1 - offerDiscount) * (1 - (usePoints ? 0.05 : 0));
+
+    var btn = document.querySelector('.btn-promo-apply');
+    btn.disabled = true; btn.textContent = '…';
+
+    var fd = new FormData();
+    fd.append('code', code);
+    fd.append('price', subtotal.toFixed(2));
+
+    fetch('{{ path("api_promo_validate") }}', { method: 'POST', body: fd })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false; btn.textContent = 'Apply';
+            if (data.valid) {
+                promoDiscount = parseFloat(data.discount);
+                document.getElementById('promo_code_hidden').value = code;
+                document.getElementById('promo-code-label').textContent = code;
+                msg.textContent = '✅ ' + data.description;
+                msg.style.color = '#22c55e';
+            } else {
+                promoDiscount = 0;
+                document.getElementById('promo_code_hidden').value = '';
+                msg.textContent = '❌ ' + data.error;
+                msg.style.color = '#f87171';
+            }
+            updatePriceBreakdown();
+        })
+        .catch(function() { btn.disabled=false; btn.textContent='Apply'; });
 }
 
 updatePriceBreakdown();

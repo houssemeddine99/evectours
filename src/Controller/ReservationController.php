@@ -13,6 +13,7 @@ use App\Service\ValidationService;
 use Symfony\Component\Messenger\MessageBusInterface;
 use App\Service\MailerService;
 use App\Service\VoyageService;
+use App\Service\PromoCodeService;
 use App\Service\WaitlistService;
 use App\Service\WeatherService;
 use Dompdf\Dompdf;
@@ -40,7 +41,36 @@ class ReservationController extends AbstractController
         private readonly MessageBusInterface $bus,
         private readonly MailerService $mailerService,
         private readonly FlouciPaymentService $flouciPaymentService,
+        private readonly PromoCodeService $promoCodeService,
     ) {}
+
+    #[Route('/api/promo/validate', name: 'api_promo_validate', methods: ['POST'])]
+    public function validatePromo(Request $request): JsonResponse
+    {
+        $code  = trim((string) $request->request->get('code', ''));
+        $price = (float) $request->request->get('price', 0);
+
+        if ($code === '') {
+            return $this->json(['valid' => false, 'error' => 'Enter a promo code.']);
+        }
+
+        $promo = $this->promoCodeService->validate($code);
+        if ($promo === null) {
+            return $this->json(['valid' => false, 'error' => 'Invalid or expired promo code.']);
+        }
+
+        $discount = $this->promoCodeService->getDiscountAmount($price, $code);
+
+        return $this->json([
+            'valid'       => true,
+            'code'        => strtoupper($code),
+            'description' => $promo['description'],
+            'type'        => $promo['type'],
+            'amount'      => $promo['discount'],
+            'discount'    => $discount,
+            'final_price' => max(0, $price - $discount),
+        ]);
+    }
 
     #[Route('/api/weather', name: 'api_weather', methods: ['GET'])]
     public function apiWeather(Request $request): JsonResponse
@@ -83,6 +113,7 @@ class ReservationController extends AbstractController
         if ($request->isMethod('POST')) {
             $numberOfPeople  = (int) $request->request->get('number_of_people', 1);
             $usePoints       = $request->request->get('use_loyalty_points') === '1';
+            $promoCode       = strtoupper(trim((string) $request->request->get('promo_code', '')));
 
             $this->validationService->clearErrors();
             $this->validationService->validateNumber($numberOfPeople, 'number_of_people', 1, 20);
@@ -96,10 +127,12 @@ class ReservationController extends AbstractController
                 return $this->redirectToRoute('travel_voyage_reserve', ['id' => $id]);
             }
 
-            $voyagePrice   = (float) ($voyage['price'] ?? 0);
-            $offerDiscount = $activeOffer ? ((float) $activeOffer['discount_percentage'] / 100) : 0;
+            $voyagePrice     = (float) ($voyage['price'] ?? 0);
+            $offerDiscount   = $activeOffer ? ((float) $activeOffer['discount_percentage'] / 100) : 0;
             $loyaltyDiscount = ($usePoints && $canRedeem) ? 0.05 : 0;
-            $totalPrice    = $numberOfPeople * $voyagePrice * (1 - $offerDiscount) * (1 - $loyaltyDiscount);
+            $subtotal        = $numberOfPeople * $voyagePrice * (1 - $offerDiscount) * (1 - $loyaltyDiscount);
+            $promoValid      = $promoCode !== '' && $this->promoCodeService->validate($promoCode) !== null;
+            $totalPrice      = $promoValid ? $this->promoCodeService->apply($subtotal, $promoCode) : $subtotal;
 
             // Deduct loyalty points before creating reservation
             if ($usePoints && $canRedeem) {
@@ -120,7 +153,7 @@ class ReservationController extends AbstractController
                 try {
                     $userEmail = $user['email'] ?? null;
                     if ($userEmail) {
-                        $this->mailerService->sendMailTo($userEmail);
+                        $this->mailerService->sendBookingConfirmation($userEmail, $created, $voyage);
                     }
                 } catch (\Throwable $e) {
                     // don't block the user if email fails
