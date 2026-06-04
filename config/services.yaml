@@ -5,6 +5,29 @@ parameters:
     # Resend's sandbox sender only delivers to your own Resend account email.
     env(MAIL_FROM): 'onboarding@resend.dev'
 
+    # Defaults for optional integrations. Because .env is git-ignored, these are
+    # absent on the host unless set as platform variables. Without a default,
+    # %env(...)% throws "Environment variable not found" and crashes any controller
+    # that injects the dependent service (e.g. ReservationController -> Flouci).
+    # Empty/sane defaults let the integration degrade gracefully instead.
+    env(FLOUCI_APP_PUBLIC): ''
+    env(FLOUCI_APP_SECRET): ''
+    env(AI_API_URL): 'https://api.groq.com/openai/v1/chat/completions'
+    env(AI_API_KEY): ''
+    env(AI_MODEL): 'llama-3.3-70b-versatile'
+    env(AI_SUGGESTION_ENABLED): '0'
+    env(OPENWEATHERMAP_API_KEY): ''
+    env(RAPIDAPI_KEY): ''
+    env(RAPIDAPI_BOOKING_HOST): 'booking-com15.p.rapidapi.com'
+    env(NVIDIA_API_KEY): ''
+    env(RESEND_API_KEY): ''
+    env(TWILIO_ACCOUNT_SID): ''
+    env(TWILIO_AUTH_TOKEN): ''
+    env(TWILIO_MESSAGING_SERVICE_SID): ''
+    env(CLOUDINARY_CLOUD_NAME): ''
+    env(CLOUDINARY_API_KEY): ''
+    env(CLOUDINARY_API_SECRET): ''
+
 services:
     _defaults:
         autowire: true
