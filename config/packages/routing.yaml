@@ -10,3 +10,7 @@ when@prod:
     framework:
         router:
             strict_requirements: null
+            # Canonical base URL for absolute links generated outside an HTTP request
+            # (async emails via Messenger, CLI, sitemap). Hardcoded so an empty
+            # APP_BASE_URL can never produce an invalid URI and crash the router.
+            default_uri: 'https://evectours.com'
