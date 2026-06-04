@@ -145,6 +145,7 @@ class AdminController extends AbstractController
             'chart_labels'  => $monthlyLabels,
             'chart_revenue' => $monthlyRevenue,
             'top_dests'     => $topDests,
+            'top_dest_values' => array_values($topDests),
         ]);
     }
 

@@ -344,7 +344,7 @@
   var confirmed = {{ stats.confirmed_reservations }};
   var cancelled = {{ stats.cancelled_reservations }};
   var destLabels = {{ top_dests|keys|json_encode|raw }};
-  var destVals   = {{ top_dests|values|json_encode|raw }};
+  var destVals   = {{ top_dest_values|json_encode|raw }};
 
   var gridColor = 'rgba(255,255,255,0.06)';
   var tickColor = 'rgba(255,255,255,0.4)';

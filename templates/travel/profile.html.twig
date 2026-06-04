@@ -43,7 +43,7 @@
         </div>
         <div class="loyalty-progress-wrap">
             <div class="loyalty-progress-bar">
-                <div class="loyalty-progress-fill" style="width:{{ [loyalty_bal, 100]|min }}%"></div>
+                <div class="loyalty-progress-fill" style="width:{{ min(loyalty_bal, 100) }}%"></div>
             </div>
         </div>
     </div>
