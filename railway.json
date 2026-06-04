@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "sh -c 'php -S 0.0.0.0:$PORT -t public'",
+    "startCommand": "sh -c 'APP_ENV=prod APP_DEBUG=0 php -S 0.0.0.0:$PORT -t public'",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
