@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Service\AuthService;
 use App\Service\CurrencyService;
+use App\Service\MailerService;
 use App\Service\ValidationService;
 use App\Service\UserLoginService;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -13,14 +15,20 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class AuthController extends AbstractController
 {
+    /** Cache-key prefix for password-reset tokens (stored server-side so links work cross-device). */
+    private const PWD_RESET_PREFIX = 'pwd_reset_';
+
     public function __construct(
         private readonly AuthService $authService,
         private readonly ValidationService $validationService,
         private readonly UserLoginService $userLoginService,
         private readonly CurrencyService $currencyService,
+        private readonly MailerService $mailer,
+        private readonly CacheItemPoolInterface $cache,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -128,10 +136,29 @@ class AuthController extends AbstractController
                 $sent = true;
             } else {
                 $token = bin2hex(random_bytes(32));
-                $request->getSession()->set('pwd_reset_token', $token);
-                $request->getSession()->set('pwd_reset_email', $email);
-                $request->getSession()->set('pwd_reset_expires', time() + 3600);
-                $this->logger->info('Password reset requested', ['email' => $email]);
+
+                // Store the token server-side (hashed) so the reset link works on any device.
+                $item = $this->cache->getItem(self::PWD_RESET_PREFIX . hash('sha256', $token));
+                $item->set($email);
+                $item->expiresAfter(3600);
+                $this->cache->save($item);
+
+                $resetUrl = $this->generateUrl(
+                    'auth_reset_password',
+                    ['token' => $token],
+                    UrlGeneratorInterface::ABSOLUTE_URL
+                );
+
+                try {
+                    $this->mailer->sendPasswordReset($email, $resetUrl);
+                    $this->logger->info('Password reset email sent', ['email' => $email]);
+                } catch (\Throwable $e) {
+                    $this->logger->error('Failed to send password reset email', [
+                        'email' => $email,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 $sent = true;
             }
         }
@@ -147,15 +174,15 @@ class AuthController extends AbstractController
     public function resetPassword(Request $request): Response
     {
         $token   = (string) $request->query->get('token', $request->request->get('token', ''));
-        $session = $request->getSession();
         $error   = null;
         $success = false;
 
-        $validToken   = $session->get('pwd_reset_token');
-        $resetEmail   = $session->get('pwd_reset_email');
-        $resetExpires = $session->get('pwd_reset_expires', 0);
+        // Look the token up in the server-side store (works regardless of which device requested it).
+        $cacheKey   = $token !== '' ? self::PWD_RESET_PREFIX . hash('sha256', $token) : '';
+        $item       = $cacheKey !== '' ? $this->cache->getItem($cacheKey) : null;
+        $resetEmail = ($item !== null && $item->isHit()) ? (string) $item->get() : null;
 
-        if (!$token || $token !== $validToken || time() > $resetExpires) {
+        if (!$token || $resetEmail === null) {
             return $this->render('auth/reset_password.html.twig', [
                 'active_nav' => '',
                 'invalid'    => true,
@@ -184,9 +211,8 @@ class AuthController extends AbstractController
                         $user['image_url'] ?? null,
                         $password
                     );
-                    $session->remove('pwd_reset_token');
-                    $session->remove('pwd_reset_email');
-                    $session->remove('pwd_reset_expires');
+                    // Invalidate the token so it can't be reused.
+                    $this->cache->deleteItem($cacheKey);
                     $this->logger->info('Password reset completed', ['email' => $resetEmail]);
                     $success = true;
                 } else {

@@ -1,6 +1,9 @@
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
 parameters:
+    # Default sender if MAIL_FROM is not set in the environment (.env is git-ignored).
+    # Resend's sandbox sender only delivers to your own Resend account email.
+    env(MAIL_FROM): 'onboarding@resend.dev'
 
 services:
     _defaults:
@@ -78,6 +81,7 @@ services:
     App\Service\MailerService:
         arguments:
             $apiKey: '%env(RESEND_API_KEY)%'
+            $fromAddress: '%env(MAIL_FROM)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
