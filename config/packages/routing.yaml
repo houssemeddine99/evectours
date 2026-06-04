@@ -10,4 +10,3 @@ when@prod:
     framework:
         router:
             strict_requirements: null
-            default_uri: '%env(default:https://evectours.com:APP_BASE_URL)%'
