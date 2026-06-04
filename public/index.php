@@ -5,12 +5,13 @@ use Symfony\Component\HttpFoundation\Request;
 
 require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
 
-// Force HTTPS on Railway (HTTP→HTTPS redirect)
-if (
-    isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
-    $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'http' &&
-    isset($_SERVER['HTTP_HOST'])
-) {
+// Force HTTPS when behind a reverse proxy (Railway/PaaS)
+$proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? $_SERVER['HTTP_X_FORWARDED_PROTOCOL'] ?? null;
+$isHttps = ($proto === 'https')
+    || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['SERVER_PORT'] ?? null) == 443);
+
+if ($proto !== null && !$isHttps && isset($_SERVER['HTTP_HOST'])) {
     header('Location: https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], true, 301);
     exit;
 }
