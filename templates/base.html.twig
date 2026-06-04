@@ -3,6 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {# ── CSRF protection (validated by App\EventSubscriber\CsrfProtectionSubscriber) ── #}
+    <meta name="csrf-token" content="{{ csrf_token('app') }}">
+    <script>
+    (function () {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var CSRF = meta ? meta.getAttribute('content') : '';
+
+        // 1) Inject the token into every same-origin non-GET form on submit.
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            if (!form || form.tagName !== 'FORM') return;
+            if ((form.getAttribute('method') || 'get').toLowerCase() === 'get') return;
+            if (form.querySelector('input[name="_token"]')) return;
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            input.value = CSRF;
+            form.appendChild(input);
+        }, true);
+
+        // 2) Add the token header to same-origin fetch() calls with unsafe methods.
+        if (window.fetch) {
+            var orig = window.fetch;
+            window.fetch = function (input, init) {
+                init = init || {};
+                var isReq = (typeof input !== 'string') && input;
+                var method = (init.method || (isReq && input.method) || 'GET').toUpperCase();
+                var url = (typeof input === 'string') ? input : (isReq ? input.url : '');
+                var sameOrigin = url === '' || url.charAt(0) === '/' || url.indexOf(window.location.origin) === 0;
+                if (sameOrigin && method !== 'GET' && method !== 'HEAD') {
+                    var headers = new Headers(init.headers || (isReq && input.headers) || {});
+                    if (!headers.has('X-CSRF-TOKEN')) headers.set('X-CSRF-TOKEN', CSRF);
+                    init.headers = headers;
+                }
+                return orig.call(this, input, init);
+            };
+        }
+    })();
+    </script>
+
     <title>{% block title %}Evec Tours — Discover the World{% endblock %}</title>
 
     {# ── SEO & Social meta ── #}
@@ -25,7 +66,10 @@
     <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png{% endblock %}">
 
     <meta name="theme-color" content="#0f1722">
-    <link rel="icon" href="/images/logo.png" type="image/png">
+    <link rel="icon" href="/images/logo.png" type="image/png" sizes="any">
+    <link rel="icon" href="/images/logo.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/images/logo.png" type="image/png" sizes="16x16">
+    <link rel="shortcut icon" href="/images/logo.png">
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

@@ -107,7 +107,7 @@ class EventController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/activities/{id}/delete', name: 'admin_activity_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/activities/{id}/delete', name: 'admin_activity_delete', methods: ['POST'])]
     public function adminDeleteActivity(Request $request, int $id): Response
     {
         if ($this->adminController->ensureIsAdmin($request) !== null) {

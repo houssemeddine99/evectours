@@ -407,7 +407,7 @@ class VoyageController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/voyages/{id}/delete', name: 'admin_voyage_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/voyages/{id}/delete', name: 'admin_voyage_delete', methods: ['POST'])]
     public function adminDeleteVoyage(Request $request, int $id): Response
     {
         if ($this->adminController->ensureIsAdmin($request) !== null) {

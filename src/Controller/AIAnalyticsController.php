@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Controller\Concern\AdminGuardTrait;
+use App\Service\AuthService;
 use App\Service\Analytics\MetricsService;
 use App\Service\Analytics\NvidiaAIClient;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -12,6 +15,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 #[Route('/api/ai')]
 class AIAnalyticsController extends AbstractController
 {
+    use AdminGuardTrait;
+
     /**
      * Define available tools (functions) for the AI.
      * @var array<int, array<string, mixed>>
@@ -206,8 +211,17 @@ class AIAnalyticsController extends AbstractController
     ];
 
     #[Route('/ask', name: 'ai_ask', methods: ['POST'])]
-    public function ask(Request $request, MetricsService $metrics, NvidiaAIClient $ai): JsonResponse
+    public function ask(Request $request, MetricsService $metrics, NvidiaAIClient $ai, AuthService $authService, LoggerInterface $logger): JsonResponse
     {
+        // This endpoint exposes full analytics (all users, payments, refunds,
+        // reclamations) — restrict it to authenticated admins only.
+        if (!$this->isSessionAdmin($request, $authService)) {
+            $logger->warning('Unauthorized access attempt to AI analytics endpoint', [
+                'ip' => $request->getClientIp(),
+            ]);
+            return $this->json(['error' => 'Admin access required.'], 403);
+        }
+
         $data = json_decode($request->getContent(), true);
         $question = $data['question'] ?? null;
 

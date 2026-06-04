@@ -194,7 +194,7 @@ unset($data['id']);
         ]);
     }
 
-    #[Route('/admin/images/{id}/delete', name: 'admin_image_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/images/{id}/delete', name: 'admin_image_delete', methods: ['POST'])]
     public function adminDeleteImage(Request $request, int $id): Response
     {
         if ($this->adminController->ensureIsAdmin($request) !== null) {

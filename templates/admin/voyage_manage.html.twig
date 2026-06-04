@@ -75,7 +75,10 @@
                 </div>
                 <div class="item-actions">
                     <a href="{{ path('admin_offer_edit', {id: offer.id}) }}" class="btn btn-sm btn-edit">Edit</a>
-                    <a href="{{ path('admin_offer_delete', {id: offer.id}) }}" class="btn btn-sm btn-delete" onclick="return confirm('Delete this offer?');">Delete</a>
+                    <form method="post" action="{{ path('admin_offer_delete', {id: offer.id}) }}" style="display:inline;" onsubmit="return confirm('Delete this offer?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('app') }}">
+                        <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -106,7 +109,10 @@
                 </div>
                 <div class="item-actions">
                     <a href="{{ path('admin_activity_edit', {id: activity.id}) }}" class="btn btn-sm btn-edit">Edit</a>
-                    <a href="{{ path('admin_activity_delete', {id: activity.id}) }}" class="btn btn-sm btn-delete" onclick="return confirm('Delete this activity?');">Delete</a>
+                    <form method="post" action="{{ path('admin_activity_delete', {id: activity.id}) }}" style="display:inline;" onsubmit="return confirm('Delete this activity?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('app') }}">
+                        <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -130,7 +136,10 @@
                 <img src="{{ image.image_url }}" alt="Voyage image">
                 <div class="image-actions">
                     <a href="{{ path('admin_image_edit', {id: image.id}) }}" class="btn btn-sm btn-edit">Edit</a>
-                    <a href="{{ path('admin_image_delete', {id: image.id}) }}" class="btn btn-sm btn-delete" onclick="return confirm('Delete this image?');">Delete</a>
+                    <form method="post" action="{{ path('admin_image_delete', {id: image.id}) }}" style="display:inline;" onsubmit="return confirm('Delete this image?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('app') }}">
+                        <button type="submit" class="btn btn-sm btn-delete">Delete</button>
+                    </form>
                 </div>
             </div>
             {% endfor %}

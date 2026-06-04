@@ -44,12 +44,15 @@
                                 <div style="display: flex; gap: 8px;">
                                     <a href="{{ path('admin_activity_edit', {id: activity.id}) }}" class="btn-sm" style="color: #4e73df; text-decoration: none;">Edit</a>
                                     
-                                    <a href="{{ path('admin_activity_delete', {id: activity.id}) }}" 
-                                       class="btn-sm" 
-                                       style="color: #e74a3b; text-decoration: none;"
-                                       onclick="return confirm('Are you sure you want to delete this activity?');">
-                                       Delete
-                                    </a>
+                                    <form method="post" action="{{ path('admin_activity_delete', {id: activity.id}) }}"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete this activity?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('app') }}">
+                                        <button type="submit" class="btn-sm"
+                                                style="color: #e74a3b; background:none; border:none; padding:0; cursor:pointer; font:inherit;">
+                                            Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

@@ -49,7 +49,11 @@ class FlouciPaymentService
 
         $data = json_decode($raw, true);
         if (!($data['result']['success'] ?? false)) {
-            $this->logger->error('Flouci createPayment failed', ['raw' => substr($raw, 0, 300)]);
+            // Do not log the raw response — it may contain payment tokens/links.
+            $this->logger->error('Flouci createPayment failed', [
+                'code'    => $data['result']['code'] ?? null,
+                'message' => $data['result']['message'] ?? null,
+            ]);
             return null;
         }
 
@@ -71,7 +75,11 @@ class FlouciPaymentService
 
         $data = json_decode($raw, true);
         if (!($data['success'] ?? false)) {
-            $this->logger->warning('Flouci verifyPayment failed', ['payment_id' => $paymentId, 'raw' => substr($raw, 0, 300)]);
+            // Do not log the raw response — it may contain payment tokens/links.
+            $this->logger->warning('Flouci verifyPayment failed', [
+                'payment_id' => $paymentId,
+                'code'       => $data['code'] ?? null,
+            ]);
             return null;
         }
 

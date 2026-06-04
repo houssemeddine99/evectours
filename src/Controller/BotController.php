@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Controller\Concern\AdminGuardTrait;
+use App\Service\AuthService;
 use App\Service\MailerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -10,9 +12,16 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class BotController extends AbstractController
 {
+    use AdminGuardTrait;
+
     #[Route('/sendbot', name: 'sendbot', methods: ['POST'])]
-    public function sendbot(Request $request, MailerService $mailer): JsonResponse
+    public function sendbot(Request $request, MailerService $mailer, AuthService $authService): JsonResponse
     {
+        // Open mail-sender — restrict to admins to prevent it being used as a spam relay.
+        if (!$this->isSessionAdmin($request, $authService)) {
+            return $this->json(['error' => 'Admin access required.'], 403);
+        }
+
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
 

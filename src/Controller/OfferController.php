@@ -124,7 +124,7 @@ class OfferController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/offers/{id}/delete', name: 'admin_offer_delete', methods: ['GET', 'POST'])]
+    #[Route('/admin/offers/{id}/delete', name: 'admin_offer_delete', methods: ['POST'])]
     public function adminDeleteOffer(Request $request, int $id): Response
     {
         if ($this->adminController->ensureIsAdmin($request) !== null) {
