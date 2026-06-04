@@ -114,8 +114,13 @@ class AdminController extends AbstractController
             $month = date('Y-m', $ts);
             $monthlyLabels[]  = date('M Y', $ts);
             $monthlyRevenue[] = array_sum(array_map(
-                fn($r) => (strpos((string)($r['reservation_date'] ?? ''), $month) === 0 && $r['status'] !== 'CANCELLED')
-                    ? (float)($r['total_price'] ?? 0) : 0,
+                function ($r) use ($month) {
+                    // reservation_date may be a DateTime object or a string.
+                    $d = $r['reservation_date'] ?? null;
+                    $dateStr = $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : (string) $d;
+                    return (str_starts_with($dateStr, $month) && ($r['status'] ?? '') !== 'CANCELLED')
+                        ? (float) ($r['total_price'] ?? 0) : 0;
+                },
                 $reservations
             ));
         }

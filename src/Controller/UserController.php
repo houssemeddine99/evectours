@@ -297,7 +297,7 @@ class UserController extends AbstractController
         }
 
         $userId       = (int) $user['id'];
-        $reservations = $this->reservationService->getUserReservations($userId);
+        $reservations = $this->reservationService->getReservationsForUser($userId);
         $favoriteIds  = $this->favoriteService->getFavoriteVoyageIds($userId);
         $favorites    = array_filter(
             array_map(fn($fid) => $this->voyageService->getVoyageById($fid), $favoriteIds),
