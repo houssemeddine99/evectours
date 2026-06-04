@@ -50,6 +50,14 @@ class ContactController extends AbstractController
         }
     }
 
+    #[Route('/faq', name: 'travel_faq', methods: ['GET'])]
+    public function faq(): Response
+    {
+        return $this->render('travel/faq.html.twig', [
+            'active_nav' => '',
+        ]);
+    }
+
     #[Route('/favicon.ico', name: 'travel_favicon', methods: ['GET'])]
     public function favicon(): Response
     {

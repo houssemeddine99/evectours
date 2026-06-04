@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+{% block title %}FAQ — Frequently Asked Questions | Evec Tours{% endblock %}
+{% block meta_description %}Find answers to common questions about booking, payments, cancellations, and more at Evec Tours.{% endblock %}
+
+{% block body %}
+<section class="faq-page">
+    <div class="faq-hero">
+        <p class="section-eyebrow">Support</p>
+        <h1>Frequently Asked Questions</h1>
+        <p class="faq-sub">Everything you need to know about travelling with Evec Tours.</p>
+        <input type="text" id="faq-search" class="faq-search-input" placeholder="🔍 Search questions…">
+    </div>
+
+    <div class="faq-container">
+
+        <div class="faq-category">
+            <h2 class="faq-cat-title">✈️ Booking & Reservations</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">How do I book a voyage? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Browse our <a href="{{ path('travel_voyages') }}">Voyages</a> page, select your trip, and click "Reserve Your Spot". Fill in your details and choose your payment method. You'll receive a confirmation email with your ticket.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Can I book for a group? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Yes! During the reservation process you can select the number of travellers. For groups of 10+, contact us directly on WhatsApp for a special group rate.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Do I need to create an account? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Yes, an account is required to complete a booking. You can register with email or sign in with your Google account in seconds.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-category">
+            <h2 class="faq-cat-title">💰 Pricing & Payments</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">What currency are prices in? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>All prices are displayed in Tunisian Dinar (TND) by default. You can toggle the currency in the top navigation bar.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">What payment methods are accepted? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>We accept payments via Flouci (Tunisian payment platform). More payment options are coming soon. All transactions are SSL-encrypted.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Are there any hidden fees? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>No hidden fees. The price shown is the final price. Any applicable taxes or charges are included in the displayed amount.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-category">
+            <h2 class="faq-cat-title">🔄 Cancellations & Refunds</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Can I cancel my booking? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Yes. Go to your reservation details and click "Request Cancellation". Cancellations more than 7 days before departure are fully refunded. Within 7 days, partial refunds apply.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">How long do refunds take? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Refunds are processed within 3–5 business days after approval. The amount will be returned to your original payment method.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-category">
+            <h2 class="faq-cat-title">🤖 AI Features</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">What is the AI Itinerary feature? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>On each voyage detail page, click "✨ Generate" to get a personalised day-by-day itinerary created by our AI. It's free and instant.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">What is the AI mascot? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>The mascot in the bottom-right corner is your AI travel assistant. Double-click it and describe your dream trip — it will recommend the best matching voyages with prices.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-q" onclick="toggleFaq(this)">Can the AI plan a custom trip? <span class="faq-chevron">›</span></button>
+                    <div class="faq-a"><p>Yes! Visit the <a href="{{ path('trip_planner') }}">AI Trip Planner</a> page and describe your budget, travel style, and dates. The AI will find matching voyages and special offers for you.</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-cta">
+            <h3>Still have questions?</h3>
+            <p>Our team is available 7 days a week.</p>
+            <div class="faq-cta-btns">
+                <a href="{{ path('travel_contact') }}" class="btn btn-primary">📧 Contact Us</a>
+                <a href="https://wa.me/21671000000" target="_blank" class="btn btn-ghost-pro">💬 WhatsApp</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<style>
+.faq-page { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+.faq-hero { text-align:center; margin-bottom:48px; }
+.faq-hero h1 { font-size:2.4rem; font-weight:900; margin:8px 0 12px; }
+.faq-sub { color:var(--text-muted); font-size:1.05rem; margin-bottom:24px; }
+.faq-search-input { width:100%; max-width:480px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:30px; padding:12px 22px; color:inherit; font-size:.95rem; font-family:inherit; outline:none; transition:border-color .2s; }
+.faq-search-input:focus { border-color:var(--amazon-orange); }
+
+.faq-category { margin-bottom:36px; }
+.faq-cat-title { font-size:1.1rem; font-weight:700; color:var(--amazon-orange-soft); margin:0 0 14px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.06); }
+
+.faq-item { border:1px solid rgba(255,255,255,.07); border-radius:10px; margin-bottom:8px; overflow:hidden; transition:border-color .2s; }
+.faq-item.open { border-color:rgba(255,153,0,.25); }
+.faq-q { width:100%; background:rgba(255,255,255,.03); border:none; color:var(--text-primary); font-size:.95rem; font-weight:600; padding:16px 20px; text-align:left; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; transition:background .2s; font-family:inherit; }
+.faq-q:hover { background:rgba(255,255,255,.06); }
+.faq-chevron { font-size:1.3rem; transition:transform .25s; flex-shrink:0; color:var(--amazon-orange-soft); }
+.faq-item.open .faq-chevron { transform:rotate(90deg); }
+.faq-a { display:none; padding:0 20px 16px; }
+.faq-item.open .faq-a { display:block; }
+.faq-a p { margin:12px 0 0; color:var(--text-muted); line-height:1.65; font-size:.93rem; }
+.faq-a a { color:var(--amazon-orange-soft); }
+
+.faq-cta { text-align:center; background:rgba(255,153,0,.06); border:1px solid rgba(255,153,0,.2); border-radius:16px; padding:36px 24px; margin-top:48px; }
+.faq-cta h3 { font-size:1.4rem; margin:0 0 8px; }
+.faq-cta p { color:var(--text-muted); margin-bottom:20px; }
+.faq-cta-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+.faq-item.faq-hidden { display:none; }
+</style>
+
+<script>
+function toggleFaq(btn) {
+    var item = btn.closest('.faq-item');
+    var isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(function(i) { i.classList.remove('open'); });
+    if (!isOpen) item.classList.add('open');
+}
+
+// Live search
+document.getElementById('faq-search').addEventListener('input', function() {
+    var q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.faq-item').forEach(function(item) {
+        var text = item.textContent.toLowerCase();
+        item.classList.toggle('faq-hidden', q && !text.includes(q));
+    });
+    document.querySelectorAll('.faq-category').forEach(function(cat) {
+        var hasVisible = Array.from(cat.querySelectorAll('.faq-item')).some(function(i) { return !i.classList.contains('faq-hidden'); });
+        cat.style.display = hasVisible ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

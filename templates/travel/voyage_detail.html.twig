@@ -1,6 +1,35 @@
 ﻿{% extends 'base.html.twig' %}
 
 {% block stylesheets %}<link rel="stylesheet" href="/styles/voyage-detail.css">{% endblock %}
+
+{% block javascripts %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TouristTrip",
+  "name": {{ voyage.title|default('')|json_encode|raw }},
+  "description": {{ voyage.description|default('')|striptags|slice(0,300)|json_encode|raw }},
+  "touristType": "Adventure",
+  "itinerary": {
+    "@type": "ItemList",
+    "name": {{ voyage.destination|default('')|json_encode|raw }}
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": {{ voyage.price is not empty ? voyage.price|json_encode|raw : '"0"' }},
+    "priceCurrency": "TND",
+    "availability": "https://schema.org/InStock",
+    "url": "{{ app.request.scheme }}://{{ app.request.httpHost }}{{ app.request.requestUri }}"
+  },
+  "provider": {
+    "@type": "TravelAgency",
+    "name": "Evec Tours",
+    "url": "https://evectours.com"
+  }{% if voyage.image_url is iterable and voyage.image_url|length > 0 %},
+  "image": {{ voyage.image_url[0]|json_encode|raw }}{% endif %}
+}
+</script>
+{% endblock %}
 {% block title %}{{ voyage.title|default('Voyage details') }} | Evec Tours{% endblock %}
 {% block meta_description %}{{ voyage.description|default('Discover ' ~ voyage.destination ~ ' with Evec Tours — curated voyages and exclusive travel offers.')|striptags|slice(0,160) }}{% endblock %}
 {% block og_title %}{{ voyage.title|default('Voyage') }} — Evec Tours{% endblock %}

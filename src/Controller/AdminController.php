@@ -106,6 +106,29 @@ class AdminController extends AbstractController
         // Get recent users (last 5)
         $recentUsers = array_slice($users, 0, 5);
 
+        // Monthly revenue chart data (last 6 months)
+        $monthlyRevenue = [];
+        $monthlyLabels  = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $ts    = strtotime("-$i months");
+            $month = date('Y-m', $ts);
+            $monthlyLabels[]  = date('M Y', $ts);
+            $monthlyRevenue[] = array_sum(array_map(
+                fn($r) => (strpos((string)($r['reservation_date'] ?? ''), $month) === 0 && $r['status'] !== 'CANCELLED')
+                    ? (float)($r['total_price'] ?? 0) : 0,
+                $reservations
+            ));
+        }
+
+        // Top destinations
+        $destRevenue = [];
+        foreach ($reservations as $r) {
+            $dest = $r['destination'] ?? $r['voyage_title'] ?? 'Unknown';
+            $destRevenue[$dest] = ($destRevenue[$dest] ?? 0) + (float)($r['total_price'] ?? 0);
+        }
+        arsort($destRevenue);
+        $topDests = array_slice($destRevenue, 0, 5, true);
+
         return $this->render('admin/dashboard.html.twig', [
             'active_nav' => 'account',
             'stats' => [
@@ -119,6 +142,9 @@ class AdminController extends AbstractController
             ],
             'recent_reservations' => $recentReservations,
             'recent_users' => $recentUsers,
+            'chart_labels'  => $monthlyLabels,
+            'chart_revenue' => $monthlyRevenue,
+            'top_dests'     => $topDests,
         ]);
     }
 
@@ -316,5 +342,37 @@ class AdminController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_users');
+    }
+
+    // ==================== CSV EXPORT ====================
+
+    #[Route('/export/reservations', name: 'admin_export_reservations', methods: ['GET'])]
+    public function exportReservations(Request $request): Response
+    {
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
+        }
+
+        $reservations = $this->reservationService->listAllReservations();
+
+        $csv  = "ID,User,Email,Voyage,Destination,People,Total (TND),Status,Date\n";
+        foreach ($reservations as $r) {
+            $csv .= implode(',', [
+                $r['id'] ?? '',
+                '"' . str_replace('"', '""', $r['user_name'] ?? '') . '"',
+                '"' . str_replace('"', '""', $r['user_email'] ?? '') . '"',
+                '"' . str_replace('"', '""', $r['voyage_title'] ?? '') . '"',
+                '"' . str_replace('"', '""', $r['destination'] ?? '') . '"',
+                $r['number_of_people'] ?? '',
+                number_format((float)($r['total_price'] ?? 0), 2),
+                $r['status'] ?? '',
+                '"' . ($r['reservation_date'] ?? '') . '"',
+            ]) . "\n";
+        }
+
+        return new Response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="reservations-' . date('Y-m-d') . '.csv"',
+        ]);
     }
 }

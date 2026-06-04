@@ -1,48 +1,252 @@
-﻿{% extends 'base.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Home | Evec Tours{% endblock %}
+{% block title %}Home | Evec Tours — Your Trusted Travel Partner{% endblock %}
+{% block meta_description %}Evec Tours offers curated voyages, group adventures, and AI-powered trip planning. Discover Tunisia and the world with us.{% endblock %}
 
 {% block body %}
-    <section class="hero">
-        <div class="hero-content">
-            <p class="eyebrow">Evec Tours — Your trusted partner in travel</p>
-            <h1>Discover unforgettable journeys around the world</h1>
-            <p>We design personalized trips, group adventures, and premium packages with local activities and best-value offers.</p>
-            <div class="hero-actions">
-                <a class="btn btn-primary" href="{{ path('travel_voyages') }}">Explore voyages</a>
-                <a class="btn btn-secondary" href="{{ path('travel_offers') }}">See active offers</a>
+
+    {# ── HERO ── #}
+    <section class="hero hero--pro">
+        <div class="hero-bg-overlay"></div>
+        <div class="hero-content hero-content--pro">
+            <p class="eyebrow-pro">✈️ Your Trusted Travel Partner</p>
+            <h1 class="hero-title-pro">Discover <span class="hero-highlight">Unforgettable</span><br>Journeys Around the World</h1>
+            <p class="hero-sub-pro">Curated voyages, exclusive offers, and AI-powered trip planning — all in one place.</p>
+            <div class="hero-actions hero-actions--pro">
+                <a class="btn btn-primary btn-hero" href="{{ path('travel_voyages') }}">🗺️ Explore Voyages</a>
+                <a class="btn btn-ghost-pro" href="{{ path('travel_offers') }}">🏷️ Active Offers</a>
             </div>
         </div>
     </section>
 
+    {# ── STATS COUNTER STRIP ── #}
+    <section class="stats-strip">
+        <div class="stats-strip-inner">
+            <div class="stat-item">
+                <span class="stat-num" data-target="{{ featured_voyages|length > 0 ? '50' : '10' }}">0</span><span class="stat-suffix">+</span>
+                <span class="stat-label">Destinations</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num" data-target="500">0</span><span class="stat-suffix">+</span>
+                <span class="stat-label">Happy Travellers</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num" data-target="98">0</span><span class="stat-suffix">%</span>
+                <span class="stat-label">Satisfaction Rate</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-num" data-target="5">0</span><span class="stat-suffix">★</span>
+                <span class="stat-label">Average Rating</span>
+            </div>
+        </div>
+    </section>
+
+    {# ── FEATURED VOYAGES ── #}
     <section class="voyages-section">
         <div class="section-title-row">
-            <h2>Featured Voyages</h2>
-            <a href="{{ path('travel_voyages') }}">View all</a>
+            <div>
+                <p class="section-eyebrow">Handpicked for you</p>
+                <h2>Featured Voyages</h2>
+            </div>
+            <a href="{{ path('travel_voyages') }}" class="view-all-link">View all →</a>
         </div>
         <div class="grid responsive-grid">
             {% for voyage in featured_voyages %}
-                <article class="card">
-                    <img src="{{ voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
+                {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' %}
+                <article class="card card--pro">
+                    <div class="card-img-wrap">
+                        <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image" loading="lazy" decoding="async">
+                        <div class="card-img-overlay"></div>
+                        <span class="card-dest-badge">📍 {{ voyage.destination|split(', ')|first }}</span>
+                    </div>
                     <div class="card-body">
-                        <div class="card-header">
-                            <p class="meta">{{ voyage.destination|default('Unknown destination') }}</p>
-                            <div class="card-badges">
-                                <span class="badge destination">🌍 {{ voyage.destination|split(', ')|first }}</span>
-                                {% if voyage.start_date %}
-                                <span class="badge dates">📅 {{ voyage.start_date|date('M j') }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
                         <h3>{{ voyage.title|default('Untitled trip') }}</h3>
-                        <p>{{ voyage.description|default('')|slice(0, 100) ~ '...' }}</p>
-                        <div class="card-footer">
-                            <strong>{{ voyage.price is not empty ? voyage.price|format_price : 'Price on request' }}</strong>
-                            <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}">View details</a>
+                        <p class="card-desc">{{ voyage.description|default('')|striptags|slice(0, 90) ~ '…' }}</p>
+                        <div class="card-footer card-footer--pro">
+                            <div class="card-price-pro">
+                                <span class="price-label">From</span>
+                                <strong>{{ voyage.price is not empty ? voyage.price|number_format(0) ~ ' TND' : 'On request' }}</strong>
+                            </div>
+                            <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-primary btn-sm">View →</a>
                         </div>
                     </div>
                 </article>
             {% endfor %}
         </div>
     </section>
+
+    {# ── WHY CHOOSE US ── #}
+    <section class="why-us">
+        <div class="why-us-inner">
+            <div class="why-us-text">
+                <p class="section-eyebrow">Why Evec Tours</p>
+                <h2>Travel Smarter, Not Harder</h2>
+                <p class="why-us-desc">We combine AI-powered planning, local expertise, and exclusive deals to give you the best travel experience possible.</p>
+                <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Get Started →</a>
+            </div>
+            <div class="why-us-features">
+                <div class="why-feature">
+                    <div class="why-icon">🤖</div>
+                    <div>
+                        <h4>AI Itinerary Builder</h4>
+                        <p>Generate a personalised day-by-day plan instantly with our AI assistant.</p>
+                    </div>
+                </div>
+                <div class="why-feature">
+                    <div class="why-icon">🔒</div>
+                    <div>
+                        <h4>Secure Booking</h4>
+                        <p>SSL-encrypted payments and transparent pricing — no hidden fees.</p>
+                    </div>
+                </div>
+                <div class="why-feature">
+                    <div class="why-icon">🎯</div>
+                    <div>
+                        <h4>Curated Experiences</h4>
+                        <p>Every voyage is hand-selected and quality-checked by our travel experts.</p>
+                    </div>
+                </div>
+                <div class="why-feature">
+                    <div class="why-icon">💬</div>
+                    <div>
+                        <h4>24/7 Support</h4>
+                        <p>Chat with us anytime on WhatsApp or via our AI-powered mascot.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ── TRUST BADGES ── #}
+    <section class="trust-strip">
+        <div class="trust-inner">
+            <div class="trust-badge"><span>🔒</span><span>Secure Payments</span></div>
+            <div class="trust-badge"><span>✈️</span><span>Best Price Guarantee</span></div>
+            <div class="trust-badge"><span>📞</span><span>24/7 WhatsApp Support</span></div>
+            <div class="trust-badge"><span>🌟</span><span>Verified Reviews</span></div>
+            <div class="trust-badge"><span>🗺️</span><span>Expert Local Guides</span></div>
+        </div>
+    </section>
+
+    {# ── CTA BANNER ── #}
+    <section class="cta-banner">
+        <div class="cta-banner-inner">
+            <div class="cta-text">
+                <h2>Ready for your next adventure?</h2>
+                <p>Tell our AI your dream trip and we'll find the perfect match in seconds.</p>
+            </div>
+            <div class="cta-actions">
+                <a href="{{ path('trip_planner') }}" class="btn btn-primary btn-lg">✨ Plan with AI</a>
+                <a href="{{ path('travel_contact') }}" class="btn btn-ghost-pro">Contact Us</a>
+            </div>
+        </div>
+    </section>
+
+<style>
+/* ── Hero Pro ── */
+.hero--pro { min-height: 88vh; display:flex; align-items:center; position:relative; background: linear-gradient(135deg, #060d1e 0%, #0a1628 40%, #0d1f3c 100%); overflow:hidden; }
+.hero-bg-overlay { position:absolute; inset:0; background: radial-gradient(ellipse at 70% 40%, rgba(74,158,255,0.12) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(255,153,0,0.08) 0%, transparent 55%); pointer-events:none; }
+.hero-content--pro { position:relative; z-index:1; max-width:700px; padding: 80px 48px; }
+.eyebrow-pro { color:var(--amazon-orange-soft); font-size:.9rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:16px; }
+.hero-title-pro { font-size:clamp(2.4rem, 5vw, 4rem); font-weight:900; line-height:1.12; margin:0 0 20px; color:#fff; }
+.hero-highlight { background: linear-gradient(135deg, var(--amazon-orange), #fde68a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.hero-sub-pro { font-size:1.15rem; color:rgba(255,255,255,.7); line-height:1.7; margin-bottom:36px; }
+.hero-actions--pro { display:flex; gap:16px; flex-wrap:wrap; }
+.btn-hero { padding:15px 32px; font-size:1.05rem; font-weight:800; border-radius:12px; }
+.btn-ghost-pro { padding:14px 28px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; border-radius:12px; font-weight:700; text-decoration:none; transition:background .2s,border-color .2s; display:inline-flex; align-items:center; }
+.btn-ghost-pro:hover { background:rgba(255,255,255,.15); border-color:rgba(255,255,255,.4); }
+
+/* ── Stats strip ── */
+.stats-strip { background: rgba(255,153,0,.06); border-top:1px solid rgba(255,153,0,.15); border-bottom:1px solid rgba(255,153,0,.15); padding:28px 24px; }
+.stats-strip-inner { display:flex; justify-content:center; align-items:center; gap:0; max-width:900px; margin:0 auto; flex-wrap:wrap; }
+.stat-item { text-align:center; padding:0 40px; display:flex; flex-direction:column; gap:4px; }
+.stat-num { font-size:2.4rem; font-weight:900; color:var(--amazon-orange-soft); line-height:1; }
+.stat-suffix { font-size:1.6rem; font-weight:900; color:var(--amazon-orange-soft); }
+.stat-label { font-size:.82rem; color:rgba(255,255,255,.55); font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
+.stat-item > span:first-child, .stat-item > span:nth-child(2) { display:inline; }
+.stat-item { position:relative; }
+.stat-num-wrap { display:flex; justify-content:center; align-items:baseline; gap:2px; }
+.stat-divider { width:1px; height:48px; background:rgba(255,255,255,.1); flex-shrink:0; margin:0 4px; }
+
+/* ── Section eyebrow ── */
+.section-eyebrow { color:var(--amazon-orange-soft); font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px; }
+
+/* ── Card Pro ── */
+.card--pro { border:1px solid rgba(255,255,255,.07); transition:transform .22s,box-shadow .22s,border-color .22s; }
+.card--pro:hover { transform:translateY(-6px); box-shadow:0 16px 40px rgba(0,0,0,.45); border-color:rgba(255,153,0,.3); }
+.card-img-wrap { position:relative; overflow:hidden; border-radius:12px 12px 0 0; }
+.card-img-wrap .card-image { transition:transform .4s ease; width:100%; height:200px; object-fit:cover; display:block; }
+.card--pro:hover .card-image { transform:scale(1.06); }
+.card-img-overlay { position:absolute; inset:0; background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.55) 100%); }
+.card-dest-badge { position:absolute; bottom:10px; left:12px; background:rgba(0,0,0,.65); color:#fff; font-size:.75rem; font-weight:700; padding:3px 10px; border-radius:20px; backdrop-filter:blur(4px); }
+.card-desc { color:var(--text-muted); font-size:.88rem; line-height:1.55; margin:6px 0 14px; }
+.card-footer--pro { display:flex; justify-content:space-between; align-items:center; }
+.card-price-pro { display:flex; flex-direction:column; }
+.price-label { font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
+.card-price-pro strong { font-size:1.15rem; color:var(--amazon-orange-soft); font-weight:800; }
+.btn-sm { padding:8px 18px; font-size:.88rem; border-radius:8px; }
+.view-all-link { color:var(--amazon-orange-soft); font-weight:700; text-decoration:none; font-size:.95rem; }
+.view-all-link:hover { text-decoration:underline; }
+
+/* ── Why Us ── */
+.why-us { padding:72px 24px; background:rgba(255,255,255,.015); border-top:1px solid rgba(255,255,255,.05); }
+.why-us-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1.4fr; gap:64px; align-items:center; }
+.why-us-text h2 { font-size:2.2rem; font-weight:900; margin:8px 0 16px; }
+.why-us-desc { color:var(--text-muted); line-height:1.7; margin-bottom:28px; }
+.why-us-features { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.why-feature { display:flex; gap:14px; align-items:flex-start; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:18px; transition:border-color .2s,background .2s; }
+.why-feature:hover { border-color:rgba(255,153,0,.25); background:rgba(255,153,0,.04); }
+.why-icon { font-size:1.8rem; flex-shrink:0; }
+.why-feature h4 { margin:0 0 4px; font-size:.95rem; font-weight:700; }
+.why-feature p { margin:0; color:var(--text-muted); font-size:.83rem; line-height:1.5; }
+
+/* ── Trust strip ── */
+.trust-strip { padding:20px 24px; background:rgba(68,121,207,.06); border-top:1px solid rgba(68,121,207,.15); }
+.trust-inner { max-width:1000px; margin:0 auto; display:flex; justify-content:center; flex-wrap:wrap; gap:12px; }
+.trust-badge { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:30px; padding:8px 18px; font-size:.82rem; font-weight:600; color:rgba(255,255,255,.7); }
+
+/* ── CTA Banner ── */
+.cta-banner { padding:64px 24px; background:linear-gradient(135deg,rgba(255,153,0,.1),rgba(68,121,207,.1)); border-top:1px solid rgba(255,153,0,.15); }
+.cta-banner-inner { max-width:860px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:32px; flex-wrap:wrap; }
+.cta-text h2 { margin:0 0 8px; font-size:1.8rem; font-weight:900; }
+.cta-text p { margin:0; color:var(--text-muted); font-size:1rem; }
+.cta-actions { display:flex; gap:14px; flex-shrink:0; flex-wrap:wrap; }
+.btn-lg { padding:16px 36px; font-size:1.05rem; font-weight:800; border-radius:12px; }
+
+@media (max-width:900px) {
+    .hero-content--pro { padding:60px 24px; }
+    .why-us-inner { grid-template-columns:1fr; gap:36px; }
+    .why-us-features { grid-template-columns:1fr; }
+    .cta-banner-inner { flex-direction:column; text-align:center; }
+    .stat-item { padding:0 20px; }
+    .stat-divider { display:none; }
+}
+</style>
+
+<script>
+// Animated counter
+document.addEventListener('DOMContentLoaded', function() {
+    var nums = document.querySelectorAll('.stat-num[data-target]');
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            var target = parseInt(el.dataset.target, 10);
+            var current = 0;
+            var step = Math.ceil(target / 40);
+            var timer = setInterval(function() {
+                current = Math.min(current + step, target);
+                el.textContent = current;
+                if (current >= target) clearInterval(timer);
+            }, 30);
+            observer.unobserve(el);
+        });
+    }, { threshold: 0.4 });
+    nums.forEach(function(n) { observer.observe(n); });
+});
+</script>
+
 {% endblock %}
