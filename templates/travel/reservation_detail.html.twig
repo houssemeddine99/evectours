@@ -3,6 +3,13 @@
 {% block title %}Reservation Detail | Evec Tours{% endblock %}
 
 {% block body %}
+<nav class="breadcrumb-bar" aria-label="Breadcrumb">
+    <ol class="breadcrumb-list" style="max-width:960px;margin:0 auto;padding:0 20px;">
+        <li><a href="{{ path('travel_home') }}">Home</a></li>
+        <li><a href="{{ path('travel_voyages') }}">Voyages</a></li>
+        <li aria-current="page">Reservation #{{ reservation.id }}</li>
+    </ol>
+</nav>
 <section>
     <h1>Reservation Details</h1>
 

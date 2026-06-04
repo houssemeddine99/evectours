@@ -12,6 +12,7 @@ use App\Service\VoyageVisitService;
 use App\Service\AiVoyageService;
 use App\Service\FavoriteService;
 use App\Service\ReviewService;
+use App\Service\CarbonFootprintService;
 use App\Repository\ReviewRepository;
 use App\Repository\VoyageRepository;
 
@@ -40,6 +41,7 @@ class VoyageController extends AbstractController
         private readonly AiVoyageService $aiVoyageService,
         private readonly FavoriteService $favoriteService,
         private readonly ReviewService $reviewService,
+        private readonly CarbonFootprintService $carbonService,
         private readonly ReviewRepository $reviewRepository,
         #[Target('cache.api_external')]
         private readonly CacheInterface $cache,
@@ -146,6 +148,8 @@ class VoyageController extends AbstractController
         $endDate = $voyage['end_date'] ? new \DateTime($voyage['end_date']) : null;
         $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
 
+        $carbon = $this->carbonService->calculate($voyage['destination'] ?? '', 1);
+
         return $this->render('travel/voyage_detail.html.twig', [
             'active_nav' => 'voyages',
             'voyage' => $voyage,
@@ -154,10 +158,11 @@ class VoyageController extends AbstractController
             'compare_list' => $compareList,
             'duration_days' => $durationDays,
             'user_id' => $userId,
+            'carbon' => $carbon,
             'reviews' => $this->reviewService->getReviewsForVoyage($voyage['id']),
             'review_avg' => $this->reviewService->getAverageRating($voyage['id']),
             'review_count' => $this->reviewService->getReviewCount($voyage['id']),
-            'user_review' => $userId > 1 ? $this->reviewService->getUserReview($userId, $voyage['id']) : null,
+            'user_review' => $userId > 0 ? $this->reviewService->getUserReview($userId, $voyage['id']) : null,
         ]);
     }
 

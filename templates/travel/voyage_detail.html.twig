@@ -11,6 +11,14 @@
 {% block twitter_image %}{% set _img = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : '' %}{% if _img %}{{ _img }}{% else %}{{ parent() }}{% endif %}{% endblock %}
 
 {% block body %}
+    <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+            <li><a href="{{ path('travel_home') }}">Home</a></li>
+            <li><a href="{{ path('travel_voyages') }}">Voyages</a></li>
+            <li aria-current="page">{{ voyage.title|default(voyage.destination) }}</li>
+        </ol>
+    </nav>
+
     <section class="voyage-hero">
         <div class="hero-overlay"></div>
         <div class="voyage-gallery-section">
@@ -148,6 +156,21 @@
                 </div>
 
                 <div class="voyage-separator"></div>
+
+                {# Carbon Footprint Widget #}
+                {% if carbon is defined %}
+                <div class="carbon-section">
+                    <div class="carbon-card carbon-{{ carbon.color }}">
+                        <div class="carbon-icon">{{ carbon.badge }}</div>
+                        <div class="carbon-info">
+                            <p class="carbon-label">Carbon Footprint</p>
+                            <p class="carbon-value">{{ carbon.co2_per_person }} kg CO₂ <span class="carbon-tag">per person</span></p>
+                            <p class="carbon-sub">~{{ carbon.distance_km }} km flight · {{ carbon.label }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="voyage-separator"></div>
+                {% endif %}
 
                 {% if voyage.activities|default([]) is not empty %}
                 <div class="voyage-activities-section">

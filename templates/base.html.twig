@@ -954,7 +954,22 @@
     </style>
 
     <script>window._mascotCfg={tripUrl:'{{ path("trip_planner") }}',planUrl:'{{ path("trip_planner_plan") }}'};</script>
-    <script src="/js/mascot.js?v=2" defer></script>
+    <script>
+    (function(){
+        function loadMascot(){
+            if(window._mascotLoaded) return;
+            window._mascotLoaded=true;
+            var s=document.createElement('script');
+            s.src='/js/mascot.js?v=2';
+            document.body.appendChild(s);
+        }
+        if('requestIdleCallback' in window){
+            requestIdleCallback(loadMascot,{timeout:3000});
+        } else {
+            window.addEventListener('load',function(){setTimeout(loadMascot,1000);});
+        }
+    })();
+    </script>
     {% endif %}{# end mascot guard #}
 
     {# ══ UI Enhancement DOM elements ══ #}

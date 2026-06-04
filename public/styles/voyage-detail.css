@@ -2,6 +2,49 @@
    VOYAGE DETAIL PAGE STYLES
    ======================================== */
 
+/* ========== BREADCRUMB ========== */
+.breadcrumb-bar {
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 24px;
+}
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.breadcrumb-list li { color: var(--text-muted); }
+.breadcrumb-list li:not(:last-child)::after { content: '›'; margin-left: 8px; opacity: 0.5; }
+.breadcrumb-list a { color: var(--amazon-orange-soft); text-decoration: none; }
+.breadcrumb-list a:hover { text-decoration: underline; }
+.breadcrumb-list li[aria-current="page"] { color: var(--text-secondary); }
+
+/* ========== CARBON FOOTPRINT ========== */
+.carbon-section { margin: 0 0 8px; }
+.carbon-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+.carbon-card.carbon-green { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
+.carbon-card.carbon-orange { border-color: rgba(249,115,22,0.3); background: rgba(249,115,22,0.06); }
+.carbon-card.carbon-red { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+.carbon-icon { font-size: 2rem; flex-shrink: 0; }
+.carbon-label { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 4px; font-weight: 600; }
+.carbon-value { font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 2px; }
+.carbon-tag { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); }
+.carbon-sub { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+
 /* ========== VOYAGE HERO ========== */
 .voyage-hero {
   position: relative;

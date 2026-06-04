@@ -3842,3 +3842,12 @@ body.tg-leaving #pg { opacity: 0; transform: translateY(-8px); transition: opaci
   outline: 2px solid var(--primary-orange);
   outline-offset: 2px;
 }
+
+/* ========== BREADCRUMB (global) ========== */
+.breadcrumb-bar{background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);padding:10px 24px}
+.breadcrumb-list{display:flex;align-items:center;gap:8px;list-style:none;margin:0;padding:0;font-size:.85rem}
+.breadcrumb-list li{color:var(--text-muted)}
+.breadcrumb-list li:not(:last-child)::after{content:'›';margin-left:8px;opacity:.5}
+.breadcrumb-list a{color:var(--amazon-orange-soft);text-decoration:none}
+.breadcrumb-list a:hover{text-decoration:underline}
+.breadcrumb-list li[aria-current="page"]{color:var(--text-secondary)}

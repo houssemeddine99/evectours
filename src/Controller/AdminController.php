@@ -72,8 +72,8 @@ class AdminController extends AbstractController
 
     public function aiAssistant(Request $request): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
         return $this->render('admin/ai_assistant.html.twig');
     }
@@ -82,8 +82,8 @@ class AdminController extends AbstractController
     #[Route('/', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(Request $request): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         // Get statistics for dashboard
@@ -127,8 +127,8 @@ class AdminController extends AbstractController
     #[Route('/users', name: 'admin_users', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         $users = $this->authService->listUsers();
@@ -142,8 +142,8 @@ class AdminController extends AbstractController
     #[Route('/users/new', name: 'admin_users_new', methods: ['GET', 'POST'])]
     public function create(Request $request): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         $error = null;
@@ -201,8 +201,8 @@ class AdminController extends AbstractController
     #[Route('/users/{id}', name: 'admin_users_view', methods: ['GET'])]
     public function view(Request $request, int $id): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         $user = $this->authService->getUserById($id);
@@ -219,8 +219,8 @@ class AdminController extends AbstractController
     #[Route('/users/{id}/edit', name: 'admin_users_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, int $id): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         $currentUser = $this->authService->getUserById($id);
@@ -305,8 +305,8 @@ class AdminController extends AbstractController
     #[Route('/users/{id}/delete', name: 'admin_users_delete', methods: ['POST'])]
     public function delete(Request $request, int $id): Response
     {
-        if ($this->ensureAdmin($request) !== null) {
-            return $this->ensureAdmin($request);
+        if (($guard = $this->ensureAdmin($request)) !== null) {
+            return $guard;
         }
 
         if (!$this->authService->deleteUser($id)) {
