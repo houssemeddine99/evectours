@@ -1174,7 +1174,7 @@
                 card.innerHTML = `<div class="gbc-rec-icon">${icons[i % icons.length]}</div>`
                   + `<div class="gbc-rec-title">${dest}</div>`
                   + `<div class="gbc-rec-reason">${escHtml(rec.reason||'')}</div>`
-                  + (rec.estimated_price ? `<div class="gbc-rec-price">~$${Number(rec.estimated_price).toLocaleString()}</div>` : '')
+                  + (rec.estimated_price ? `<div class="gbc-rec-price">~${Number(rec.estimated_price).toLocaleString()} TND</div>` : '')
                   + `<a href="${tripLink}" class="gbc-rec-btn">View Trip →</a>`;
                 bubble.appendChild(card);
               });

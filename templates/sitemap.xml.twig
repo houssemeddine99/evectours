@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for entry in static %}
+    <url>
+        <loc>{{ entry.url }}</loc>
+        <changefreq>{{ entry.changefreq }}</changefreq>
+        <priority>{{ entry.priority }}</priority>
+    </url>
+{% endfor %}
+{% for entry in dynamic %}
+    <url>
+        <loc>{{ entry.url }}</loc>
+        <lastmod>{{ entry.lastmod }}</lastmod>
+        <changefreq>{{ entry.changefreq }}</changefreq>
+        <priority>{{ entry.priority }}</priority>
+    </url>
+{% endfor %}
+</urlset>

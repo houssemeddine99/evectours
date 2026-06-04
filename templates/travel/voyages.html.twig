@@ -68,7 +68,7 @@
     {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' %}
     <article class="card voyage-card" data-voyage-id="{{ voyage.id }}">
         <div class="tg-img-wrap card-image-wrap" style="position:relative">
-            <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image">
+            <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image" loading="lazy" decoding="async">
             <button class="fav-btn {% if voyage.id in favorite_ids %}fav-active{% endif %}" data-voyage-id="{{ voyage.id }}" onclick="toggleFavorite(event, {{ voyage.id }})" title="{% if voyage.id in favorite_ids %}Remove from favorites{% else %}Add to favorites{% endif %}">♥</button>
             <button class="cmp-btn" data-voyage-id="{{ voyage.id }}" onclick="openComparePicker({{ voyage.id }})" title="Compare this voyage">⊕</button>
         </div>
@@ -147,6 +147,76 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('voyage-grid').style.display = '';
     // Render recently viewed
     tgRenderRecent('#tg-recent-anchor');
+
+    // ── Real-time search & filter ──────────────────────────────
+    var searchInput  = document.getElementById('search');
+    var minInput     = document.getElementById('min_price');
+    var maxInput     = document.getElementById('max_price');
+    var sortByInput  = document.getElementById('sort_by');
+    var sortOrdInput = document.getElementById('sort_order');
+    var grid         = document.getElementById('voyage-grid');
+    var debounceTimer;
+
+    function applyFilters() {
+        var q       = (searchInput.value || '').toLowerCase().trim();
+        var minP    = parseFloat(minInput.value) || 0;
+        var maxP    = parseFloat(maxInput.value) || Infinity;
+        var sortBy  = sortByInput ? sortByInput.value : 'startDate';
+        var sortOrd = sortOrdInput ? sortOrdInput.value : 'ASC';
+
+        var cards = Array.from(grid.querySelectorAll('.voyage-card'));
+        var visible = 0;
+
+        cards.forEach(function(card) {
+            var title = (card.querySelector('h3') ? card.querySelector('h3').textContent : '').toLowerCase();
+            var dest  = (card.querySelector('.badge.destination') ? card.querySelector('.badge.destination').textContent : '').toLowerCase();
+            var priceEl = card.querySelector('.card-price-wrap strong');
+            var priceVal = priceEl ? parseFloat(priceEl.textContent.replace(/[^\d.]/g,'')) || 0 : 0;
+
+            var matchText  = !q || title.includes(q) || dest.includes(q);
+            var matchMin   = priceVal === 0 || priceVal >= minP;
+            var matchMax   = priceVal === 0 || maxP === Infinity || priceVal <= maxP;
+
+            if (matchText && matchMin && matchMax) {
+                card.style.display = '';
+                visible++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Show empty state if nothing visible
+        var emptyEl = grid.querySelector('.tg-empty');
+        if (emptyEl) emptyEl.style.display = visible === 0 ? '' : 'none';
+        if (visible === 0 && !emptyEl) {
+            grid.insertAdjacentHTML('beforeend',
+                '<div class="tg-empty" id="live-empty" style="grid-column:1/-1"><div class="tg-empty-icon">🔍</div><h3>No voyages match your search</h3><p>Try different keywords or adjust the price range.</p></div>');
+        } else {
+            var le = document.getElementById('live-empty');
+            if (le) le.remove();
+        }
+    }
+
+    function debounce(fn, ms) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fn, ms);
+    }
+
+    if (searchInput) searchInput.addEventListener('input', function() { debounce(applyFilters, 250); });
+    if (minInput)    minInput.addEventListener('input',  function() { debounce(applyFilters, 300); });
+    if (maxInput)    maxInput.addEventListener('input',  function() { debounce(applyFilters, 300); });
+    if (sortByInput) sortByInput.addEventListener('change', applyFilters);
+    if (sortOrdInput) sortOrdInput.addEventListener('change', applyFilters);
+
+    // Hide the Apply button since filtering is now live
+    var applyBtn = document.querySelector('.btn-filter[type="submit"]');
+    if (applyBtn) applyBtn.style.display = 'none';
+
+    // Add TND labels to price inputs
+    [minInput, maxInput].forEach(function(inp) {
+        if (!inp) return;
+        inp.placeholder = inp.id === 'min_price' ? 'Min TND' : 'Max TND';
+    });
 });
 </script>
 </section>

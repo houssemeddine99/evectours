@@ -27,7 +27,7 @@
                 {% if images is iterable and images|length > 0 %}
                     <div class="gallery-container">
                         <div class="gallery-main" style="background: linear-gradient(135deg, #0a0f1c 0%, #1a2f4a 100%);">
-                            <img src="{{ images[0] }}" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image" id="mainImage">
+                            <img src="{{ images[0] }}" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image" id="mainImage" loading="eager" decoding="async">
                             <div class="gallery-gradient-overlay"></div>
                             {% if images|length > 1 %}
                                 <button class="gallery-nav gallery-prev" onclick="changeImage(-1)" aria-label="Previous image">❮</button>
