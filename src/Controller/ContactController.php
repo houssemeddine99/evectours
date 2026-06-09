@@ -58,6 +58,24 @@ class ContactController extends AbstractController
         ]);
     }
 
+    #[Route('/privacy', name: 'travel_privacy', methods: ['GET'])]
+    public function privacy(): Response
+    {
+        return $this->render('travel/legal.html.twig', [
+            'active_nav' => '',
+            'doc'        => 'privacy',
+        ]);
+    }
+
+    #[Route('/terms', name: 'travel_terms', methods: ['GET'])]
+    public function terms(): Response
+    {
+        return $this->render('travel/legal.html.twig', [
+            'active_nav' => '',
+            'doc'        => 'terms',
+        ]);
+    }
+
     #[Route('/favicon.ico', name: 'travel_favicon', methods: ['GET'])]
     public function favicon(): Response
     {
