@@ -395,7 +395,7 @@ function renderFlight(f, idx) {
         : `<span style="font-size:1.4rem">✈</span>`;
 
     const price = f.price != null
-        ? `<div class="flight-price-val">$${Number(f.price).toLocaleString()}</div><div class="flight-price-label">${f.currency} · per person</div>`
+        ? `<div class="flight-price-val">${f.price_display}</div><div class="flight-price-label">per person</div>`
         : `<div class="flight-price-val" style="font-size:1rem;color:var(--text-muted)">Price on request</div>`;
 
     const dt = f.depart_time ? new Date(f.depart_time) : null;
@@ -437,7 +437,7 @@ function renderFlight(f, idx) {
             <div class="detail-item"><strong>Duration</strong>${f.duration || '—'}</div>
             <div class="detail-item"><strong>Baggage included</strong>${f.baggage ? 'Yes' : 'Check airline'}</div>
         </div>
-        <button class="flight-cta" onclick="openBookingModal('${f.airline} ${f.flight_no}', '${f.from_city} → ${f.to_city}', '${f.price != null ? '$'+Number(f.price).toLocaleString() : 'On request'}')">📞 Book via Agency</button>
+        <button class="flight-cta" onclick="openBookingModal('${f.airline} ${f.flight_no}', '${f.from_city} → ${f.to_city}', '${f.price_display ? f.price_display + ' / person' : 'On request'}')">📞 Book via Agency</button>
     </div>
 </div>`;
 }
@@ -475,7 +475,7 @@ function renderHotel(h) {
         : '<span class="hotel-reviews">No reviews yet</span>';
 
     const price = h.price != null
-        ? `<div class="hotel-price">$${Number(h.price).toFixed(0)} <small>/ total (${h.currency})</small></div>`
+        ? `<div class="hotel-price">${h.price_display} <small>/ total</small></div>`
         : `<div class="hotel-price" style="font-size:1rem;color:var(--text-muted)">Price on request</div>`;
 
     const dates = (h.checkin && h.checkout)
@@ -491,7 +491,7 @@ function renderHotel(h) {
         ${price}
         ${dates}
         <div class="hotel-footer">
-            <button class="flight-cta" onclick="openBookingModal('${h.name}', 'Hotel • ${h.checkin || ''} → ${h.checkout || ''}', '${h.price != null ? '$'+Number(h.price).toFixed(0)+' total' : 'On request'}')">📞 Book via Agency</button>
+            <button class="flight-cta" onclick="openBookingModal('${h.name}', 'Hotel • ${h.checkin || ''} → ${h.checkout || ''}', '${h.price_display ? h.price_display + ' total' : 'On request'}')">📞 Book via Agency</button>
         </div>
     </div>
 </div>`;

@@ -82,6 +82,37 @@ class CurrencyService
         return $amount * $tndToEur * $eurToTarget;
     }
 
+    /**
+     * Convert an amount between any two currencies (e.g. USD from an external API -> TND).
+     */
+    public function convertCurrency(float $amount, string $from, string $to): float
+    {
+        $from = strtoupper($from);
+        $to   = strtoupper($to);
+        if ($from === $to) {
+            return $amount;
+        }
+
+        $rates = $this->getExchangeRates(); // EUR-based: value = units per 1 EUR
+        $fromRate = $from === 'EUR' ? 1.0 : ($rates[$from] ?? null);
+        $toRate   = $to === 'EUR' ? 1.0 : ($rates[$to] ?? null);
+
+        if ($fromRate === null || $toRate === null || (float) $fromRate === 0.0) {
+            return $amount;
+        }
+
+        return $amount / $fromRate * $toRate;
+    }
+
+    /**
+     * Convert from a source currency to the target (defaults to the user's currency) and format it.
+     */
+    public function formatFrom(float $amount, string $from, ?string $to = null): string
+    {
+        $to = $to ?? $this->getUserCurrency();
+        return $this->format($this->convertCurrency($amount, $from, $to), $to);
+    }
+
     public function format(float $amount, string $currency): string
     {
         $symbol = $this->getSymbol($currency);
@@ -131,24 +162,14 @@ class CurrencyService
     /** @return array<mixed> */
     private function getExchangeRates(): array
     {
-        return $this->cache->get('exchange_rates', function (ItemInterface $item): array {
+        // v2 key: previous cache may hold live rates that lack TND/DZD/etc.
+        return $this->cache->get('exchange_rates_v2', function (ItemInterface $item): array {
             $item->expiresAfter(3600 * 6); // refresh every 6h
 
-            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
-            $json = @file_get_contents('https://api.frankfurter.app/latest?base=EUR', false, $ctx);
-
-            if ($json) {
-                $data = json_decode($json, true);
-                if (!empty($data['rates'])) {
-                    // Add EUR itself
-                    $rates = $data['rates'];
-                    $rates['EUR'] = 1.0;
-                    return $rates;
-                }
-            }
-
-            // Fallback hardcoded rates (EUR-based, approximate)
-            return [
+            // EUR-based fallback. Also fills currencies the live ECB feed (Frankfurter)
+            // does NOT provide — e.g. TND, DZD, MAD, EGP, SAR, AED, LYD — so conversions
+            // to those still work instead of silently returning the unconverted amount.
+            $fallback = [
                 'EUR' => 1.0,
                 'USD' => 1.09,
                 'GBP' => 0.86,
@@ -158,11 +179,27 @@ class CurrencyService
                 'EGP' => 53.0,
                 'SAR' => 4.09,
                 'AED' => 4.00,
+                'LYD' => 5.30,
                 'JPY' => 163.0,
                 'CAD' => 1.49,
                 'AUD' => 1.67,
                 'CHF' => 0.97,
             ];
+
+            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
+            $json = @file_get_contents('https://api.frankfurter.app/latest?base=EUR', false, $ctx);
+
+            if ($json) {
+                $data = json_decode($json, true);
+                if (!empty($data['rates'])) {
+                    $rates = $data['rates'];
+                    $rates['EUR'] = 1.0;
+                    // Live ECB rates win for majors; fallback fills the gaps (TND, DZD, …).
+                    return array_merge($fallback, $rates);
+                }
+            }
+
+            return $fallback;
         });
     }
 }

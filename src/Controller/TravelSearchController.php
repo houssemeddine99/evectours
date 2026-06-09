@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\BookingComService;
+use App\Service\CurrencyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,7 +12,27 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class TravelSearchController extends AbstractController
 {
-    public function __construct(private readonly BookingComService $booking) {}
+    public function __construct(
+        private readonly BookingComService $booking,
+        private readonly CurrencyService $currency,
+    ) {}
+
+    /**
+     * Add a `price_display` field (converted to the user's currency) to each result.
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function withConvertedPrices(array $items): array
+    {
+        $userCurrency = $this->currency->getUserCurrency();
+        foreach ($items as $i => $item) {
+            $price = $item['price'] ?? null;
+            $items[$i]['price_display'] = ($price !== null && $price !== '')
+                ? $this->currency->formatFrom((float) $price, (string) ($item['currency'] ?? 'USD'), $userCurrency)
+                : null;
+        }
+        return $items;
+    }
 
     #[Route('/travel-search', name: 'travel_search', methods: ['GET'])]
     public function index(): Response
@@ -51,7 +72,7 @@ class TravelSearchController extends AbstractController
         return $this->json([
             'success' => true,
             'count'   => count($flights),
-            'flights' => $flights,
+            'flights' => $this->withConvertedPrices($flights),
         ]);
     }
 
@@ -85,7 +106,7 @@ class TravelSearchController extends AbstractController
         return $this->json([
             'success' => true,
             'count'   => count($hotels),
-            'hotels'  => $hotels,
+            'hotels'  => $this->withConvertedPrices($hotels),
         ]);
     }
 
