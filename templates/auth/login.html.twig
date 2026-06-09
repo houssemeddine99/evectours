@@ -57,10 +57,12 @@
                         >
                     </div>
                 </div>
+                <div class="auth-divider"><span>or</span></div>
+
                 <a href="{{ path('connect_google_start') }}" class="btn-google">
-    <img src="https://techdocs.akamai.com/identity-cloud/img/social-login/identity-providers/iconfinder-new-google-favicon-682665.png" width="20px">
-    Se connecter avec Google
-</a>
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" height="18">
+                    Continue with Google
+                </a>
 
                 <div class="form-actions">
                     <label class="remember-me">
@@ -77,12 +79,6 @@
 
             <div class="auth-footer">
                 <p>Don't have an account? <a href="{{ path('auth_register') }}">Create one</a></p>
-            </div>
-
-            <div class="demo-credentials">
-                <p><strong>Demo Credentials:</strong></p>
-                <p>Email: <code>user2@example.com</code></p>
-                <p>Password: <code>password2</code></p>
             </div>
         </div>
 
@@ -283,27 +279,54 @@
     text-decoration: underline;
 }
 
-/* Demo Credentials */
-.demo-credentials {
-    margin-top: 24px;
-    padding: 16px;
-    background: rgba(255, 153, 0, 0.1);
-    border-radius: 12px;
+/* Divider */
+.auth-divider {
+    display: flex;
+    align-items: center;
     text-align: center;
-    font-size: 0.85rem;
     color: var(--text-muted);
-}
-
-.demo-credentials p {
+    font-size: 0.8rem;
     margin: 4px 0;
 }
 
-.demo-credentials code {
-    background: rgba(0, 0, 0, 0.1);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-family: monospace;
-    color: var(--text-primary);
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-dark);
+}
+
+.auth-divider span {
+    padding: 0 12px;
+}
+
+/* Google button */
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px;
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-google:hover {
+    background: #f3f4f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-google img {
+    display: block;
 }
 
 /* Visual Side */
