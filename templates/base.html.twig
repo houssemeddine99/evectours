@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    {# ── Theme (light default, optional dark) — set before paint to avoid flash ── #}
+    <script>
+    (function(){
+        try { if (localStorage.getItem('tg_theme') === 'dark') document.documentElement.setAttribute('data-theme','dark'); } catch(e){}
+        window.toggleTheme = function(){
+            var html = document.documentElement;
+            var toDark = html.getAttribute('data-theme') !== 'dark';
+            if (toDark) html.setAttribute('data-theme','dark'); else html.removeAttribute('data-theme');
+            try { localStorage.setItem('tg_theme', toDark ? 'dark' : 'light'); } catch(e){}
+            var ic = document.querySelector('#themeToggle .theme-icon');
+            if (ic) ic.textContent = toDark ? '☀️' : '🌙';
+        };
+        document.addEventListener('DOMContentLoaded', function(){
+            var ic = document.querySelector('#themeToggle .theme-icon');
+            if (ic) ic.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        });
+    })();
+    </script>
+
     {# ── Google Search Console verification ── #}
     <meta name="google-site-verification" content="8VHYhSQMeC0PB-FOFCl8pjRtz3nAvzk7De3WwUCow6U">
 
@@ -87,9 +106,9 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com">
 
     {# ── Critical CSS (single request) ── #}
-    <link rel="preload" href="/styles/bundle.css?v=8" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=8"></noscript>
-    <link rel="stylesheet" href="/styles/bundle.css?v=8">
+    <link rel="preload" href="/styles/bundle.css?v=9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=9"></noscript>
+    <link rel="stylesheet" href="/styles/bundle.css?v=9">
 
     {# ── Fonts — Cormorant Garamond (display serif) + Inter (body) ── #}
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -113,6 +132,7 @@
                 <a class="{{ active_nav|default('') == 'hotels' ? 'active' : '' }}" href="{{ path('travel_hotels') }}">Hotels</a>
                 <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
                 <a href="{{ path('travel_faq') }}">FAQ</a>
+                <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" title="Toggle light / dark" aria-label="Toggle light or dark theme"><span class="theme-icon">🌙</span></button>
                 <div class="currency-picker" id="currencyPicker">
                     <button class="currency-toggle" id="currencyToggle" title="Change currency">
                         <span class="currency-code">{{ user_currency }}</span>
