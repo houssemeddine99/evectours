@@ -31,10 +31,18 @@ class BookingComService
     /** @return array<mixed> */
     public function searchHotelDestinations(string $query): array
     {
-        return $this->cache->get('hotel_dest_' . md5($query), function (ItemInterface $item) use ($query) {
+        // tn_ cache key so previously-cached unfiltered (worldwide) results aren't reused.
+        return $this->cache->get('hotel_dest_tn_' . md5($query), function (ItemInterface $item) use ($query) {
             $item->expiresAfter(self::CACHE_TTL);
             $data = $this->request('/api/v1/hotels/searchDestination', ['query' => $query]);
-            return $data['data'] ?? [];
+            $results = $data['data'] ?? [];
+
+            // Tunisia only — drop any international destinations.
+            return array_values(array_filter($results, static function ($d): bool {
+                $cc      = strtolower((string) ($d['cc1'] ?? ''));
+                $country = strtolower((string) ($d['country'] ?? ''));
+                return $cc === 'tn' || $country === 'tunisia';
+            }));
         });
     }
 
@@ -64,7 +72,7 @@ class BookingComService
      */
     public function searchHotels(array $params): array
     {
-        $data = $this->request('/api/v1/hotels/searchHotels', array_filter([
+        $query = array_filter([
             'dest_id'       => $params['dest_id'] ?? '',
             'search_type'   => $params['search_type'] ?? 'city',
             'arrival_date'  => $params['arrival_date'] ?? '',
@@ -72,7 +80,14 @@ class BookingComService
             'adults'        => $params['adults'] ?? 2,
             'room_qty'      => $params['rooms'] ?? 1,
             'currency_code' => 'USD',
-        ]));
+        ]);
+
+        // Children ages, e.g. "5,10" — Booking.com requires an age per child.
+        if (!empty($params['children_age'])) {
+            $query['children_age'] = $params['children_age'];
+        }
+
+        $data = $this->request('/api/v1/hotels/searchHotels', $query);
 
         $hotels = $data['data']['hotels'] ?? [];
         return array_map([$this, 'mapHotel'], $hotels);

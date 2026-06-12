@@ -90,8 +90,29 @@ class TravelSearchController extends AbstractController
         $adults    = max(1, (int) $request->request->get('adults', 2));
         $rooms     = max(1, (int) $request->request->get('rooms', 1));
 
+        // Children ages: "5,10" — clamp each to 0..17, max 6 children.
+        $childrenAge = '';
+        $rawAges = (string) $request->request->get('children_age', '');
+        if ($rawAges !== '') {
+            $ages = array_slice(array_filter(
+                array_map('trim', explode(',', $rawAges)),
+                static fn($a): bool => $a !== '' && is_numeric($a)
+            ), 0, 6);
+            $ages = array_map(static fn($a): int => max(0, min(17, (int) $a)), $ages);
+            $childrenAge = implode(',', $ages);
+        }
+
         if (!$destId || !$checkin || !$checkout) {
             return $this->json(['success' => false, 'error' => 'Please fill in all required fields.'], 400);
+        }
+
+        // Date sanity (defend against tampered/invalid dates from the client).
+        $today = (new \DateTime('today'))->format('Y-m-d');
+        if ($checkin < $today) {
+            return $this->json(['success' => false, 'error' => 'Check-in date cannot be in the past.'], 400);
+        }
+        if ($checkout <= $checkin) {
+            return $this->json(['success' => false, 'error' => 'Check-out must be after check-in.'], 400);
         }
 
         $hotels = $this->booking->searchHotels([
@@ -101,6 +122,7 @@ class TravelSearchController extends AbstractController
             'departure_date'=> $checkout,
             'adults'        => $adults,
             'rooms'         => $rooms,
+            'children_age'  => $childrenAge,
         ]);
 
         return $this->json([

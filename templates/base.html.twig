@@ -442,6 +442,7 @@
         </div>
       </div>
       <button type="button" class="gb-cycle-btn" id="gb-cycle" title="Change mascot design">Change look</button>
+      <button type="button" class="gb-close-btn" id="gb-close" title="Hide assistant" aria-label="Hide assistant">×</button>
       <div class="gb-bubble" id="gb-bubble">
         <span>👋 Double-click me!</span>
         <div class="gb-bubble-arrow"></div>
@@ -1056,23 +1057,91 @@
         filter: drop-shadow(0 8px 20px rgba(80,120,255,0.5)) drop-shadow(0 2px 6px rgba(0,0,0,0.3));
         transform: scale(1.06) translateY(-3px);
       }
+
+      /* ── Mascot hide/show controls ── */
+      .gb-close-btn {
+        position: absolute; top: -4px; right: -4px;
+        width: 24px; height: 24px; border-radius: 50%; border: none;
+        background: #1a2433; color: #fff; font-size: 16px; line-height: 1;
+        cursor: pointer; opacity: 0; z-index: 6;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,.45);
+        transition: opacity .2s ease, transform .2s ease, background .2s ease;
+      }
+      #globe-bot:hover .gb-close-btn,
+      #globe-bot:focus-within .gb-close-btn { opacity: 1; }
+      .gb-close-btn:hover { background: #ef4444; transform: scale(1.12); }
+      #gb-restore {
+        position: fixed; right: 20px; bottom: 20px; z-index: 99996;
+        width: 50px; height: 50px; border-radius: 50%; border: none;
+        background: var(--amazon-orange, #f5c300); color: #0a0f1c; font-size: 24px;
+        cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+        display: flex; align-items: center; justify-content: center;
+        transition: transform .2s ease;
+      }
+      #gb-restore:hover { transform: scale(1.08); }
+      @media (max-width: 768px) { .gb-close-btn { opacity: 1; } }
     </style>
+
+    {# small floating button to bring the assistant back after it's hidden #}
+    <button type="button" id="gb-restore" title="Show travel assistant" aria-label="Show travel assistant" hidden>🤖</button>
 
     <script>window._mascotCfg={tripUrl:'{{ path("trip_planner") }}',planUrl:'{{ path("trip_planner_plan") }}'};</script>
     <script>
     (function(){
+        var HIDE_KEY='tg_mascot_hidden';
+        var bot=document.getElementById('globe-bot');
+        var canvas=document.getElementById('gb-canvas');
+        var chat=document.getElementById('gb-chat');
+        var closeBtn=document.getElementById('gb-close');
+        var restore=document.getElementById('gb-restore');
+
+        function hidden(){ try{return localStorage.getItem(HIDE_KEY)==='1';}catch(e){return false;} }
+        function setEls(disp){ [bot,canvas,chat].forEach(function(el){ if(el) el.style.display=disp; }); }
+
         function loadMascot(){
             if(window._mascotLoaded) return;
             window._mascotLoaded=true;
             var s=document.createElement('script');
-            s.src='/js/mascot.js?v=2';
+            s.src='/js/mascot.js?v=3';
             document.body.appendChild(s);
         }
-        if('requestIdleCallback' in window){
-            requestIdleCallback(loadMascot,{timeout:3000});
-        } else {
-            window.addEventListener('load',function(){setTimeout(loadMascot,1000);});
+        function scheduleLoad(){
+            if('requestIdleCallback' in window){ requestIdleCallback(loadMascot,{timeout:3000}); }
+            else { window.addEventListener('load',function(){setTimeout(loadMascot,1000);}); }
         }
+
+        // Close button: hide the mascot and remember the choice. Capture-phase +
+        // stopPropagation so it never triggers the mascot's drag/double-click.
+        function stop(e){ e.preventDefault(); e.stopPropagation(); }
+        if(closeBtn){
+            ['mousedown','touchstart','dblclick'].forEach(function(ev){
+                closeBtn.addEventListener(ev, stop, true);
+            });
+            closeBtn.addEventListener('click', function(e){
+                stop(e);
+                try{ localStorage.setItem(HIDE_KEY,'1'); }catch(err){}
+                setEls('none');
+                if(restore) restore.hidden=false;
+            }, true);
+        }
+        // Restore pill: bring it back and (lazy) load the script if needed.
+        if(restore){
+            restore.addEventListener('click', function(){
+                try{ localStorage.removeItem(HIDE_KEY); }catch(err){}
+                restore.hidden=true;
+                setEls('');
+                loadMascot();
+            });
+        }
+
+        if(hidden()){
+            // User opted out — don't even load the mascot script; show the restore pill.
+            setEls('none');
+            if(restore) restore.hidden=false;
+            return;
+        }
+        scheduleLoad();
     })();
     </script>
     {% endif %}{# end mascot guard #}

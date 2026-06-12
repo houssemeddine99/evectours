@@ -6,7 +6,7 @@
 <section class="ts-page">
     <div class="ts-hero">
         <h1>Find Flights & Hotels</h1>
-        <p class="ts-lead">Search available flights and hotels worldwide. Contact our agency to book.</p>
+        <p class="ts-lead">Search flights worldwide and hotels across Tunisia. Contact our agency to complete your booking.</p>
     </div>
 
     <div class="ts-tabs">
@@ -65,8 +65,8 @@
     <div id="tab-hotels" class="ts-panel ts-card" hidden>
         <div class="ts-form-grid">
             <div class="ts-field ts-autocomplete-wrap" style="grid-column:1/-1">
-                <label>Destination</label>
-                <input type="text" id="h-dest-input" placeholder="City or area" class="ts-input" autocomplete="off">
+                <label>Destination 🇹🇳 Tunisia</label>
+                <input type="text" id="h-dest-input" placeholder="City or area in Tunisia (e.g. Tunis, Hammamet, Djerba)" class="ts-input" autocomplete="off">
                 <input type="hidden" id="h-dest-id">
                 <input type="hidden" id="h-dest-type" value="city">
                 <div class="ts-suggestions" id="h-dest-sug"></div>
@@ -86,10 +86,20 @@
                 </select>
             </div>
             <div class="ts-field">
+                <label>Children</label>
+                <select id="h-children" class="ts-input">
+                    {% for i in 0..6 %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="ts-field">
                 <label>Rooms</label>
                 <select id="h-rooms" class="ts-input">
                     {% for i in 1..5 %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
                 </select>
+            </div>
+            <div class="ts-field" id="h-children-ages-wrap" style="grid-column:1/-1;display:none">
+                <label>Children's ages (at check-in)</label>
+                <div id="h-children-ages" class="ts-ages"></div>
             </div>
         </div>
         <button class="ts-search-btn" onclick="searchHotels()">Search Hotels</button>
@@ -129,6 +139,8 @@
 .ts-field label{font-size:.85rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
 .ts-input{padding:12px 14px;border:1px solid var(--ts-border);border-radius:8px;background:rgba(15,23,34,.5);color:var(--text-primary);font-size:1rem;width:100%;box-sizing:border-box;transition:border-color .2s}
 .ts-input:focus{outline:none;border-color:var(--ts-orange)}
+.ts-ages{display:flex;gap:8px;flex-wrap:wrap}
+.ts-ages .ts-age{min-width:110px;width:auto}
 .ts-autocomplete-wrap{position:relative}
 .ts-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#1a2433;border:1px solid var(--ts-border);border-radius:8px;z-index:100;max-height:220px;overflow-y:auto;display:none}
 .ts-sug-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);font-size:.95rem;transition:background .15s}
@@ -293,6 +305,50 @@ makeAutocomplete(
     document.getElementById('h-checkout').min  = fmt(today);
 })();
 
+// ── Real calendar logic: check-in >= today, check-out strictly after check-in ──
+function wireDateRange(startId, endId) {
+    const s = document.getElementById(startId);
+    const e = document.getElementById(endId);
+    const fmt = d => d.toISOString().split('T')[0];
+    const nextDay = v => { const d = new Date(v); d.setDate(d.getDate() + 1); return fmt(d); };
+    function sync() {
+        const today = fmt(new Date());
+        s.min = today;
+        if (s.value && s.value < today) s.value = today;
+        e.min = s.value ? nextDay(s.value) : today;
+        if (e.value && s.value && e.value <= s.value) e.value = nextDay(s.value);
+    }
+    s.addEventListener('change', sync);
+    e.addEventListener('change', () => {
+        if (s.value && e.value && e.value <= s.value) e.value = nextDay(s.value);
+    });
+    sync();
+}
+wireDateRange('h-checkin', 'h-checkout');
+wireDateRange('f-depart', 'f-return');
+
+// ── Children ages (Booking.com needs an age per child) ──
+const hChildren = document.getElementById('h-children');
+const hAgesWrap = document.getElementById('h-children-ages-wrap');
+const hAgesBox  = document.getElementById('h-children-ages');
+function renderChildAges() {
+    const n = parseInt(hChildren.value || '0', 10);
+    hAgesWrap.style.display = n > 0 ? '' : 'none';
+    let html = '';
+    for (let i = 0; i < n; i++) {
+        html += `<select class="ts-input ts-age" aria-label="Child ${i + 1} age">`;
+        for (let a = 0; a <= 17; a++) {
+            html += `<option value="${a}">Child ${i + 1}: ${a === 0 ? 'under 1' : a + (a === 1 ? ' year' : ' years')}</option>`;
+        }
+        html += `</select>`;
+    }
+    hAgesBox.innerHTML = html;
+}
+if (hChildren) hChildren.addEventListener('change', renderChildAges);
+function getChildrenAges() {
+    return Array.from(document.querySelectorAll('#h-children-ages .ts-age')).map(s => s.value).join(',');
+}
+
 function showSpinner() {
     const r = document.getElementById('ts-results');
     r.style.display = 'block';
@@ -373,6 +429,8 @@ async function searchHotels() {
     body.append('departure_date', checkout);
     body.append('adults', document.getElementById('h-adults').value);
     body.append('rooms', document.getElementById('h-rooms').value);
+    const childAges = getChildrenAges();
+    if (childAges) body.append('children_age', childAges);
 
     const res  = await fetch(HOTEL_SEARCH, { method: 'POST', body });
     const data = await res.json();
