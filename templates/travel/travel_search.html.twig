@@ -3,17 +3,21 @@
 {% block title %}Flights & Hotels | Evec Tours{% endblock %}
 
 {% block body %}
+{% set mode = mode|default('both') %}
 <section class="ts-page">
     <div class="ts-hero">
-        <h1>Find Flights & Hotels</h1>
-        <p class="ts-lead">Search flights worldwide and hotels across Tunisia. Contact our agency to complete your booking.</p>
+        <h1>{% if mode == 'flights' %}Find Flights{% elseif mode == 'hotels' %}Find Hotels in Tunisia{% else %}Find Flights & Hotels{% endif %}</h1>
+        <p class="ts-lead">{% if mode == 'flights' %}Search flights worldwide. Contact our agency to complete your booking.{% elseif mode == 'hotels' %}Search hotels across Tunisia. Contact our agency to complete your booking.{% else %}Search flights worldwide and hotels across Tunisia. Contact our agency to complete your booking.{% endif %}</p>
     </div>
 
+    {% if mode == 'both' %}
     <div class="ts-tabs">
         <button class="ts-tab active" data-tab="flights">✈ Flights</button>
         <button class="ts-tab" data-tab="hotels">🏨 Hotels</button>
     </div>
+    {% endif %}
 
+    {% if mode != 'hotels' %}
     <!-- Flights Panel -->
     <div id="tab-flights" class="ts-panel ts-card">
         <div class="trip-toggle">
@@ -60,9 +64,11 @@
         <button class="ts-search-btn" onclick="searchFlights()">Search Flights</button>
         <div id="f-error" class="ts-error" style="display:none"></div>
     </div>
+    {% endif %}
 
+    {% if mode != 'flights' %}
     <!-- Hotels Panel -->
-    <div id="tab-hotels" class="ts-panel ts-card" hidden>
+    <div id="tab-hotels" class="ts-panel ts-card"{% if mode == 'both' %} hidden{% endif %}>
         <div class="ts-form-grid">
             <div class="ts-field ts-autocomplete-wrap" style="grid-column:1/-1">
                 <label>Destination 🇹🇳 Tunisia</label>
@@ -105,6 +111,7 @@
         <button class="ts-search-btn" onclick="searchHotels()">Search Hotels</button>
         <div id="h-error" class="ts-error" style="display:none"></div>
     </div>
+    {% endif %}
 
     <!-- Results -->
     <div id="ts-results" style="display:none">
@@ -197,7 +204,20 @@
 .hotel-price{font-size:1.3rem;font-weight:700;color:var(--ts-orange)}
 .hotel-price small{font-size:.8rem;font-weight:400;color:var(--text-muted)}
 .hotel-dates{font-size:.85rem;color:var(--text-muted)}
-.hotel-footer{margin-top:auto;display:flex;align-items:center;gap:12px}
+.hotel-footer{margin-top:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.room-view-btn{background:transparent;border:1px solid var(--ts-border);color:var(--text-primary);padding:10px 18px;border-radius:8px;cursor:pointer;font-size:.88rem;font-weight:600;transition:all .2s}
+.room-view-btn:hover{border-color:var(--ts-orange);color:var(--ts-orange)}
+.room-view-btn:disabled{opacity:.6;cursor:default}
+.hotel-rooms{display:none;flex-direction:column;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--ts-border)}
+.hotel-rooms.open{display:flex}
+.hotel-rooms-msg{color:var(--text-muted);font-size:.9rem;padding:6px 0}
+.room-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 14px;background:rgba(15,23,34,.45);border:1px solid var(--ts-border);border-radius:8px}
+.room-name{font-weight:600;font-size:.95rem}
+.room-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-muted);font-size:.8rem;margin-top:5px}
+.room-ref{color:#34d399}
+.room-nonref{color:var(--text-muted)}
+.room-price{font-weight:700;color:var(--ts-orange);white-space:nowrap}
+@media(max-width:600px){.room-row{flex-direction:column;align-items:flex-start;gap:6px}}
 
 @media(max-width:600px){
     .hotel-card{flex-direction:column}
@@ -211,6 +231,7 @@ const FLIGHT_DEST_URL = '{{ path('travel_search_flight_dest') }}';
 const HOTEL_DEST_URL  = '{{ path('travel_search_hotel_dest') }}';
 const FLIGHT_SEARCH   = '{{ path('travel_search_flights') }}';
 const HOTEL_SEARCH    = '{{ path('travel_search_hotels') }}';
+const HOTEL_ROOMS     = '{{ path('travel_search_hotel_rooms') }}';
 
 // Tab switching
 document.querySelectorAll('.ts-tab').forEach(btn => {
@@ -239,6 +260,7 @@ function makeAutocomplete(inputId, sugId, hiddenId, hiddenTypeId, url, labelFn, 
     const input  = document.getElementById(inputId);
     const sug    = document.getElementById(sugId);
     const hidden = document.getElementById(hiddenId);
+    if (!input || !sug || !hidden) return; // panel not on this page (split flights/hotels)
     const hiddenType = hiddenTypeId ? document.getElementById(hiddenTypeId) : null;
     let timer;
 
@@ -295,20 +317,18 @@ makeAutocomplete(
     const today = new Date();
     const fmt   = d => d.toISOString().split('T')[0];
     const plus  = n => { const d = new Date(today); d.setDate(d.getDate() + n); return d; };
-    document.getElementById('f-depart').value   = fmt(plus(30));
-    document.getElementById('f-return').value   = fmt(plus(37));
-    document.getElementById('h-checkin').value  = fmt(plus(30));
-    document.getElementById('h-checkout').value = fmt(plus(34));
-    document.getElementById('f-depart').min    = fmt(today);
-    document.getElementById('f-return').min    = fmt(today);
-    document.getElementById('h-checkin').min   = fmt(today);
-    document.getElementById('h-checkout').min  = fmt(today);
+    const set = (id, val, min) => { const el = document.getElementById(id); if (!el) return; el.value = val; el.min = min; };
+    set('f-depart',   fmt(plus(30)), fmt(today));
+    set('f-return',   fmt(plus(37)), fmt(today));
+    set('h-checkin',  fmt(plus(30)), fmt(today));
+    set('h-checkout', fmt(plus(34)), fmt(today));
 })();
 
 // ── Real calendar logic: check-in >= today, check-out strictly after check-in ──
 function wireDateRange(startId, endId) {
     const s = document.getElementById(startId);
     const e = document.getElementById(endId);
+    if (!s || !e) return; // panel not on this page
     const fmt = d => d.toISOString().split('T')[0];
     const nextDay = v => { const d = new Date(v); d.setDate(d.getDate() + 1); return fmt(d); };
     function sync() {
@@ -432,6 +452,15 @@ async function searchHotels() {
     const childAges = getChildrenAges();
     if (childAges) body.append('children_age', childAges);
 
+    // Remember this search so "View room types" can request rooms for the same dates/occupancy.
+    window._lastHotelSearch = {
+        arrival_date: checkin,
+        departure_date: checkout,
+        adults: document.getElementById('h-adults').value,
+        rooms: document.getElementById('h-rooms').value,
+        children_age: childAges,
+    };
+
     const res  = await fetch(HOTEL_SEARCH, { method: 'POST', body });
     const data = await res.json();
     hideSpinner();
@@ -549,10 +578,59 @@ function renderHotel(h) {
         ${price}
         ${dates}
         <div class="hotel-footer">
+            ${h.hotel_id ? `<button class="room-view-btn" onclick="viewRooms('${h.hotel_id}', this)">🛏 View room types</button>` : ''}
             <button class="flight-cta" onclick="openBookingModal('${h.name}', 'Hotel • ${h.checkin || ''} → ${h.checkout || ''}', '${h.price_display ? h.price_display + ' total' : 'On request'}')">📞 Book via Agency</button>
         </div>
     </div>
 </div>`;
+}
+
+// ── Room types for a hotel (loaded on demand to spare the API quota) ──
+async function viewRooms(hotelId, btn) {
+    const card = btn.closest('.hotel-card');
+    const body = card.querySelector('.hotel-body');
+    let panel = body.querySelector('.hotel-rooms');
+    if (panel) { panel.classList.toggle('open'); return; }
+
+    panel = document.createElement('div');
+    panel.className = 'hotel-rooms open';
+    panel.innerHTML = '<div class="hotel-rooms-msg">Loading room types…</div>';
+    body.appendChild(panel);
+    btn.disabled = true;
+
+    const s = window._lastHotelSearch || {};
+    const fd = new FormData();
+    fd.append('hotel_id', hotelId);
+    fd.append('arrival_date', s.arrival_date || '');
+    fd.append('departure_date', s.departure_date || '');
+    fd.append('adults', s.adults || 2);
+    fd.append('rooms', s.rooms || 1);
+    if (s.children_age) fd.append('children_age', s.children_age);
+
+    try {
+        const res  = await fetch(HOTEL_ROOMS, { method: 'POST', body: fd });
+        const data = await res.json();
+        btn.disabled = false;
+        if (!data.success || !data.rooms || !data.rooms.length) {
+            panel.innerHTML = '<div class="hotel-rooms-msg">No room details available for these dates — contact our agency.</div>';
+            return;
+        }
+        panel.innerHTML = data.rooms.map(r => `
+            <div class="room-row">
+                <div class="room-info">
+                    <div class="room-name">${r.name}</div>
+                    <div class="room-meta">
+                        ${r.surface ? `<span>📐 ${r.surface} m²</span>` : ''}
+                        <span>🍽 ${r.meal}</span>
+                        <span class="${r.refundable ? 'room-ref' : 'room-nonref'}">${r.refundable ? '✓ Free cancellation' : 'Non-refundable'}</span>
+                    </div>
+                </div>
+                <div class="room-price">${r.price_display || 'On request'}</div>
+            </div>`).join('');
+    } catch (_) {
+        btn.disabled = false;
+        panel.innerHTML = '<div class="hotel-rooms-msg">Could not load room types. Please try again.</div>';
+    }
 }
 </script>
 

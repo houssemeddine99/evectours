@@ -39,6 +39,25 @@ class TravelSearchController extends AbstractController
     {
         return $this->render('travel/travel_search.html.twig', [
             'active_nav' => 'search',
+            'mode'       => 'both',
+        ]);
+    }
+
+    #[Route('/flights', name: 'travel_flights', methods: ['GET'])]
+    public function flightsPage(): Response
+    {
+        return $this->render('travel/travel_search.html.twig', [
+            'active_nav' => 'flights',
+            'mode'       => 'flights',
+        ]);
+    }
+
+    #[Route('/hotels', name: 'travel_hotels', methods: ['GET'])]
+    public function hotelsPage(): Response
+    {
+        return $this->render('travel/travel_search.html.twig', [
+            'active_nav' => 'hotels',
+            'mode'       => 'hotels',
         ]);
     }
 
@@ -90,17 +109,7 @@ class TravelSearchController extends AbstractController
         $adults    = max(1, (int) $request->request->get('adults', 2));
         $rooms     = max(1, (int) $request->request->get('rooms', 1));
 
-        // Children ages: "5,10" — clamp each to 0..17, max 6 children.
-        $childrenAge = '';
-        $rawAges = (string) $request->request->get('children_age', '');
-        if ($rawAges !== '') {
-            $ages = array_slice(array_filter(
-                array_map('trim', explode(',', $rawAges)),
-                static fn($a): bool => $a !== '' && is_numeric($a)
-            ), 0, 6);
-            $ages = array_map(static fn($a): int => max(0, min(17, (int) $a)), $ages);
-            $childrenAge = implode(',', $ages);
-        }
+        $childrenAge = $this->parseChildrenAges($request);
 
         if (!$destId || !$checkin || !$checkout) {
             return $this->json(['success' => false, 'error' => 'Please fill in all required fields.'], 400);
@@ -130,6 +139,57 @@ class TravelSearchController extends AbstractController
             'count'   => count($hotels),
             'hotels'  => $this->withConvertedPrices($hotels),
         ]);
+    }
+
+    #[Route('/travel-search/hotel-rooms', name: 'travel_search_hotel_rooms', methods: ['POST'])]
+    public function hotelRooms(Request $request): JsonResponse
+    {
+        if (!$this->rateLimit($request, 'room_list', 15)) {
+            return $this->json(['success' => false, 'error' => 'Too many requests. Please wait a moment.'], 429);
+        }
+
+        $hotelId  = trim((string) $request->request->get('hotel_id', ''));
+        $checkin  = trim((string) $request->request->get('arrival_date', ''));
+        $checkout = trim((string) $request->request->get('departure_date', ''));
+        $adults   = max(1, (int) $request->request->get('adults', 2));
+        $rooms    = max(1, (int) $request->request->get('rooms', 1));
+
+        if (!$hotelId || !$checkin || !$checkout) {
+            return $this->json(['success' => false, 'error' => 'Missing parameters.'], 400);
+        }
+
+        $list = $this->booking->getRoomList([
+            'hotel_id'       => $hotelId,
+            'arrival_date'   => $checkin,
+            'departure_date' => $checkout,
+            'adults'         => $adults,
+            'rooms'          => $rooms,
+            'children_age'   => $this->parseChildrenAges($request),
+        ]);
+
+        return $this->json([
+            'success' => true,
+            'count'   => count($list),
+            'rooms'   => $this->withConvertedPrices($list),
+        ]);
+    }
+
+    /**
+     * Parse a "children_age" request field into a safe "5,10" string
+     * (each age clamped 0..17, max 6 children).
+     */
+    private function parseChildrenAges(Request $request): string
+    {
+        $raw = (string) $request->request->get('children_age', '');
+        if ($raw === '') {
+            return '';
+        }
+        $ages = array_slice(array_filter(
+            array_map('trim', explode(',', $raw)),
+            static fn($a): bool => $a !== '' && is_numeric($a)
+        ), 0, 6);
+        $ages = array_map(static fn($a): int => max(0, min(17, (int) $a)), $ages);
+        return implode(',', $ages);
     }
 
     #[Route('/travel-search/flight-destinations', name: 'travel_search_flight_dest', methods: ['GET'])]

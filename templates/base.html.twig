@@ -109,7 +109,8 @@
                 <a class="{{ active_nav|default('') == 'home' ? 'active' : '' }}" href="{{ path('travel_home') }}">Home</a>
                 <a class="{{ active_nav|default('') == 'voyages' ? 'active' : '' }}" href="{{ path('travel_voyages') }}">Voyages</a>
                 <a class="{{ active_nav|default('') == 'offers' ? 'active' : '' }}" href="{{ path('travel_offers') }}">Offers</a>
-                <a class="{{ active_nav|default('') == 'search' ? 'active' : '' }}" href="{{ path('travel_search') }}">Flights & Hotels</a>
+                <a class="{{ active_nav|default('') == 'flights' ? 'active' : '' }}" href="{{ path('travel_flights') }}">Flights</a>
+                <a class="{{ active_nav|default('') == 'hotels' ? 'active' : '' }}" href="{{ path('travel_hotels') }}">Hotels</a>
                 <a class="{{ active_nav|default('') == 'contact' ? 'active' : '' }}" href="{{ path('travel_contact') }}">Contact</a>
                 <a href="{{ path('travel_faq') }}">FAQ</a>
                 <div class="currency-picker" id="currencyPicker">
@@ -244,7 +245,8 @@
                 <a href="{{ path('travel_voyages') }}">Voyages</a>
                 <a href="{{ path('travel_offers') }}">Special Offers</a>
                 <a href="{{ path('trip_planner') }}">AI Trip Planner</a>
-                <a href="{{ path('travel_search') }}">Flights & Hotels</a>
+                <a href="{{ path('travel_flights') }}">Flights</a>
+                <a href="{{ path('travel_hotels') }}">Hotels</a>
             </div>
             <div class="footer-col">
                 <h4>Support</h4>

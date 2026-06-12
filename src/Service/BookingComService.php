@@ -94,6 +94,76 @@ class BookingComService
     }
 
     /**
+     * Available room types/offers for one hotel on the given dates.
+     * @param array<mixed> $params
+     * @return array<int, array<string, mixed>>
+     */
+    public function getRoomList(array $params): array
+    {
+        $hotelId = (string) ($params['hotel_id'] ?? '');
+        if ($hotelId === '') {
+            return [];
+        }
+
+        // Cache 30 min (prices/availability change) and to spare the API quota.
+        $cacheKey = 'rooms_' . md5((string) json_encode($params));
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($params, $hotelId) {
+            $item->expiresAfter(1800);
+
+            $q = [
+                'hotel_id'       => $hotelId,
+                'arrival_date'   => $params['arrival_date'] ?? '',
+                'departure_date' => $params['departure_date'] ?? '',
+                'adults'         => $params['adults'] ?? 2,
+                'room_qty'       => $params['rooms'] ?? 1,
+                'units'          => 'metric',
+                'currency_code'  => 'USD',
+                'languagecode'   => 'en-us',
+            ];
+            if (!empty($params['children_age'])) {
+                $q['children_age'] = $params['children_age'];
+            }
+
+            $data     = $this->request('/api/v1/hotels/getRoomList', $q);
+            $blocks   = $data['data']['block'] ?? [];
+            $currency = $data['data']['currency_code'] ?? 'USD';
+
+            // Dedupe by room name, keep the cheapest offer per room type.
+            $byName = [];
+            foreach ($blocks as $b) {
+                if (!is_array($b)) {
+                    continue;
+                }
+                $name  = (string) ($b['room_name'] ?? $b['name'] ?? 'Room');
+                $price = $b['product_price_breakdown']['gross_amount']['value'] ?? null;
+                $room  = [
+                    'name'       => $name,
+                    'price'      => $price,
+                    'currency'   => $currency,
+                    'meal'       => $this->mealLabel((string) ($b['mealplan'] ?? '')),
+                    'refundable' => (bool) ($b['refundable'] ?? false),
+                    'surface'    => $b['room_surface_in_m2'] ?? null,
+                ];
+                if (!isset($byName[$name]) || ($price !== null && $price < ($byName[$name]['price'] ?? INF))) {
+                    $byName[$name] = $room;
+                }
+            }
+
+            return array_values($byName);
+        });
+    }
+
+    private function mealLabel(string $mealplan): string
+    {
+        $mp = strtolower($mealplan);
+        if (str_contains($mp, 'breakfast'))                                   return 'Breakfast included';
+        if (str_contains($mp, 'all inclusive') || str_contains($mp, 'all-inclusive')) return 'All inclusive';
+        if (str_contains($mp, 'full board'))                                  return 'Full board';
+        if (str_contains($mp, 'half board'))                                  return 'Half board';
+        return 'Room only';
+    }
+
+    /**
      * @param array<mixed> $offer
      * @return array<mixed>
      */
@@ -141,6 +211,7 @@ class BookingComService
         $price = $prop['priceBreakdown']['grossPrice'] ?? [];
 
         return [
+            'hotel_id'      => $item['hotel_id'] ?? ($prop['id'] ?? null),
             'name'          => $prop['name'] ?? 'Unknown Hotel',
             'review_score'  => $prop['reviewScore'] ?? null,
             'review_count'  => $prop['reviewCount'] ?? 0,
