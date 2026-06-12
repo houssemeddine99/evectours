@@ -20,50 +20,50 @@ nav a, .account-dropdown, .logo {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 7px; height: 7px; }
-::-webkit-scrollbar-track { background: #0b0c10; }
-::-webkit-scrollbar-thumb { background: #2a2c33; border-radius: 4px; }
+::-webkit-scrollbar-track { background: #efeae1; }
+::-webkit-scrollbar-thumb { background: #d3cabb; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--amazon-orange); }
 
 /* Text selection */
-::selection { background: rgba(201,162,75,.30); color: #fbf9f4; }
+::selection { background: rgba(184,134,46,.22); color: #20242b; }
 
 :root {
-  /* Evec Tours — Luxury Minimal palette (antique gold on warm ink) */
-  --amazon-orange: #c9a24b;        /* antique gold (primary accent) */
-  --amazon-orange-soft: #e2c98c;   /* champagne gold */
-  --amazon-orange-dark: #a9863a;   /* deep gold */
-  --amazon-dark: #07080b;          /* deepest ink */
-  --amazon-navy: #121419;          /* card/panel bg */
-  --amazon-slate: #20232b;         /* hover states */
-  --amazon-light: #0b0c10;         /* page background (warm ink) */
-  --amazon-white: #14161c;         /* subtle panels */
+  /* Evec Tours — Light Luxury palette (gold + ink on warm ivory) */
+  --amazon-orange: #b8862e;        /* deep gold (primary accent, readable on light) */
+  --amazon-orange-soft: #d9b25b;   /* light gold (hover/highlight) */
+  --amazon-orange-dark: #936a22;   /* deeper gold */
+  --amazon-dark: #1b1f24;          /* near-black ink (dark text/elements) */
+  --amazon-navy: #ffffff;          /* card/panel bg (now white) */
+  --amazon-slate: #f1ece2;         /* warm hover surface */
+  --amazon-light: #fbf8f3;         /* page background (warm ivory) */
+  --amazon-white: #ffffff;         /* surfaces */
 
   /* Evec Blue (secondary, logo) */
-  --evec-blue: #4a73a8;
-  --evec-blue-light: #7da3d4;
-  --evec-blue-dark: #355680;
+  --evec-blue: #1d4e6b;
+  --evec-blue-light: #2f6f92;
+  --evec-blue-dark: #143a51;
 
-  /* Text Colors — warm */
-  --text-primary: #ece8e1;         /* warm cream */
-  --text-muted: #9b958a;           /* warm muted */
-  --text-secondary: #d8d4cc;
+  /* Text Colors — warm dark on light */
+  --text-primary: #20242b;         /* ink */
+  --text-muted: #6b7280;           /* muted gray */
+  --text-secondary: #3a3f47;
 
-  /* Hairline borders (minimal) */
-  --border-dark: rgba(255, 255, 255, 0.09);
-  --hairline: rgba(255, 255, 255, 0.09);
-  --hairline-gold: rgba(201, 162, 75, 0.35);
+  /* Hairline borders (light) */
+  --border-dark: rgba(31, 35, 40, 0.10);
+  --hairline: rgba(31, 35, 40, 0.10);
+  --hairline-gold: rgba(184, 134, 46, 0.45);
 
   /* Aliases used by per-page styles */
-  --primary-orange: #c9a24b;
-  --primary-orange-light: #e2c98c;
-  --primary-orange-dark: #a9863a;
-  --dark-bg: #0b0c10;
-  --card-bg: rgba(20, 22, 28, 0.7);
-  --card-bg-hover: rgba(26, 28, 36, 0.85);
-  --border-color: rgba(255, 255, 255, 0.09);
-  --border-color-hover: rgba(201, 162, 75, 0.5);
-  --glow-orange: rgba(201, 162, 75, 0.22);
-  --glow-blue: rgba(74, 115, 168, 0.25);
+  --primary-orange: #b8862e;
+  --primary-orange-light: #d9b25b;
+  --primary-orange-dark: #936a22;
+  --dark-bg: #fbf8f3;
+  --card-bg: #ffffff;
+  --card-bg-hover: #fffdf9;
+  --border-color: rgba(31, 35, 40, 0.10);
+  --border-color-hover: rgba(184, 134, 46, 0.5);
+  --glow-orange: rgba(184, 134, 46, 0.20);
+  --glow-blue: rgba(29, 78, 107, 0.18);
 
   /* Typography */
   --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
@@ -134,7 +134,7 @@ p {
 }
 
 h1 {
-  color: #fbf9f4;
+  color: #1b1f24;
   font-size: clamp(2.4rem, 5vw, 3.6rem);
   font-weight: 600;
   letter-spacing: 0.3px;
@@ -336,7 +336,7 @@ input:focus, select:focus, textarea:focus {
   background: var(--amazon-navy);
   border: 1px solid var(--hairline);
   border-radius: 8px;
-  box-shadow: none;
+  box-shadow: 0 4px 18px -12px rgba(31, 35, 40, 0.20);
   transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
@@ -366,7 +366,7 @@ input:focus, select:focus, textarea:focus {
 
 .card:hover, .offer:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 22px 45px -22px rgba(31, 35, 40, 0.30);
   border-color: var(--hairline-gold);
 }
 
@@ -482,7 +482,7 @@ input:focus, select:focus, textarea:focus {
   position: sticky;
   top: 0;
   z-index: 9000;
-  background: rgba(11, 12, 16, 0.82);
+  background: rgba(251, 248, 243, 0.88);
 }
 
 /* menus are portalled to <body> by JS — these rules position them */
