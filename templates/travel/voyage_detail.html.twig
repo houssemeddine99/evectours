@@ -55,7 +55,7 @@
                 {% set images = voyage.image_url|default([]) %}
                 {% if images is iterable and images|length > 0 %}
                     <div class="gallery-container">
-                        <div class="gallery-main" style="background: linear-gradient(135deg, #0a0f1c 0%, #1a2f4a 100%);">
+                        <div class="gallery-main" style="background: linear-gradient(135deg, #f1ece2 0%, #e3dccd 100%);">
                             <img src="{{ images[0] }}" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image" id="mainImage" loading="eager" decoding="async">
                             <div class="gallery-gradient-overlay"></div>
                             {% if images|length > 1 %}
@@ -74,7 +74,7 @@
                     </div>
                 {% else %}
                     <div class="gallery-container">
-                        <div class="gallery-main" style="background: linear-gradient(135deg, #0a0f1c 0%, #1a2f4a 100%);">
+                        <div class="gallery-main" style="background: linear-gradient(135deg, #f1ece2 0%, #e3dccd 100%);">
                             <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80" alt="{{ voyage.title|default('Voyage image') }}" class="voyage-hero-image">
                             <div class="gallery-gradient-overlay"></div>
                         </div>
