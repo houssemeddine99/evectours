@@ -797,7 +797,7 @@ COMPONENT STYLES
 .hero {
     padding: 60px 20px;
     text-align: center;
-    background: linear-gradient(135deg, var(--amazon-light) 0%, var(--amazon-navy) 100%);
+    background: linear-gradient(160deg, var(--amazon-light) 0%, #f6efe3 100%);
     position: relative;
     overflow: hidden;
 }
@@ -805,48 +805,39 @@ COMPONENT STYLES
 .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 80%, rgba(30, 122, 224, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 195, 0, 0.08) 0%, transparent 50%), radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
-    animation: heroGlow 6s ease-in-out infinite alternate;
-}
-
-@keyframes heroGlow {
-    0% { opacity: 0.3; }
-    100% { opacity: 0.8; }
+    inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(184, 134, 46, 0.06) 0%, transparent 55%);
+    pointer-events: none;
 }
 
 .hero .eyebrow {
-    color: var(--evec-blue-light);
-    font-size: 0.9rem;
+    color: var(--amazon-orange-dark);
+    font-size: 0.82rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    text-shadow: 0 0 12px rgba(30, 122, 224, 0.6);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-shadow: none;
 }
 
 .hero h1 {
-    color: #ffffff;
-    font-size: 3rem;
-    font-weight: 800;
+    color: #1b1f24;
+    font-family: var(--font-serif);
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 600;
     margin: 0 0 16px 0;
-    line-height: 1.2;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    background: linear-gradient(135deg, #ffffff 0%, var(--amazon-orange-soft) 60%, var(--evec-blue-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    line-height: 1.1;
+    text-shadow: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
 }
 
 .hero p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1.2rem;
+    color: var(--text-secondary);
+    font-size: 1.15rem;
     max-width: 600px;
     margin: 0 auto 32px;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 .hero-actions {
@@ -857,56 +848,41 @@ COMPONENT STYLES
 }
 
 .hero-actions .btn {
-    padding: 14px 28px;
-    font-size: 1rem;
-    font-weight: 700;
+    padding: 13px 28px;
+    font-size: 0.78rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    letter-spacing: 1.5px;
+    border-radius: 2px;
+    transition: var(--transition-smooth);
     position: relative;
     overflow: hidden;
 }
 
-.hero-actions .btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.hero-actions .btn:hover::before {
-    left: 100%;
-}
-
 .hero-actions .btn-primary {
-    background: linear-gradient(135deg, var(--evec-blue), var(--evec-blue-light));
-    color: #ffffff;
-    box-shadow: 0 8px 25px rgba(30, 122, 224, 0.4);
-    border: 1px solid rgba(30, 122, 224, 0.4);
+    background: var(--amazon-orange);
+    color: #1b1f24;
+    box-shadow: none;
+    border: 1px solid var(--amazon-orange);
 }
 
 .hero-actions .btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(30, 122, 224, 0.55);
-    background: linear-gradient(135deg, var(--evec-blue-light), var(--evec-blue));
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -10px var(--glow-orange);
+    background: var(--amazon-orange-soft);
 }
 
 .hero-actions .btn-secondary {
     background: transparent;
-    color: #ffffff;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    border: 1px solid var(--border-dark);
+    backdrop-filter: none;
 }
 
 .hero-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.6);
-    color: #ffffff;
+    background: transparent;
+    border-color: var(--amazon-orange);
+    color: var(--amazon-orange);
 }
 
 /* ========== VOYAGES SECTION ========== */
