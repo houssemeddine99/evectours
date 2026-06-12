@@ -19,61 +19,67 @@ nav a, .account-dropdown, .logo {
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0a0f1c; }
-::-webkit-scrollbar-thumb { background: #2f3b4d; border-radius: 3px; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: #0b0c10; }
+::-webkit-scrollbar-thumb { background: #2a2c33; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--amazon-orange); }
 
 /* Text selection */
-::selection { background: rgba(255,153,0,.25); color: #fff; }
+::selection { background: rgba(201,162,75,.30); color: #fbf9f4; }
 
 :root {
-  /* Evec Tours — Brand Colors */
-  --amazon-orange: #f5c300;        /* Evec Gold (primary accent) */
-  --amazon-orange-soft: #ffd740;   /* Gold light */
-  --amazon-orange-dark: #d4a800;   /* Gold dark */
-  --amazon-dark: #080e1c;          /* Deepest navy */
-  --amazon-navy: #0d1528;          /* Card/panel bg */
-  --amazon-slate: #1e3050;         /* Hover states */
-  --amazon-light: #090f1e;         /* Page background */
-  --amazon-white: #111d33;         /* Subtle panels */
+  /* Evec Tours — Luxury Minimal palette (antique gold on warm ink) */
+  --amazon-orange: #c9a24b;        /* antique gold (primary accent) */
+  --amazon-orange-soft: #e2c98c;   /* champagne gold */
+  --amazon-orange-dark: #a9863a;   /* deep gold */
+  --amazon-dark: #07080b;          /* deepest ink */
+  --amazon-navy: #121419;          /* card/panel bg */
+  --amazon-slate: #20232b;         /* hover states */
+  --amazon-light: #0b0c10;         /* page background (warm ink) */
+  --amazon-white: #14161c;         /* subtle panels */
 
-  /* Evec Blue */
-  --evec-blue: #1e7ae0;
-  --evec-blue-light: #4a9eff;
-  --evec-blue-dark: #1560b8;
+  /* Evec Blue (secondary, logo) */
+  --evec-blue: #4a73a8;
+  --evec-blue-light: #7da3d4;
+  --evec-blue-dark: #355680;
 
-  /* Text Colors */
-  --text-primary: #e5e7eb;
-  --text-muted: #8fa3c0;
-  --text-secondary: #e2e8f0;
+  /* Text Colors — warm */
+  --text-primary: #ece8e1;         /* warm cream */
+  --text-muted: #9b958a;           /* warm muted */
+  --text-secondary: #d8d4cc;
 
-  /* Border Colors */
-  --border-dark: #1e3050;
+  /* Hairline borders (minimal) */
+  --border-dark: rgba(255, 255, 255, 0.09);
+  --hairline: rgba(255, 255, 255, 0.09);
+  --hairline-gold: rgba(201, 162, 75, 0.35);
 
-  /* Contact Page Variables */
-  --primary-orange: #f5c300;
-  --primary-orange-light: #ffd740;
-  --primary-orange-dark: #d4a800;
-  --dark-bg: #090f1e;
-  --card-bg: rgba(13, 21, 40, 0.85);
-  --card-bg-hover: rgba(13, 21, 40, 0.95);
-  --border-color: rgba(30, 122, 224, 0.3);
-  --border-color-hover: rgba(245, 195, 0, 0.5);
-  --glow-orange: rgba(245, 195, 0, 0.35);
-  --glow-blue: rgba(30, 122, 224, 0.4);
+  /* Aliases used by per-page styles */
+  --primary-orange: #c9a24b;
+  --primary-orange-light: #e2c98c;
+  --primary-orange-dark: #a9863a;
+  --dark-bg: #0b0c10;
+  --card-bg: rgba(20, 22, 28, 0.7);
+  --card-bg-hover: rgba(26, 28, 36, 0.85);
+  --border-color: rgba(255, 255, 255, 0.09);
+  --border-color-hover: rgba(201, 162, 75, 0.5);
+  --glow-orange: rgba(201, 162, 75, 0.22);
+  --glow-blue: rgba(74, 115, 168, 0.25);
+
+  /* Typography */
+  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 
   /* Transitions */
-  --transition-smooth: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 body {
   margin: 0;
-  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans);
   color: var(--text-primary);
   background: var(--amazon-light);
-  line-height: 1.6;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeSpeed;
@@ -107,8 +113,12 @@ img {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
   color: var(--text-primary);
   margin-top: 0;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  line-height: 1.15;
 }
 
 p {
@@ -119,14 +129,19 @@ p {
 .lead {
   color: var(--text-muted);
   margin-bottom: 16px;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
+  font-weight: 400;
 }
 
 h1 {
-  color: #ffffff;
-  font-size: 2.1rem;
-  margin-bottom: 8px;
+  color: #fbf9f4;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 12px;
 }
+
+h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); }
 
 /* Utility Classes */
 .meta {
@@ -187,41 +202,45 @@ h1 {
 /* Buttons */
 .btn {
   display: inline-block;
-  padding: 10px 16px;
-  border-radius: 12px;
+  padding: 13px 28px;
+  border-radius: 2px;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+  letter-spacing: 1.5px;
+  transition: var(--transition-smooth);
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
-  color: var(--amazon-dark);
-  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
-  border: 1px solid rgba(255, 153, 0, 0.2);
+  background: var(--amazon-orange);
+  color: #0b0c10;
+  border-color: var(--amazon-orange);
+  box-shadow: none;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--amazon-orange-soft), #ffffff);
+  background: var(--amazon-orange-soft);
+  border-color: var(--amazon-orange-soft);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 153, 0, 0.4);
-  color: #0a0f1c;
+  box-shadow: 0 10px 30px -8px var(--glow-orange);
+  color: #0b0c10;
 }
 
 .btn-secondary {
   background: transparent;
-  color: #ffffff;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+  border: 1px solid var(--border-dark);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: transparent;
+  border-color: var(--amazon-orange);
+  color: var(--amazon-orange);
+  transform: translateY(-2px);
 }
 
 .btn-danger {
@@ -314,42 +333,41 @@ input:focus, select:focus, textarea:focus {
 
 /* Card Base */
 .card, .offer {
-  background: linear-gradient(145deg, #080e1c 0%, #0d1a30 25%, #0a1220 50%, #080e1c 100%);
-  border: 1px solid rgba(30, 122, 224, 0.25);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--amazon-navy);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  box-shadow: none;
+  transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
   min-height: 320px;
   overflow: hidden;
   position: relative;
-  backdrop-filter: blur(10px);
 }
 
 .card h3, .offer h3 {
   margin-top: 0;
-  color: #ffffff;
-  font-size: 1.4rem;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  line-height: 1.3;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.25;
+  text-shadow: none;
 }
 
 .card p, .offer p {
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
+  color: var(--text-muted);
+  line-height: 1.7;
   margin: 8px 0;
   font-size: 0.95rem;
 }
 
 .card:hover, .offer:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(30, 122, 224, 0.25), 0 0 80px rgba(245, 195, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  border-color: rgba(245, 195, 0, 0.5);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7);
+  border-color: var(--hairline-gold);
 }
 
 /* Card Image */
@@ -460,11 +478,11 @@ input:focus, select:focus, textarea:focus {
 
 /* Site Header */
 .site-header {
-  border-bottom: 1px solid rgba(30, 122, 224, 0.2);
+  border-bottom: 1px solid var(--hairline);
   position: sticky;
   top: 0;
   z-index: 9000;
-  background: rgba(8, 14, 28, 0.92);
+  background: rgba(11, 12, 16, 0.82);
 }
 
 /* menus are portalled to <body> by JS — these rules position them */
@@ -515,19 +533,23 @@ input:focus, select:focus, textarea:focus {
 /* Navigation */
 nav {
   display: flex;
-  gap: 18px;
+  gap: 28px;
 }
 
 nav a {
   color: var(--text-primary);
-  font-weight: 600;
-  padding: 6px 2px;
-  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 1px;
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 nav a.active, nav a:hover {
-  color: var(--evec-blue-light);
-  border-color: var(--evec-blue-light);
+  color: var(--amazon-orange);
+  border-color: var(--amazon-orange);
 }
 
 /* Auth Buttons */
@@ -1168,8 +1190,8 @@ COMPONENT STYLES
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 153, 0, 0.8) 20%, rgba(68, 121, 207, 0.8) 50%, rgba(255, 153, 0, 0.8) 80%, transparent 100%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--amazon-orange) 50%, transparent 100%);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -1178,9 +1200,9 @@ COMPONENT STYLES
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 24px;
+    border-radius: 8px;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(68, 121, 207, 0.2), rgba(255, 153, 0, 0.2), rgba(68, 121, 207, 0.2));
+    background: linear-gradient(135deg, var(--hairline-gold), transparent 60%, var(--hairline-gold));
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
     opacity: 0;
@@ -1196,10 +1218,10 @@ COMPONENT STYLES
 }
 
 .offer h3 span, .card h3 span {
-    background: linear-gradient(135deg, rgba(255, 153, 0, 0.9), rgba(255, 205, 112, 0.9));
-    color: #0a0f1c;
+    background: var(--amazon-orange);
+    color: #0b0c10;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 800;
     margin-left: 8px;
