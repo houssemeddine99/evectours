@@ -26,6 +26,14 @@ class CarbonFootprintService
         'tokyo'   => 9500,
         'new york' => 7000,
         'montreal' => 6700,
+        // Middle East / pilgrimage (one-way km from Tunisia)
+        'mecca'   => 4200,
+        'medina'  => 3950,
+        'jeddah'  => 4180,
+        'riyadh'  => 4600,
+        'saudi'   => 4180,
+        'istanbul' => 1900,
+        'cairo'   => 2050,
     ];
 
     private const DEFAULT_DISTANCE = 2500;
