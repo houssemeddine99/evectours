@@ -100,7 +100,8 @@
 
         <div class="auth-visual">
             <div class="visual-content">
-                <h2>Start Your Journey</h2>
+                <span class="v-eyebrow">✦ Welcome Aboard</span>
+                <h2>Start Your<br>Journey Today</h2>
                 <p>Join thousands of travelers who trust Evec Tours for their adventures.</p>
                 <div class="visual-features">
                     <div class="feature">
@@ -139,6 +140,7 @@
     border-radius: 24px;
     overflow: hidden;
     box-shadow: 0 25px 50px -12px rgba(31, 35, 40, 0.18);
+    border: 1px solid var(--hairline,rgba(31,35,40,.10));
 }
 
 .auth-card {
@@ -287,43 +289,73 @@
 /* Visual Side */
 .auth-visual {
     flex: 1;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    padding: 48px;
+    position: relative;
+    padding: 48px 44px;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end;
+    background-image:
+        linear-gradient(180deg, rgba(18,14,8,0.10) 0%, rgba(18,14,8,0.45) 45%, rgba(18,14,8,0.82) 100%),
+        url('https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=900&q=80');
+    background-size: cover;
+    background-position: center;
 }
 
 .visual-content {
-    color: white;
-    text-align: center;
+    color: #fff;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+}
+
+.v-eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #f1d9a4;
+    margin-bottom: 16px;
 }
 
 .visual-content h2 {
-    font-size: 2rem;
-    margin: 0 0 16px 0;
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.08;
+    margin: 0 0 14px 0;
+    color: #fff;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.35);
 }
 
 .visual-content p {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    margin: 0 0 32px 0;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    opacity: 1;
+    color: rgba(255,255,255,0.94);
+    margin: 0 0 30px 0;
+    max-width: 360px;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.3);
 }
 
 .visual-features {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
 }
 
 .feature {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 20px;
-    background: rgba(255, 255, 255, 0.15);
+    padding: 13px 18px;
+    background: rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     border-radius: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #fff;
 }
 
 /* Alert */
