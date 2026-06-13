@@ -146,7 +146,11 @@ class VoyageController extends AbstractController
 
         $startDate = $voyage['start_date'] ? new \DateTime($voyage['start_date']) : null;
         $endDate = $voyage['end_date'] ? new \DateTime($voyage['end_date']) : null;
-        $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
+        // Prefer an explicit duration; otherwise derive from the date range; else default.
+        $durationDays = $voyage['duration_days'] ?? null;
+        if ($durationDays === null) {
+            $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
+        }
 
         $carbon = $this->carbonService->calculate($voyage['destination'] ?? '', 1);
 
@@ -212,8 +216,11 @@ class VoyageController extends AbstractController
 
         $startDate = $voyage['start_date'] ? new \DateTime($voyage['start_date']) : null;
         $endDate = $voyage['end_date'] ? new \DateTime($voyage['end_date']) : null;
-        $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
-        $durationDays = max(1, $durationDays);
+        $durationDays = $voyage['duration_days'] ?? null;
+        if ($durationDays === null) {
+            $durationDays = ($startDate && $endDate) ? (int) $startDate->diff($endDate)->days : 5;
+        }
+        $durationDays = max(1, (int) $durationDays);
 
         $itinerary = $this->aiVoyageService->generateItinerary($voyage['title'], $voyage['destination'], $durationDays);
 

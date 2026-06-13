@@ -31,6 +31,7 @@ class VoyageService
         $voyage->setDestination($data['destination'] ?? '');
         $voyage->setStartDate(isset($data['start_date']) ? new \DateTime($data['start_date']) : null);
         $voyage->setEndDate(isset($data['end_date']) ? new \DateTime($data['end_date']) : null);
+        $voyage->setDurationDays(isset($data['duration_days']) && $data['duration_days'] !== '' ? (int) $data['duration_days'] : null);
         $voyage->setPrice($data['price'] ?? null);
        // $voyage->setImageUrl($data['image_url'] ?? []);
         $voyage->setCreatedAt(new \DateTime());
@@ -67,10 +68,13 @@ class VoyageService
         if (isset($data['end_date'])) {
             $voyage->setEndDate(new \DateTime($data['end_date']));
         }
+        if (array_key_exists('duration_days', $data)) {
+            $voyage->setDurationDays($data['duration_days'] !== '' ? (int) $data['duration_days'] : null);
+        }
         if (isset($data['price'])) {
             $voyage->setPrice($data['price']);
         }
-     
+
 
         $this->entityManager->flush();
 
@@ -152,6 +156,7 @@ class VoyageService
             'destination' => $voyage->getDestination(),
             'start_date' => $voyage->getStartDate()?->format('Y-m-d'),
             'end_date' => $voyage->getEndDate()?->format('Y-m-d'),
+            'duration_days' => $voyage->getDurationDays(),
             'price' => $voyage->getPrice(),
             'image_url' => $imageUrls,
             'created_at' => $voyage->getCreatedAt()?->format('Y-m-d H:i:s'),
@@ -308,6 +313,7 @@ class VoyageService
             'destination'     => $voyage->getDestination(),
             'start_date'      => $voyage->getStartDate()?->format('Y-m-d'),
             'end_date'        => $voyage->getEndDate()?->format('Y-m-d'),
+            'duration_days'   => $voyage->getDurationDays(),
             'price'           => (string) $pricing['price'],
             'base_price'      => (string) $pricing['base_price'],
             'scarcity_label'  => $pricing['scarcity_label'],

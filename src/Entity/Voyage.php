@@ -33,6 +33,9 @@ class Voyage
     #[ORM\Column(name: 'end_date', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $endDate = null;
 
+    #[ORM\Column(name: 'duration_days', type: Types::INTEGER, nullable: true)]
+    private ?int $durationDays = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $price = null;
 
@@ -122,6 +125,18 @@ class Voyage
     public function setEndDate(?\DateTimeInterface $endDate): self
     {
         $this->endDate = $endDate;
+
+        return $this;
+    }
+
+    public function getDurationDays(): ?int
+    {
+        return $this->durationDays;
+    }
+
+    public function setDurationDays(?int $durationDays): self
+    {
+        $this->durationDays = $durationDays;
 
         return $this;
     }
