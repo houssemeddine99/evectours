@@ -1864,7 +1864,10 @@ COMPONENT STYLES
    ============================================= */
 
 /* ── Page transition — animate #pg wrapper, NOT body, so fixed mascot/canvas are unaffected ── */
-#pg { animation: tg-page-in .28s ease both; }
+/* NOTE: 'backwards' (not 'both') — 'both' would keep transform:translateY(0) on
+   #pg permanently, and a transform on this ancestor breaks position:sticky for the
+   header inside it. 'backwards' plays the entrance then drops the transform. */
+#pg { animation: tg-page-in .28s ease backwards; }
 @keyframes tg-page-in {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }

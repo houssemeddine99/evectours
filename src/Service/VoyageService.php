@@ -29,8 +29,9 @@ class VoyageService
         $voyage->setTitle($data['title'] ?? '');
         $voyage->setDescription($data['description'] ?? null);
         $voyage->setDestination($data['destination'] ?? '');
-        $voyage->setStartDate(isset($data['start_date']) ? new \DateTime($data['start_date']) : null);
-        $voyage->setEndDate(isset($data['end_date']) ? new \DateTime($data['end_date']) : null);
+        // Treat empty strings as null (an empty date field must mean "no date", not today).
+        $voyage->setStartDate(!empty($data['start_date']) ? new \DateTime($data['start_date']) : null);
+        $voyage->setEndDate(!empty($data['end_date']) ? new \DateTime($data['end_date']) : null);
         $voyage->setDurationDays(isset($data['duration_days']) && $data['duration_days'] !== '' ? (int) $data['duration_days'] : null);
         $voyage->setPrice($data['price'] ?? null);
        // $voyage->setImageUrl($data['image_url'] ?? []);
@@ -62,11 +63,11 @@ class VoyageService
         if (isset($data['destination'])) {
             $voyage->setDestination($data['destination']);
         }
-        if (isset($data['start_date'])) {
-            $voyage->setStartDate(new \DateTime($data['start_date']));
+        if (array_key_exists('start_date', $data)) {
+            $voyage->setStartDate($data['start_date'] !== '' ? new \DateTime($data['start_date']) : null);
         }
-        if (isset($data['end_date'])) {
-            $voyage->setEndDate(new \DateTime($data['end_date']));
+        if (array_key_exists('end_date', $data)) {
+            $voyage->setEndDate($data['end_date'] !== '' ? new \DateTime($data['end_date']) : null);
         }
         if (array_key_exists('duration_days', $data)) {
             $voyage->setDurationDays($data['duration_days'] !== '' ? (int) $data['duration_days'] : null);
