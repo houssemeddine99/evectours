@@ -66,7 +66,8 @@ nav a, .account-dropdown, .logo {
   --glow-blue: rgba(29, 78, 107, 0.18);
 
   /* Typography */
-  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  /* "--font-serif" kept as the name for back-compat; now a bold display sans */
+  --font-serif: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 
   /* Transitions */
@@ -148,9 +149,9 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
   color: var(--text-primary);
   margin-top: 0;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 p {
