@@ -100,7 +100,15 @@ class AuthController extends AbstractController
                             $userAgent
                         );
 
-                        $request->getSession()->set('auth_user', $user);
+                        $session = $request->getSession();
+                        $session->set('auth_user', $user);
+
+                        // "Remember me": keep the session cookie for 30 days.
+                        // Unchecked = default browser-session cookie (logout on close).
+                        if ($request->request->getBoolean('remember')) {
+                            $session->migrate(true, 60 * 60 * 24 * 30);
+                        }
+
                         return $this->redirectToRoute('travel_home');
                     }
 
