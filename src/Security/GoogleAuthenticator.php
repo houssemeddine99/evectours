@@ -90,6 +90,8 @@ public function onAuthenticationSuccess(Request $request, TokenInterface $token,
         'id' => $user->getId(),
         'email' => $user->getEmail(),
         'username' => $user->getUsername(),
+        'tel' => $user->getTel(),
+        'image_url' => $user->getImageUrl(),
         'is_admin' => $admin !== null,
     ];
 

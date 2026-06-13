@@ -644,16 +644,25 @@ nav a.active, nav a:hover {
   border: 2px solid transparent;
   padding: 0;
   cursor: pointer;
+  overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   transition: box-shadow .18s, border-color .18s;
 }
+.account-btn--img { background: var(--amazon-light,#fbf8f3); }
 .account-btn:hover, .account-btn.active {
-  border-color: rgba(255,153,0,0.55);
-  box-shadow: 0 0 0 3px rgba(255,153,0,0.18);
+  border-color: rgba(184,134,46,0.55);
+  box-shadow: 0 0 0 3px rgba(184,134,46,0.18);
 }
 .acct-initial {
   color: #fff; font-weight: 800; font-size: 0.84rem;
   line-height: 1; pointer-events: none; user-select: none;
+}
+.acct-avatar-photo {
+  width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%;
+  pointer-events: none;
+}
+.acct-avatar-lg-initial {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
 }
 
 .account-menu {
@@ -685,6 +694,7 @@ nav a.active, nav a:hover {
   background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-dark));
   color: #fff; font-size: 1rem; font-weight: 800;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden;
 }
 .acct-header-info { min-width: 0; }
 .acct-header-info strong { display: block; color: var(--text-primary); font-size: .9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

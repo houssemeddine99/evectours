@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
+use App\Service\CloudinaryService;
 use App\Service\FavoriteService;
 use App\Service\LoyaltyPointsService;
 use App\Service\ReservationService;
 use App\Service\VoyageService;
 use App\Service\ValidationService;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,6 +25,7 @@ class UserController extends AbstractController
         private readonly ReservationService $reservationService,
         private readonly FavoriteService $favoriteService,
         private readonly LoyaltyPointsService $loyaltyPointsService,
+        private readonly CloudinaryService $cloudinaryService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -32,6 +35,29 @@ class UserController extends AbstractController
         $user = $request->getSession()->get('auth_user');
         if (!$user) {
             return $this->redirectToRoute('auth_login');
+        }
+
+        return null;
+    }
+
+    /**
+     * Validate an uploaded avatar file. Returns an error message, or null if OK.
+     */
+    private function validateAvatarFile(UploadedFile $file): ?string
+    {
+        if (!$file->isValid()) {
+            return 'The uploaded image could not be read. Please try again.';
+        }
+
+        // Max 5 MB
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return 'Image is too large. Maximum size is 5 MB.';
+        }
+
+        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        $mime = $file->getMimeType();
+        if (!in_array($mime, $allowed, true)) {
+            return 'Unsupported image type. Please use JPG, PNG, WEBP or GIF.';
         }
 
         return null;
@@ -90,6 +116,33 @@ class UserController extends AbstractController
         $formData['tel'] = (string) $request->request->get('tel', '');
         $formData['image_url'] = (string) $request->request->get('image_url', '');
         $currentPassword = (string) $request->request->get('current_password', '');
+
+        // Profile picture upload (optional) — overrides the URL field when a file is sent
+        $avatarFile = $request->files->get('avatar_file');
+        if ($avatarFile instanceof UploadedFile) {
+            $avatarError = $this->validateAvatarFile($avatarFile);
+            if ($avatarError !== null) {
+                $error = $avatarError;
+            } else {
+                try {
+                    $result = $this->cloudinaryService->uploadImageFile(
+                        $avatarFile,
+                        'user_' . $authUser['id'],
+                        'user_avatars'
+                    );
+                    $uploadedUrl = $result['secure_url'] ?? $result['url'] ?? '';
+                    if ($uploadedUrl !== '') {
+                        $formData['image_url'] = $uploadedUrl;
+                    } else {
+                        $error = 'Image upload failed. Please try again.';
+                    }
+                } catch (\Throwable $e) {
+                    $this->logger->error('Avatar upload failed: ' . $e->getMessage());
+                    $error = 'Image upload failed. Please try again later.';
+                }
+            }
+        }
+
         $newPassword = (string) $request->request->get('new_password', '');
         $confirmPassword = (string) $request->request->get('confirm_password', '');
 
@@ -116,7 +169,9 @@ class UserController extends AbstractController
             }
         }
 
-        if (!$this->validationService->isValid()) {
+        if ($error !== null) {
+            // An avatar-upload error already occurred — do not save.
+        } elseif (!$this->validationService->isValid()) {
             $errors = $this->validationService->getErrors();
             $error = implode(' ', array_map(fn($e) => implode(', ', $e), $errors));
         } elseif ($currentPassword !== '' && !$this->authService->checkPasswordForUser($authUser['id'], $currentPassword)) {

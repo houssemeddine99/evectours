@@ -106,9 +106,9 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com">
 
     {# ── Critical CSS (single request) ── #}
-    <link rel="preload" href="/styles/bundle.css?v=12" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=12"></noscript>
-    <link rel="stylesheet" href="/styles/bundle.css?v=12">
+    <link rel="preload" href="/styles/bundle.css?v=13" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=13"></noscript>
+    <link rel="stylesheet" href="/styles/bundle.css?v=13">
 
     {# ── Fonts — Cormorant Garamond (display serif) + Inter (body) ── #}
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -164,12 +164,26 @@
                 {% if app.session.get('auth_user') %}
                     {% set authUser = app.session.get('auth_user') %}
                     <div class="account-dropdown" id="accountDropdown">
-                        <button class="account-btn" aria-label="Account menu" title="{{ authUser.username }}">
-                            <span class="acct-initial">{{ authUser.username|slice(0,1)|upper }}</span>
+                        <button class="account-btn{{ authUser.image_url|default('') ? ' account-btn--img' : '' }}" aria-label="Account menu" title="{{ authUser.username }}">
+                            {% if authUser.image_url|default('') %}
+                                <img class="acct-avatar-photo" src="{{ authUser.image_url }}" alt="{{ authUser.username }}"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <span class="acct-initial" style="display:none;">{{ authUser.username|slice(0,1)|upper }}</span>
+                            {% else %}
+                                <span class="acct-initial">{{ authUser.username|slice(0,1)|upper }}</span>
+                            {% endif %}
                         </button>
                         <div class="account-menu">
                             <div class="acct-header">
-                                <div class="acct-avatar-lg">{{ authUser.username|slice(0,1)|upper }}</div>
+                                <div class="acct-avatar-lg">
+                                    {% if authUser.image_url|default('') %}
+                                        <img class="acct-avatar-photo" src="{{ authUser.image_url }}" alt="{{ authUser.username }}"
+                                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                        <span class="acct-avatar-lg-initial" style="display:none;">{{ authUser.username|slice(0,1)|upper }}</span>
+                                    {% else %}
+                                        {{ authUser.username|slice(0,1)|upper }}
+                                    {% endif %}
+                                </div>
                                 <div class="acct-header-info">
                                     <strong>{{ authUser.username }}</strong>
                                     <span>{{ authUser.email }}</span>

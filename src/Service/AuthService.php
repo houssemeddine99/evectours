@@ -62,6 +62,8 @@ class AuthService
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
+                'tel' => $user->getTel(),
+                'image_url' => $user->getImageUrl(),
                 'is_admin' => $this->isAdmin((int) $user->getId()),
             ];
         }
@@ -149,6 +151,8 @@ class AuthService
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
+                'tel' => $user->getTel(),
+                'image_url' => $user->getImageUrl(),
             ];
         } catch (\Throwable) {
             return null;

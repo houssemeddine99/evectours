@@ -32,7 +32,9 @@
         {# ── LEFT: Avatar card ── #}
         <div class="sp-sidebar">
             <div class="sp-avatar-card">
-                <div class="sp-avatar-wrap" id="avatarWrap">
+                <button type="button" class="sp-avatar-wrap" id="avatarWrap"
+                        onclick="document.getElementById('avatar_file').click()"
+                        title="Change profile picture" aria-label="Change profile picture">
                     {% if formData.image_url %}
                         <img id="avatarImg" class="sp-avatar-img" src="{{ formData.image_url }}" alt="Avatar"
                              onerror="this.style.display='none';document.getElementById('avatarInitial').style.display='flex';">
@@ -45,7 +47,10 @@
                             {{ formData.username|slice(0,1)|upper }}
                         </div>
                     {% endif %}
-                </div>
+                    <span class="sp-avatar-cam" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </span>
+                </button>
                 <div class="sp-avatar-name">{{ formData.username }}</div>
                 <div class="sp-avatar-email">{{ formData.email }}</div>
                 <span class="sp-role-badge">{{ authUser and authUser.is_admin|default(false) ? 'Admin' : 'Member' }}</span>
@@ -71,7 +76,7 @@
         <div class="sp-main">
 
             {# Profile section #}
-            <form method="post" action="{{ path('account_settings_update') }}" class="sp-card" id="profileForm">
+            <form method="post" action="{{ path('account_settings_update') }}" class="sp-card" id="profileForm" enctype="multipart/form-data">
                 <div class="sp-card-head">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Profile Information
@@ -98,10 +103,13 @@
                                    value="{{ formData.tel }}" placeholder="+216 XX XXX XXX">
                         </div>
                         <div class="sp-field">
-                            <label for="image_url">Avatar URL</label>
-                            <input type="url" id="image_url" name="image_url" class="sp-input"
-                                   value="{{ formData.image_url }}" placeholder="https://…/photo.jpg"
-                                   oninput="updateAvatar(this.value)">
+                            <label for="avatar_file">Profile Picture</label>
+                            <input type="file" id="avatar_file" name="avatar_file" class="sp-input sp-file"
+                                   accept="image/png,image/jpeg,image/webp,image/gif"
+                                   onchange="previewAvatarFile(this)">
+                            {# Preserve the current picture when no new file is chosen #}
+                            <input type="hidden" id="image_url" name="image_url" value="{{ formData.image_url }}">
+                            <small class="sp-file-hint">JPG, PNG, WEBP or GIF · max 5 MB</small>
                         </div>
                     </div>
                 </div>
@@ -215,6 +223,26 @@ function updateAvatar(url) {
     }
 }
 
+// Live preview when a file is picked
+function previewAvatarFile(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Image is too large. Maximum size is 5 MB.');
+        input.value = '';
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = document.getElementById('avatarImg');
+        var ini = document.getElementById('avatarInitial');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        ini.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
 // Password strength indicator
 var pwInput = document.getElementById('new_password');
 if (pwInput) {
@@ -270,16 +298,39 @@ if (pwInput) {
     border-radius: 14px; padding: 24px 16px; text-align: center;
 }
 .sp-avatar-wrap {
-    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 14px;
-    background: linear-gradient(135deg, #ff9900, #e07800);
-    overflow: hidden; position: relative;
-    box-shadow: 0 0 0 3px rgba(255,153,0,.25);
+    width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 14px;
+    background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-dark));
+    overflow: hidden; position: relative; display: block; padding: 0; border: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(184,134,46,.25);
+    transition: box-shadow .18s, transform .18s;
 }
+.sp-avatar-wrap:hover { box-shadow: 0 0 0 4px rgba(184,134,46,.45); transform: translateY(-1px); }
 .sp-avatar-img  { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sp-avatar-initial {
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; font-weight: 800; color: #000;
+    font-size: 2rem; font-weight: 800; color: #fff;
 }
+.sp-avatar-cam {
+    position: absolute; right: 2px; bottom: 2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--amazon-white); color: var(--amazon-orange);
+    border: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(31,35,40,.18);
+}
+.sp-avatar-wrap:hover .sp-avatar-cam { background: var(--amazon-orange); color: #fff; }
+.sp-file { padding: 8px 10px; cursor: pointer; }
+.sp-file::-webkit-file-upload-button,
+.sp-file::file-selector-button {
+    border: 1px solid var(--hairline); background: var(--amazon-light);
+    color: var(--text-primary); border-radius: 7px; padding: 7px 12px;
+    font: inherit; font-weight: 600; font-size: .82rem; cursor: pointer; margin-right: 12px;
+    transition: background .15s, border-color .15s;
+}
+.sp-file:hover::-webkit-file-upload-button,
+.sp-file:hover::file-selector-button { background: rgba(184,134,46,.12); border-color: var(--hairline-gold); }
+.sp-file-hint { display: block; margin-top: 6px; font-size: .72rem; color: var(--text-muted); }
 .sp-avatar-name  { font-weight: 700; font-size: .95rem; color: var(--text-primary); margin-bottom: 3px; }
 .sp-avatar-email { font-size: .76rem; color: var(--text-muted); word-break: break-all; margin-bottom: 10px; }
 .sp-role-badge {
