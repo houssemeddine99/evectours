@@ -94,8 +94,8 @@
 .admin-sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #080d1a;
-  border-right: 1px solid rgba(30,122,224,.18);
+  background: var(--amazon-white,#fff);
+  border-right: 1px solid var(--hairline,rgba(31,35,40,.10));
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -103,7 +103,7 @@
   height: calc(100vh - 62px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #1e3050 transparent;
+  scrollbar-color: var(--hairline,rgba(31,35,40,.10)) transparent;
   z-index: 200;
   transition: transform .25s ease;
 }
@@ -113,13 +113,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 16px 14px;
-  border-bottom: 1px solid rgba(30,122,224,.15);
+  border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10));
 }
 
 .sidebar-logo {
   font-weight: 700;
   font-size: .95rem;
-  color: var(--amazon-orange-soft);
+  color: var(--amazon-orange);
   letter-spacing: .3px;
 }
 
@@ -156,7 +156,7 @@
   gap: 10px;
   padding: 9px 12px;
   border-radius: 9px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: .88rem;
   font-weight: 500;
   text-decoration: none;
@@ -165,13 +165,13 @@
 }
 
 .sidebar-link:hover {
-  background: rgba(30,122,224,.12);
-  color: var(--evec-blue-light);
+  background: var(--amazon-slate,#f1ece2);
+  color: var(--evec-blue);
 }
 
 .sidebar-link.active {
-  background: rgba(245,195,0,.12);
-  color: var(--amazon-orange-soft);
+  background: rgba(184,134,46,.12);
+  color: var(--amazon-orange);
   font-weight: 700;
 }
 
@@ -195,8 +195,8 @@
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
-  background: #080d1a;
-  border-bottom: 1px solid rgba(30,122,224,.18);
+  background: var(--amazon-white,#fff);
+  border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10));
   position: sticky;
   top: 62px;
   z-index: 100;
@@ -204,7 +204,7 @@
 
 .topbar-toggle {
   background: transparent;
-  border: 1px solid rgba(255,255,255,.15);
+  border: 1px solid var(--hairline,rgba(31,35,40,.10));
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 1.2rem;
@@ -216,7 +216,7 @@
 .topbar-title {
   font-weight: 700;
   font-size: .95rem;
-  color: var(--amazon-orange-soft);
+  color: var(--amazon-orange);
 }
 
 .admin-content {

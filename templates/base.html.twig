@@ -106,9 +106,9 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com">
 
     {# ── Critical CSS (single request) ── #}
-    <link rel="preload" href="/styles/bundle.css?v=11" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=11"></noscript>
-    <link rel="stylesheet" href="/styles/bundle.css?v=11">
+    <link rel="preload" href="/styles/bundle.css?v=12" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/styles/bundle.css?v=12"></noscript>
+    <link rel="stylesheet" href="/styles/bundle.css?v=12">
 
     {# ── Fonts — Cormorant Garamond (display serif) + Inter (body) ── #}
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -1224,7 +1224,7 @@
 
         .lang-toggle {
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid var(--hairline,rgba(31,35,40,.10));
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -1245,13 +1245,13 @@
             position: absolute;
             top: calc(100% + 12px);
             right: 0;
-            background: #111c2d;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--amazon-white,#fff);
+            border: 1px solid var(--hairline,rgba(31,35,40,.10));
             border-radius: 12px;
             padding: 6px;
             z-index: 99999;
             min-width: 170px;
-            box-shadow: 0 12px 32px rgba(0,0,0,.55);
+            box-shadow: 0 12px 32px rgba(31,35,40,.15);
             gap: 2px;
         }
         .lang-menu.open { display: flex; }
@@ -1259,7 +1259,7 @@
         .lang-menu button {
             background: transparent;
             border: none;
-            color: #cbd5e1;
+            color: var(--text-primary);
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.84rem;
@@ -1299,11 +1299,11 @@
         </div>
     </div>
     <style>
-        #cookie-banner { position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#0d1525; border-top:1px solid rgba(255,153,0,.25); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:.88rem; color:var(--text-secondary); }
-        #cookie-banner a { color:var(--amazon-orange-soft); }
+        #cookie-banner { position:fixed; bottom:0; left:0; right:0; z-index:9999; background:var(--amazon-white,#fff); border-top:1px solid var(--hairline-gold,rgba(184,134,46,.45)); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:.88rem; color:var(--text-secondary); box-shadow:0 -4px 24px rgba(31,35,40,.10); }
+        #cookie-banner a { color:var(--amazon-orange); }
         .cookie-btns { display:flex; gap:10px; flex-shrink:0; }
-        .cookie-ok { background:var(--amazon-orange); color:#000; border:none; border-radius:7px; padding:8px 20px; font-weight:700; cursor:pointer; }
-        .cookie-no { background:transparent; color:var(--text-muted); border:1px solid rgba(255,255,255,.15); border-radius:7px; padding:8px 16px; cursor:pointer; }
+        .cookie-ok { background:var(--amazon-orange); color:#fff; border:none; border-radius:7px; padding:8px 20px; font-weight:700; cursor:pointer; }
+        .cookie-no { background:transparent; color:var(--text-muted); border:1px solid var(--hairline,rgba(31,35,40,.10)); border-radius:7px; padding:8px 16px; cursor:pointer; }
     </style>
     <script>
     (function(){

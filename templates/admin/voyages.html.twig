@@ -82,7 +82,7 @@
 .page-header .lead { margin:0; color:var(--text-muted); }
 
 .table-wrap {
-  background: #080e1c;
+  background: var(--amazon-white,#fff);
   border: 1px solid var(--border-dark);
   border-radius: 14px;
   overflow-x: auto;
@@ -96,7 +96,7 @@
 
 .av-table th {
   padding: 13px 14px;
-  background: rgba(15,23,34,.6);
+  background: var(--amazon-light,#fbf8f3);
   color: var(--text-muted);
   font-size: .78rem;
   font-weight: 700;
@@ -108,11 +108,11 @@
 
 .av-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
+  border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10));
   vertical-align: middle;
 }
 
-.av-table tbody tr:hover { background: rgba(74,158,255,.04); }
+.av-table tbody tr:hover { background: var(--amazon-light,#fbf8f3); }
 .av-table tbody tr:last-child td { border-bottom: none; }
 
 .td-id { font-family:monospace; color:var(--amazon-orange); font-weight:700; }
@@ -121,14 +121,14 @@
   width: 60px; height: 40px;
   object-fit: cover;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid var(--hairline,rgba(31,35,40,.10));
   display: block;
 }
 
 .v-thumb-ph {
   width: 60px; height: 40px;
   border-radius: 6px;
-  background: rgba(255,255,255,.06);
+  background: var(--amazon-light,#fbf8f3);
   display: flex; align-items:center; justify-content:center;
   font-size: 1.2rem;
   color: var(--text-muted);
@@ -146,12 +146,12 @@
   border-radius: 10px;
   font-size: .78rem;
   font-weight: 700;
-  background: rgba(74,158,255,.15);
-  color: var(--evec-blue-light);
+  background: rgba(29,78,107,.12);
+  color: var(--evec-blue);
 }
 .count-badge.offers {
-  background: rgba(245,195,0,.15);
-  color: var(--amazon-orange-soft);
+  background: rgba(184,134,46,.15);
+  color: var(--amazon-orange);
 }
 
 .td-actions { display:flex; gap:6px; align-items:center; }
@@ -168,10 +168,10 @@
   background: transparent;
 }
 
-.btn-act-manage { background:rgba(74,158,255,.15); color:var(--evec-blue-light); }
+.btn-act-manage { background:rgba(29,78,107,.12); color:var(--evec-blue); }
 .btn-act-manage:hover { background:#3b82f6; color:#fff; }
 
-.btn-act-edit { background:rgba(251,191,36,.15); color:#fbbf24; }
+.btn-act-edit { background:rgba(217,119,6,.15); color:#b45309; }
 .btn-act-edit:hover { background:#d97706; color:#fff; }
 
 .btn-act-delete { background:rgba(239,68,68,.15); color:#ef4444; }

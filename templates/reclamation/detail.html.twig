@@ -26,7 +26,7 @@
     font-size: 1.75rem;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--amazon-orange) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -45,17 +45,17 @@
     text-transform: uppercase;
     border: 1px solid;
 }
-.badge-s-open        { background:rgba(255,153,0,0.15);  color:#febd69;  border-color:rgba(255,153,0,0.3); }
-.badge-s-in-progress { background:rgba(68,121,207,0.15); color:#93c5fd;  border-color:rgba(68,121,207,0.3); }
-.badge-s-resolved    { background:rgba(22,163,74,0.15);  color:#86efac;  border-color:rgba(22,163,74,0.3); }
-.badge-s-closed      { background:rgba(100,116,139,0.15);color:#94a3b8;  border-color:rgba(100,116,139,0.3); }
-.badge-p-urgent { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
-.badge-p-high   { background:rgba(234,88,12,0.15);  color:#fdba74; border-color:rgba(234,88,12,0.3); }
-.badge-p-medium { background:rgba(68,121,207,0.15); color:#93c5fd; border-color:rgba(68,121,207,0.3); }
-.badge-p-low    { background:rgba(100,116,139,0.15);color:#94a3b8; border-color:rgba(100,116,139,0.3); }
-.badge-r-approved { background:rgba(22,163,74,0.15);  color:#86efac; border-color:rgba(22,163,74,0.3); }
-.badge-r-rejected { background:rgba(220,38,38,0.15);  color:#fca5a5; border-color:rgba(220,38,38,0.3); }
-.badge-r-pending  { background:rgba(255,193,7,0.15);  color:#fde047; border-color:rgba(255,193,7,0.3); }
+.badge-s-open        { background:rgba(255,153,0,0.15);  color:var(--amazon-orange);  border-color:rgba(255,153,0,0.3); }
+.badge-s-in-progress { background:rgba(68,121,207,0.15); color:#2563eb;  border-color:rgba(68,121,207,0.3); }
+.badge-s-resolved    { background:rgba(22,163,74,0.15);  color:#16a34a;  border-color:rgba(22,163,74,0.3); }
+.badge-s-closed      { background:rgba(100,116,139,0.15);color:var(--text-muted);  border-color:rgba(100,116,139,0.3); }
+.badge-p-urgent { background:rgba(220,38,38,0.15);  color:#dc2626; border-color:rgba(220,38,38,0.3); }
+.badge-p-high   { background:rgba(234,88,12,0.15);  color:#ea580c; border-color:rgba(234,88,12,0.3); }
+.badge-p-medium { background:rgba(68,121,207,0.15); color:#2563eb; border-color:rgba(68,121,207,0.3); }
+.badge-p-low    { background:rgba(100,116,139,0.15);color:var(--text-muted); border-color:rgba(100,116,139,0.3); }
+.badge-r-approved { background:rgba(22,163,74,0.15);  color:#16a34a; border-color:rgba(22,163,74,0.3); }
+.badge-r-rejected { background:rgba(220,38,38,0.15);  color:#dc2626; border-color:rgba(220,38,38,0.3); }
+.badge-r-pending  { background:rgba(255,193,7,0.15);  color:#b45309; border-color:rgba(255,193,7,0.3); }
 
 /* ── Info Card ─────────────────────────────────────────────── */
 .rd-info-card {
@@ -67,7 +67,7 @@
 }
 .rd-info-card-title {
     padding: 12px 20px;
-    background: var(--amazon-navy);
+    background: var(--amazon-light,#fbf8f3);
     font-size: 0.73em;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -84,7 +84,7 @@
     width: 150px;
     min-width: 150px;
     padding: 12px 20px;
-    background: rgba(0,0,0,0.15);
+    background: var(--amazon-light,#fbf8f3);
     font-size: 0.82em;
     font-weight: 600;
     color: var(--text-muted);
@@ -99,7 +99,7 @@
     word-break: break-word;
     white-space: pre-wrap;
 }
-.rd-value-resolved { color: #86efac; }
+.rd-value-resolved { color: #16a34a; }
 
 /* ── Response Cards ────────────────────────────────────────── */
 .rd-response-card {
@@ -126,15 +126,15 @@
     font-weight: 700;
     letter-spacing: 0.04em;
 }
-.rd-response-card.responded .rd-response-header { border-color:rgba(22,163,74,0.2); color:#86efac; }
-.rd-response-card.awaiting  .rd-response-header { border-color:rgba(255,153,0,0.15); color:#febd69; }
+.rd-response-card.responded .rd-response-header { border-color:rgba(22,163,74,0.2); color:#16a34a; }
+.rd-response-card.awaiting  .rd-response-header { border-color:rgba(255,153,0,0.15); color:var(--amazon-orange); }
 .rd-response-body {
     padding: 16px 20px;
     font-size: 0.88em;
     line-height: 1.65;
     white-space: pre-wrap;
 }
-.rd-response-card.responded .rd-response-body { color: #d1fae5; }
+.rd-response-card.responded .rd-response-body { color: var(--text-primary); }
 .rd-response-card.awaiting  .rd-response-body { color: var(--text-muted); font-style: italic; }
 .rd-response-footer { padding: 8px 20px 12px; font-size: 0.75em; color: var(--text-muted); }
 
@@ -164,7 +164,7 @@
 }
 .rd-refund-table { width: 100%; border-collapse: collapse; }
 .rd-refund-table th {
-    background: var(--amazon-navy);
+    background: var(--amazon-light,#fbf8f3);
     color: var(--text-primary);
     font-size: 0.73em;
     font-weight: 700;
@@ -185,7 +185,7 @@
 .rd-refund-table tr:hover td { background: rgba(255,153,0,0.04); }
 .td-primary       { color: var(--text-primary) !important; font-weight: 600; }
 .td-amount        { color: var(--text-muted); }
-.td-amount-value  { color: #febd69 !important; font-weight: 700; }
+.td-amount-value  { color: var(--amazon-orange) !important; font-weight: 700; }
 .td-partial-note  { font-size: 0.75em; color: var(--text-muted); display: block; }
 
 /* ── Refund eligibility boxes ──────────────────────────────── */
@@ -201,7 +201,7 @@
     flex-wrap: wrap;
 }
 .rd-eligible-text { display: flex; align-items: center; gap: 12px; }
-.rd-eligible-text strong { color: #86efac; font-size: 0.95em; display: block; margin-bottom: 2px; }
+.rd-eligible-text strong { color: #16a34a; font-size: 0.95em; display: block; margin-bottom: 2px; }
 .rd-eligible-text p { margin: 0; font-size: 0.8em; color: var(--text-muted); }
 .rd-ineligible-box {
     background: rgba(100,116,139,0.08);
@@ -340,7 +340,7 @@
 {% elseif eligibility is defined and eligibility.eligible %}
     <div class="rd-eligible-box">
         <div class="rd-eligible-text">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <div>
                 <strong>You are eligible for a refund</strong>
                 <p>A refund request will be submitted for your full reservation amount.</p>

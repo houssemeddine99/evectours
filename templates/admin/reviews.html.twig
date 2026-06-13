@@ -49,7 +49,7 @@
                     <td>{{ review.user_id }}</td>
                     <td class="rating-cell">
                         {% for i in 1..5 %}
-                            <span style="color: {{ i <= review.rating ? '#f59e0b' : '#444' }}">★</span>
+                            <span style="color: {{ i <= review.rating ? '#f59e0b' : '#d1ccc2' }}">★</span>
                         {% endfor %}
                         <span class="rating-num">({{ review.rating }})</span>
                     </td>
@@ -72,9 +72,9 @@
 <style>
     .admin-table-wrap { overflow-x: auto; margin-top: 24px; }
     .admin-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-    .admin-table th { background: rgba(255,255,255,.06); padding: 10px 14px; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border-dark); }
-    .admin-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: top; }
-    .admin-table tr:hover td { background: rgba(255,255,255,.03); }
+    .admin-table th { background: var(--amazon-light,#fbf8f3); padding: 10px 14px; text-align: left; font-weight: 700; border-bottom: 1px solid var(--border-dark); }
+    .admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10)); vertical-align: top; }
+    .admin-table tr:hover td { background: var(--amazon-light,#fbf8f3); }
     .rating-cell { white-space: nowrap; }
     .rating-num { color: var(--text-muted); font-size: .82rem; margin-left: 4px; }
     .comment-cell { max-width: 340px; word-break: break-word; color: var(--text-muted); }

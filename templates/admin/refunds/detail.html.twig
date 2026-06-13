@@ -18,7 +18,7 @@
     margin: 0 0 8px;
     font-size: 1.7rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--amazon-orange) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -48,7 +48,7 @@
 }
 .rfd-card-title {
     padding: 12px 18px;
-    background: var(--amazon-navy);
+    background: var(--amazon-light,#fbf8f3);
     font-size: 0.75em;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -58,14 +58,14 @@
 }
 .rfd-row {
     display: flex;
-    border-bottom: 1px solid rgba(47,59,77,0.5);
+    border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10));
 }
 .rfd-row:last-child { border-bottom: none; }
 .rfd-label {
     width: 130px;
     min-width: 130px;
     padding: 11px 16px;
-    background: rgba(0,0,0,0.12);
+    background: var(--amazon-light,#fbf8f3);
     font-size: 0.8em;
     font-weight: 600;
     color: var(--text-muted);
@@ -80,7 +80,7 @@
 .rfd-amount-highlight {
     font-size: 1.4rem;
     font-weight: 800;
-    color: #febd69;
+    color: var(--amazon-orange);
     letter-spacing: -0.01em;
 }
 .rfd-form-body { padding: 18px; }
@@ -97,7 +97,7 @@
 .rfd-field label span { text-transform: none; font-weight: 400; color: var(--text-muted); letter-spacing: 0; }
 .rfd-select, .rfd-input {
     width: 100%;
-    background: #0f1722;
+    background: var(--amazon-light,#fbf8f3);
     border: 1px solid var(--border-dark);
     border-radius: 8px;
     color: var(--text-primary);
@@ -118,7 +118,7 @@
     font-size: 0.8em;
     font-weight: 700;
     background: rgba(68,121,207,0.15);
-    color: #93c5fd;
+    color: #2563eb;
     border: 1px solid rgba(68,121,207,0.3);
     cursor: pointer;
     white-space: nowrap;
@@ -134,8 +134,8 @@
     font-weight: 600;
     display: none;
 }
-.rfd-status-msg.ok { background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.3);color:#86efac; }
-.rfd-status-msg.err { background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);color:#fca5a5; }
+.rfd-status-msg.ok { background:rgba(22,163,74,0.12);border:1px solid rgba(22,163,74,0.3);color:#16a34a; }
+.rfd-status-msg.err { background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.3);color:#dc2626; }
 </style>
 {% endblock %}
 
@@ -148,9 +148,9 @@
 
 {% if refund %}
 {% set rsStyle =
-    refund.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#86efac;border-color:rgba(22,163,74,0.3)' :
-    refund.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#fca5a5;border-color:rgba(220,38,38,0.3)' :
-    'background:rgba(255,193,7,0.15);color:#fde047;border-color:rgba(255,193,7,0.3)' %}
+    refund.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#16a34a;border-color:rgba(22,163,74,0.3)' :
+    refund.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#dc2626;border-color:rgba(220,38,38,0.3)' :
+    'background:rgba(255,193,7,0.15);color:#a16207;border-color:rgba(255,193,7,0.3)' %}
 
 <div class="rfd-header">
     <div>
@@ -200,7 +200,7 @@
             <div class="rfd-label">Reclamation</div>
             <div class="rfd-value">
                 {% if refund.reclamationId %}
-                    <a href="{{ path('admin_reclamation_detail', {'id': refund.reclamationId}) }}" style="color:#93c5fd;text-decoration:none;font-weight:600;">#{{ refund.reclamationId }} ↗</a>
+                    <a href="{{ path('admin_reclamation_detail', {'id': refund.reclamationId}) }}" style="color:#2563eb;text-decoration:none;font-weight:600;">#{{ refund.reclamationId }} ↗</a>
                 {% else %}
                     —
                 {% endif %}
@@ -237,7 +237,7 @@
                         value="{{ refund.approvedAmount ?? '' }}"
                     >
                     {% if refund.approvedAmount is not null and refund.approvedAmount != refund.amount %}
-                        <p style="margin:6px 0 0;font-size:0.78em;color:#fdba74;">
+                        <p style="margin:6px 0 0;font-size:0.78em;color:#ea580c;">
                             ⚡ Partial refund — {{ refund.approvedAmount }} TND of {{ refund.amount }} TND requested
                         </p>
                     {% endif %}
@@ -252,7 +252,7 @@
                     </select>
                 </div>
 
-                <div id="approve-warning" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;font-size:.82em;color:#fde68a;">
+                <div id="approve-warning" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;font-size:.82em;color:#a16207;">
                     ⚠ Approving will automatically <strong>cancel the reservation</strong> and mark it as REFUNDED.
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Save Changes</button>

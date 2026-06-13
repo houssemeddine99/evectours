@@ -173,7 +173,7 @@
 .hero-bg-overlay { display:none; }
 .hero-plane { position:absolute; top:15%; right:15%; width:58px; height:58px; color:#ffffff; opacity:.92; transform:rotate(42deg); filter:drop-shadow(0 3px 8px rgba(0,0,0,.28)); z-index:1; animation:heroPlaneFloat 6.5s ease-in-out infinite; pointer-events:none; }
 @keyframes heroPlaneFloat { 0%,100%{ transform:translate(0,0) rotate(42deg); } 50%{ transform:translate(10px,-16px) rotate(42deg); } }
-@media (max-width:900px){ .hero-plane{ top:8%; right:10%; width:42px; height:42px; } }
+@media (max-width:900px){ .hero-plane{ top:8%; right:10%; width:42px; height:42px; color:var(--amazon-orange); opacity:.55; filter:none; } }
 @media (prefers-reduced-motion:reduce){ .hero-plane{ animation:none; } }
 .hero-content--pro { position:relative; z-index:1; width:min(1180px,92%); margin:0 auto; padding:96px 0; text-align:left; }
 .hero--pro .eyebrow-pro { color:var(--amazon-orange-dark); font-size:.8rem; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:18px; }

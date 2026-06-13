@@ -18,7 +18,7 @@
     margin: 0 0 4px;
     font-size: 1.8rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #ffffff 0%, #febd69 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--amazon-orange) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -44,16 +44,16 @@
     top: 0; left: 0; right: 0;
     height: 3px;
 }
-.rf-stat.pending::before  { background: #fde047; }
-.rf-stat.approved::before { background: #86efac; }
-.rf-stat.rejected::before { background: #fca5a5; }
-.rf-stat.total::before    { background: linear-gradient(90deg,#ff9900,#febd69); }
+.rf-stat.pending::before  { background: #eab308; }
+.rf-stat.approved::before { background: #16a34a; }
+.rf-stat.rejected::before { background: #dc2626; }
+.rf-stat.total::before    { background: linear-gradient(90deg,var(--amazon-orange),var(--amazon-orange-soft)); }
 .rf-stat-value { font-size: 1.7rem; font-weight: 800; color: var(--text-primary); line-height: 1; margin-bottom: 4px; }
 .rf-stat-label { font-size: 0.72em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
-.rf-stat.pending  .rf-stat-value { color: #fde047; }
-.rf-stat.approved .rf-stat-value { color: #86efac; }
-.rf-stat.rejected .rf-stat-value { color: #fca5a5; }
-.rf-stat.total    .rf-stat-value { color: #febd69; }
+.rf-stat.pending  .rf-stat-value { color: #a16207; }
+.rf-stat.approved .rf-stat-value { color: #16a34a; }
+.rf-stat.rejected .rf-stat-value { color: #dc2626; }
+.rf-stat.total    .rf-stat-value { color: var(--amazon-orange); }
 .rf-table-wrap {
     background: var(--amazon-white);
     border: 1px solid var(--border-dark);
@@ -63,7 +63,7 @@
 }
 .rf-table { width: 100%; border-collapse: collapse; min-width: 680px; }
 .rf-table thead th {
-    background: var(--amazon-navy);
+    background: var(--amazon-light,#fbf8f3);
     color: var(--text-muted);
     font-size: 0.73em;
     font-weight: 700;
@@ -77,7 +77,7 @@
     padding: 13px 16px;
     font-size: 0.86em;
     color: var(--text-muted);
-    border-bottom: 1px solid rgba(47,59,77,0.6);
+    border-bottom: 1px solid var(--hairline,rgba(31,35,40,.10));
     vertical-align: middle;
 }
 .rf-table tbody tr:last-child td { border-bottom: none; }
@@ -101,8 +101,8 @@
     border-radius: 8px;
     font-size: 0.78em;
     font-weight: 700;
-    background: linear-gradient(135deg, #ff9900, #febd69);
-    color: #131a22;
+    background: linear-gradient(135deg, var(--amazon-orange), var(--amazon-orange-soft));
+    color: #fff;
     text-decoration: none;
     transition: opacity .2s, transform .2s;
 }
@@ -165,9 +165,9 @@
         <tbody>
             {% for r in refunds %}
                 {% set rsStyle =
-                    r.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#86efac;border-color:rgba(22,163,74,0.3)' :
-                    r.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#fca5a5;border-color:rgba(220,38,38,0.3)' :
-                    'background:rgba(255,193,7,0.15);color:#fde047;border-color:rgba(255,193,7,0.3)' %}
+                    r.status == 'APPROVED' ? 'background:rgba(22,163,74,0.15);color:#16a34a;border-color:rgba(22,163,74,0.3)' :
+                    r.status == 'REJECTED' ? 'background:rgba(220,38,38,0.15);color:#dc2626;border-color:rgba(220,38,38,0.3)' :
+                    'background:rgba(255,193,7,0.15);color:#a16207;border-color:rgba(255,193,7,0.3)' %}
                 <tr>
                     <td style="color:var(--text-primary);font-weight:600;">#{{ r.id }}</td>
                     <td>
@@ -178,7 +178,7 @@
                         {% endif %}
                     </td>
                     <td>#{{ r.reservationId|default('—') }}</td>
-                    <td style="color:#febd69;font-weight:700;">{{ r.amount|default('0.00') }} TND</td>
+                    <td style="color:var(--amazon-orange);font-weight:700;">{{ r.amount|default('0.00') }} TND</td>
                     <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ r.reason|default('') }}">
                         {{ r.reason|default('—')|slice(0, 50) }}{% if (r.reason|default(''))|length > 50 %}…{% endif %}
                     </td>

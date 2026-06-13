@@ -54,7 +54,7 @@
                             <div><strong>People</strong><br>{{ reservation.number_of_people }}</div>
                             <div><strong>Total</strong><br>{{ reservation.total_price|format_price }}</div>
                             <div><strong>Payment</strong><br>
-                                <span style="color:{% if reservation.payment_status == 'PAID' %}#22c55e{% elseif reservation.payment_status == 'REFUNDED' %}#f59e0b{% else %}#94a3b8{% endif %}">
+                                <span style="color:{% if reservation.payment_status == 'PAID' %}#16a34a{% elseif reservation.payment_status == 'REFUNDED' %}#f59e0b{% else %}var(--text-muted){% endif %}">
                                     {{ reservation.payment_status }}
                                 </span>
                             </div>
@@ -109,8 +109,8 @@
 
     <style>
     .tg-pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin:28px 0 8px;flex-wrap:wrap}
-    .tg-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;font-family:Inter,sans-serif;font-size:.88rem;font-weight:700;text-decoration:none;border:1px solid rgba(99,140,255,.2);background:rgba(255,255,255,.03);color:#94a3b8;transition:background .15s,border-color .15s,color .15s}
-    .tg-page-btn:hover{background:rgba(99,140,255,.12);border-color:rgba(99,140,255,.4);color:#f1f5f9}
+    .tg-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border-radius:10px;font-family:Inter,sans-serif;font-size:.88rem;font-weight:700;text-decoration:none;border:1px solid var(--hairline,rgba(31,35,40,.10));background:var(--amazon-light,#fbf8f3);color:var(--text-muted);transition:background .15s,border-color .15s,color .15s}
+    .tg-page-btn:hover{background:var(--amazon-slate,#f1ece2);border-color:var(--hairline-gold);color:var(--text-primary)}
     .tg-page-btn.active{background:linear-gradient(135deg,#4f6ef7,#6366f1);border-color:transparent;color:#fff;cursor:default}
     .tg-page-btn.disabled{opacity:.35;cursor:default;pointer-events:none}
 
@@ -120,11 +120,11 @@
     .loyalty-balance { font-size:2rem; font-weight:800; color:var(--amazon-orange); }
     .loyalty-balance span { font-size:1rem; color:var(--text-muted); }
     .loyalty-label { font-size:0.78rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px; }
-    .loyalty-progress-bar { height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:6px; }
+    .loyalty-progress-bar { height:6px; background:var(--hairline,rgba(31,35,40,.10)); border-radius:3px; overflow:hidden; margin-bottom:6px; }
     .loyalty-fill { height:100%; background:var(--amazon-orange); border-radius:3px; transition:width 0.6s ease; }
     .loyalty-hint { font-size:0.84rem; color:var(--text-muted); }
     .loyalty-badge-ready { background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e; border-radius:20px; padding:6px 14px; font-size:0.82rem; font-weight:700; white-space:nowrap; }
-    .btn-ticket { background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.4); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; }
+    .btn-ticket { background:rgba(99,102,241,0.12); color:#4f46e5; border:1px solid rgba(99,102,241,0.4); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:0.88rem; font-weight:600; }
     .btn-pay-now { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; font-size:0.88rem; cursor:pointer; transition:opacity .2s; }
     .btn-pay-now:hover { opacity:.88; }
     </style>
