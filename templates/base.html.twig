@@ -26,6 +26,17 @@
     {# ── Google Search Console verification ── #}
     <meta name="google-site-verification" content="8VHYhSQMeC0PB-FOFCl8pjRtz3nAvzk7De3WwUCow6U">
 
+    {# ── Google Analytics (GA4) — set GA_MEASUREMENT_ID env var to enable ── #}
+    {% if ga_measurement_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ ga_measurement_id }}');
+    </script>
+    {% endif %}
+
     {# ── CSRF protection (validated by App\EventSubscriber\CsrfProtectionSubscriber) ── #}
     <meta name="csrf-token" content="{{ csrf_token('app') }}">
     <script>
@@ -87,7 +98,7 @@
     <meta name="twitter:description" content="{% block twitter_description %}Curated voyages, exclusive deals, AI trip planner.{% endblock %}">
     <meta name="twitter:image"       content="{% block twitter_image %}{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png{% endblock %}">
 
-    <meta name="theme-color" content="#0f1722">
+    <meta name="theme-color" content="#fbf8f3">
     <link rel="icon" href="/images/logo.png" type="image/png" sizes="any">
     <link rel="icon" href="/images/logo.png" type="image/png" sizes="32x32">
     <link rel="icon" href="/images/logo.png" type="image/png" sizes="16x16">
@@ -113,6 +124,24 @@
     {# ── Fonts — Poppins (bold display) + Inter (body) ── #}
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+
+    {# ── Structured data (JSON-LD) ── #}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TravelAgency",
+      "name": "Evec Tours",
+      "url": "{{ app.request.scheme ~ '://' ~ app.request.httpHost }}",
+      "logo": "{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png",
+      "image": "{{ app.request.scheme ~ '://' ~ app.request.httpHost }}/images/logo.png",
+      "description": "Curated travel voyages, exclusive offers, and AI-powered trip planning across Tunisia and beyond.",
+      "email": "contact@evectours.com",
+      "telephone": "+216 98 365 730",
+      "areaServed": "TN",
+      "sameAs": ["https://www.facebook.com/share/1B2KCNSsbo/"]
+    }
+    </script>
+    {% block structured_data %}{% endblock %}
 
     {% block stylesheets %}{% endblock %}
 </head>
@@ -1298,10 +1327,19 @@
     </style>
     {% endif %}
 
-    {# ── Tawk.to live chat (replace TAWK_PROPERTY_ID and TAWK_WIDGET_ID with your own from tawk.to) ── #}
-    {% if not app.request.pathInfo starts with '/admin' %}
-    {# To enable: sign up at tawk.to, get your IDs, replace the placeholders below #}
-    {# <script>var Tawk_API=Tawk_API||{};(function(){var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];s1.async=true;s1.src='https://embed.tawk.to/TAWK_PROPERTY_ID/TAWK_WIDGET_ID';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0)})();</script> #}
+    {# ── Tawk.to live chat — set TAWK_PROPERTY_ID and TAWK_WIDGET_ID env vars to enable ── #}
+    {% if tawk_property_id and tawk_widget_id and not (app.request.pathInfo starts with '/admin') %}
+    <script>
+        var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+        (function () {
+            var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            s1.src = 'https://embed.tawk.to/{{ tawk_property_id }}/{{ tawk_widget_id }}';
+            s1.charset = 'UTF-8';
+            s1.setAttribute('crossorigin', '*');
+            s0.parentNode.insertBefore(s1, s0);
+        })();
+    </script>
     {% endif %}
 
     {# ── Cookie consent banner ── #}
@@ -1328,5 +1366,8 @@
     function cookieAccept(){ localStorage.setItem('cookie_consent','accepted'); document.getElementById('cookie-banner').style.display='none'; }
     function cookieDecline(){ localStorage.setItem('cookie_consent','declined'); document.getElementById('cookie-banner').style.display='none'; }
     </script>
+
+    {# Page-specific scripts / JSON-LD (e.g. voyage_detail structured data) #}
+    {% block javascripts %}{% endblock %}
 </body>
 </html>

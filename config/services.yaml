@@ -27,6 +27,10 @@ parameters:
     env(CLOUDINARY_CLOUD_NAME): ''
     env(CLOUDINARY_API_KEY): ''
     env(CLOUDINARY_API_SECRET): ''
+    # Optional front-end integrations (rendered only when set). Empty = disabled.
+    env(TAWK_PROPERTY_ID): ''
+    env(TAWK_WIDGET_ID): ''
+    env(GA_MEASUREMENT_ID): ''
 
 services:
     _defaults:

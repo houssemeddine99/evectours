@@ -22,7 +22,9 @@ class AuthServiceTest extends TestCase
         $user = new User();
         $user->setUsername($username);
         $user->setEmail($email);
-        $user->setPassword($plainPassword); // hashes internally
+        // Production stores a hashed password (setPassword does not hash), so the
+        // test fixture must hash it for authenticate()'s password_verify to pass.
+        $user->setPassword(password_hash($plainPassword, PASSWORD_DEFAULT));
         // Set the private id property via reflection for testing purposes
         $ref = new \ReflectionClass($user);
         $prop = $ref->getProperty('id');

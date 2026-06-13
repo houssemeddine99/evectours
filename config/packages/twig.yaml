@@ -1,5 +1,10 @@
 twig:
     file_name_pattern: '*.twig'
+    globals:
+        # Optional integrations — empty string disables the related <script> block.
+        tawk_property_id: '%env(TAWK_PROPERTY_ID)%'
+        tawk_widget_id: '%env(TAWK_WIDGET_ID)%'
+        ga_measurement_id: '%env(GA_MEASUREMENT_ID)%'
 
 when@test:
     twig:

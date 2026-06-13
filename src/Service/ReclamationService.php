@@ -46,6 +46,13 @@ class ReclamationService
             return ['eligible' => false, 'reason' => 'Reservation status is not eligible for a refund.'];
         }
 
+        // Only a reservation that was actually paid can be refunded.
+        // (PENDING = never paid, REFUNDED = already refunded.)
+        $paymentStatus = strtoupper((string) $reservation->getPaymentStatus());
+        if ($paymentStatus !== 'PAID') {
+            return ['eligible' => false, 'reason' => 'This reservation has not been paid, so there is no payment to refund.'];
+        }
+
         try {
             $pendingCount = (int) $this->entityManager->createQueryBuilder()
                 ->select('COUNT(rr.id)')
