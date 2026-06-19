@@ -107,7 +107,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Evec Tours">
-    <link rel="apple-touch-icon" href="/images/logo.png">
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
     <meta name="mobile-web-app-capable" content="yes">
 
     {# ── Resource hints ── #}
@@ -1232,6 +1232,40 @@
 
     <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}</script>
     <script src="/js/ui.js" defer></script>
+
+    {# ── Install App (PWA) — button appears only when the browser offers install ── #}
+    {% if not app.request.pathInfo starts with '/admin' %}
+    <button id="pwaInstallBtn" type="button" aria-label="Install the Evec Tours app" hidden>
+        <span aria-hidden="true">📲</span> Install App
+    </button>
+    <style>
+        #pwaInstallBtn{position:fixed;left:24px;bottom:24px;z-index:9988;display:none;align-items:center;gap:8px;
+            background:var(--amazon-orange,#b8862e);color:#fff;border:none;border-radius:30px;padding:12px 18px;
+            font:600 .9rem/1 var(--font-sans,Inter,sans-serif);cursor:pointer;box-shadow:0 6px 20px rgba(31,35,40,.22);
+            -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:transform .2s,box-shadow .2s}
+        #pwaInstallBtn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(31,35,40,.3)}
+        @supports(padding:env(safe-area-inset-bottom)){#pwaInstallBtn{bottom:calc(24px + env(safe-area-inset-bottom))}}
+    </style>
+    <script>
+    (function(){
+        var deferred = null, btn = document.getElementById('pwaInstallBtn');
+        if (!btn) return;
+        // Hide if already installed / running as an app.
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
+        window.addEventListener('beforeinstallprompt', function(e){
+            e.preventDefault();
+            deferred = e;
+            btn.hidden = false; btn.style.display = 'inline-flex';
+        });
+        btn.addEventListener('click', function(){
+            if (!deferred) return;
+            deferred.prompt();
+            deferred.userChoice.finally(function(){ deferred = null; btn.style.display = 'none'; });
+        });
+        window.addEventListener('appinstalled', function(){ btn.style.display = 'none'; });
+    })();
+    </script>
+    {% endif %}
 
     <style>
         /* Kill every piece of Google Translate UI chrome */
