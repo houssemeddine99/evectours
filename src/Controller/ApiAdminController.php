@@ -63,7 +63,7 @@ class ApiAdminController extends AbstractController
             'total_price'    => $r['total_price'] ?? null,
             'status'         => $r['status'] ?? null,
             'payment_status' => $r['payment_status'] ?? null,
-            'date'           => $r['reservation_date'] ?? null,
+            'date'           => $this->dateStr($r['reservation_date'] ?? null),
         ], $this->reservationService->listAllReservations());
 
         return $this->json(['reservations' => $items]);
@@ -87,6 +87,15 @@ class ApiAdminController extends AbstractController
         }
         $this->reservationService->cancelReservationAsAdmin($id);
         return $this->json(['ok' => true]);
+    }
+
+    /** Coerce a date value (possibly a \DateTime) to a YYYY-MM-DD string. */
+    private function dateStr(mixed $v): ?string
+    {
+        if ($v instanceof \DateTimeInterface) {
+            return $v->format('Y-m-d');
+        }
+        return is_string($v) && $v !== '' ? substr($v, 0, 10) : null;
     }
 
     /** @return array<string,mixed>|null current user iff admin */
