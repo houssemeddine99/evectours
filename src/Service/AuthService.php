@@ -177,6 +177,43 @@ class AuthService
             'is_admin' => $this->isAdmin((int) $user->getId()),
         ];
     }
+
+    /** Issue (and persist) a fresh API token for the mobile app. */
+    public function issueTokenForUser(int $userId): ?string
+    {
+        $user = $this->userRepository->find($userId);
+        if (!$user) {
+            return null;
+        }
+        $token = bin2hex(random_bytes(32)); // 64 hex chars
+        $user->setApiToken($token);
+        $this->entityManager->flush();
+        return $token;
+    }
+
+    /** Resolve a bearer token to a user array (or null). @return array<mixed>|null */
+    public function getUserByToken(string $token): ?array
+    {
+        if (trim($token) === '') {
+            return null;
+        }
+        try {
+            $user = $this->userRepository->findOneBy(['apiToken' => $token]);
+        } catch (\Throwable) {
+            return null;
+        }
+        if (!$user) {
+            return null;
+        }
+        return [
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'tel' => $user->getTel(),
+            'image_url' => $user->getImageUrl(),
+            'is_admin' => $this->isAdmin((int) $user->getId()),
+        ];
+    }
 /** @return array<mixed> */
 public function getUserByEmail(string $email): ?array
 {

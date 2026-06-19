@@ -63,6 +63,11 @@ final class CsrfProtectionSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Skip the mobile JSON API — it authenticates with bearer tokens, not CSRF.
+        if (str_starts_with($request->getPathInfo(), '/api/')) {
+            return;
+        }
+
         $submitted = (string) (
             $request->request->get(self::FIELD_NAME)
             ?? $request->headers->get(self::HEADER_NAME, '')

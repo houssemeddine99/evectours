@@ -39,9 +39,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $createdAt = null;
 
+    #[ORM\Column(name: 'api_token', length: 64, nullable: true)]
+    private ?string $apiToken = null;
+
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getApiToken(): ?string
+    {
+        return $this->apiToken;
+    }
+
+    public function setApiToken(?string $apiToken): self
+    {
+        $this->apiToken = $apiToken;
+
+        return $this;
     }
     public function getUserIdentifier(): string
     {
