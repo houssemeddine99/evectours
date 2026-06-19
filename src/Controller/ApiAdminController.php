@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
 use App\Service\AuthService;
 use App\Service\ReservationService;
 use App\Service\VoyageService;
@@ -22,6 +23,7 @@ class ApiAdminController extends AbstractController
         private readonly AuthService $authService,
         private readonly ReservationService $reservationService,
         private readonly VoyageService $voyageService,
+        private readonly UserRepository $userRepository,
     ) {
     }
 
@@ -37,12 +39,19 @@ class ApiAdminController extends AbstractController
         $revenue = array_sum(array_map(fn ($r) => (float) ($r['total_price'] ?? 0), $paid));
         $voyages = count($this->voyageService->getAllActiveVoyages());
 
+        $users = 0;
+        try {
+            $users = $this->userRepository->count([]);
+        } catch (\Throwable) {
+        }
+
         return $this->json([
             'voyages'      => $voyages,
             'reservations' => count($reservations),
             'paid'         => count($paid),
             'pending'      => count($reservations) - count($paid),
             'revenue'      => round($revenue, 2),
+            'users'        => $users,
         ]);
     }
 
@@ -87,6 +96,53 @@ class ApiAdminController extends AbstractController
         }
         $this->reservationService->cancelReservationAsAdmin($id);
         return $this->json(['ok' => true]);
+    }
+
+    #[Route('/voyages', name: 'api_v1_admin_voyages', methods: ['GET'])]
+    public function voyages(Request $request): JsonResponse
+    {
+        if ($this->admin($request) === null) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+        $items = array_map(function (array $v): array {
+            $images = is_array($v['image_url'] ?? null) ? array_values($v['image_url']) : [];
+            return [
+                'id'            => $v['id'] ?? null,
+                'slug'          => $v['slug'] ?? '',
+                'title'         => $v['title'] ?? '',
+                'destination'   => $v['destination'] ?? '',
+                'price'         => $v['price'] ?? null,
+                'duration_days' => $v['duration_days'] ?? null,
+                'image'         => $images[0] ?? null,
+            ];
+        }, $this->voyageService->getAllVoyagesForAdmin());
+        return $this->json(['voyages' => $items]);
+    }
+
+    #[Route('/voyages/{id}', name: 'api_v1_admin_voyage_delete', methods: ['DELETE'])]
+    public function deleteVoyage(Request $request, int $id): JsonResponse
+    {
+        if ($this->admin($request) === null) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+        $this->voyageService->deleteVoyage($id);
+        return $this->json(['ok' => true]);
+    }
+
+    #[Route('/users', name: 'api_v1_admin_users', methods: ['GET'])]
+    public function users(Request $request): JsonResponse
+    {
+        if ($this->admin($request) === null) {
+            return $this->json(['error' => 'Forbidden'], 403);
+        }
+        $items = array_map(fn ($u): array => [
+            'id'         => $u->getId(),
+            'username'   => $u->getUsername(),
+            'email'      => $u->getEmail(),
+            'is_admin'   => $this->authService->isAdmin((int) $u->getId()),
+            'created_at' => $u->getCreatedAt()?->format('Y-m-d'),
+        ], $this->userRepository->findAll());
+        return $this->json(['users' => $items]);
     }
 
     /** Coerce a date value (possibly a \DateTime) to a YYYY-MM-DD string. */
