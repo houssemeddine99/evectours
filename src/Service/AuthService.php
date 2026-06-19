@@ -178,16 +178,23 @@ class AuthService
         ];
     }
 
-    /** Issue (and persist) a fresh API token for the mobile app. */
+    /**
+     * Return the user's API token, generating one only if they don't have it yet.
+     * Reusing the existing token keeps the app logged in across re-logins / other
+     * sessions instead of rotating (and silently invalidating) it each time.
+     */
     public function issueTokenForUser(int $userId): ?string
     {
         $user = $this->userRepository->find($userId);
         if (!$user) {
             return null;
         }
-        $token = bin2hex(random_bytes(32)); // 64 hex chars
-        $user->setApiToken($token);
-        $this->entityManager->flush();
+        $token = $user->getApiToken();
+        if ($token === null || $token === '') {
+            $token = bin2hex(random_bytes(32)); // 64 hex chars
+            $user->setApiToken($token);
+            $this->entityManager->flush();
+        }
         return $token;
     }
 
