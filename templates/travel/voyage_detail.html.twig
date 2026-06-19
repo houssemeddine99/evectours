@@ -227,6 +227,10 @@
                         <span class="btn-text">Reserve Your Spot</span>
                         <span class="btn-arrow">→</span>
                     </a>
+                    <a class="btn btn-secondary btn-email-trip" target="_blank" rel="noopener"
+                       href="https://mail.google.com/mail/?view=cm&fs=1&to=contact@evectours.com&su={{ ('Booking inquiry: ' ~ voyage.title)|url_encode }}&body={{ ('Hello Evec Tours team, I am interested in this trip: ' ~ voyage.title ~ ' (Destination: ' ~ voyage.destination ~ ', Duration: ' ~ duration_days ~ ' days). Please send me more details and availability. Thank you!')|url_encode }}">
+                        ✉️ Email about this trip
+                    </a>
                     <button class="btn btn-fav {% if is_favorite %}btn-fav-active{% endif %}" id="favBtn" onclick="toggleFavorite({{ voyage.id }})" title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
                         {{ is_favorite ? '♥ Saved' : '♡ Save' }}
                     </button>

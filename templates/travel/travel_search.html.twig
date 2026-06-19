@@ -534,6 +534,18 @@ function openBookingModal(item, detail, price) {
     document.getElementById('bm-item').textContent   = item;
     document.getElementById('bm-detail').textContent = detail;
     document.getElementById('bm-price').textContent  = price;
+    // Pre-fill the Gmail compose link with this booking's details
+    var email = document.getElementById('bm-email');
+    if (email) {
+        var su = 'Booking inquiry: ' + item;
+        var body = 'Hello Evec Tours team,\n\nI would like to book the following:\n'
+            + '• ' + item + '\n'
+            + '• ' + detail + '\n'
+            + '• Price: ' + price + '\n\n'
+            + 'Please get back to me with the next steps. Thank you!';
+        email.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=contact@evectours.com&su='
+            + encodeURIComponent(su) + '&body=' + encodeURIComponent(body);
+    }
     document.getElementById('booking-modal-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -664,7 +676,7 @@ async function viewRooms(hotelId, btn) {
                     <small>Quick response guaranteed</small>
                 </div>
             </a>
-            <a href="mailto:contact@evectours.com" class="bm-method bm-email">
+            <a id="bm-email" href="https://mail.google.com/mail/?view=cm&fs=1&to=contact@evectours.com" target="_blank" rel="noopener" class="bm-method bm-email">
                 <span class="bm-method-icon">✉️</span>
                 <div>
                     <strong>Email Us</strong>
