@@ -267,6 +267,13 @@
 
   function hide(){ box.hidden = true; box.innerHTML = ''; }
   function pick(c, n){ code.value = c; name.value = n; input.value = n; hide(); }
+  function gotoHotel(hcode){
+    var g = function(id, d){ var el = document.getElementById(id); return el ? el.value : d; };
+    var qs = 'checkIn=' + encodeURIComponent(document.getElementById('hbIn').value)
+      + '&checkOut=' + encodeURIComponent(document.getElementById('hbOut').value)
+      + '&adults=' + g('hb_adults', 2) + '&children=' + g('hb_children', 0) + '&rooms=' + g('hb_rooms', 1);
+    window.location.href = '/hotel/' + encodeURIComponent(hcode) + '?' + qs;
+  }
 
   input.addEventListener('input', function(){
     code.value = ''; // typing invalidates previous selection
@@ -283,8 +290,10 @@
           list.forEach(function(d){
             var b = document.createElement('button');
             b.type = 'button';
-            b.innerHTML = '<span>📍</span><span>' + d.name + '</span><span class="s-code">' + d.code + '</span>';
-            b.addEventListener('click', function(){ pick(d.code, d.name); });
+            var isHotel = d.type === 'hotel';
+            b.innerHTML = '<span>' + (isHotel ? '🏨' : '📍') + '</span><span>' + d.name + '</span>'
+              + '<span class="s-code">' + (isHotel ? 'Hôtel' : d.code) + '</span>';
+            b.addEventListener('click', function(){ isHotel ? gotoHotel(d.code) : pick(d.code, d.name); });
             box.appendChild(b);
           });
           box.hidden = false;

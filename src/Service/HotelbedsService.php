@@ -85,6 +85,54 @@ class HotelbedsService
         return array_slice($matches, 0, 12);
     }
 
+    /**
+     * Hotels matching a name query (e.g. "Alhambra Thalasso"). Backed by a cached
+     * index of the whole country's hotels (name + code), rebuilt weekly.
+     * @return array<int, array{code:string,name:string}>
+     */
+    public function searchHotelsByName(string $query, string $countryCode = 'TN'): array
+    {
+        if (!$this->isConfigured()) {
+            return [];
+        }
+        $q = mb_strtolower(trim($query));
+        if (mb_strlen($q) < 3) {
+            return [];
+        }
+
+        $index = $this->cache->get('hb_hotelidx_' . strtoupper($countryCode), function (ItemInterface $item) use ($countryCode) {
+            $item->expiresAfter(self::CONTENT_TTL);
+            $out  = [];
+            $from = 1;
+            $step = 1000;
+            do {
+                $data   = $this->get('/hotel-content-api/1.0/hotels', [
+                    'fields'      => 'code,name',
+                    'language'    => 'ENG',
+                    'countryCode' => strtoupper($countryCode),
+                    'from'        => $from,
+                    'to'          => $from + $step - 1,
+                ]);
+                $hotels = $data['hotels'] ?? [];
+                foreach ($hotels as $h) {
+                    $name = (string) ($h['name']['content'] ?? '');
+                    if ($name !== '') {
+                        $out[] = ['code' => (string) ($h['code'] ?? ''), 'name' => $name];
+                    }
+                }
+                $total = (int) ($data['total'] ?? 0);
+                $from += $step;
+            } while ($from <= $total && !empty($hotels));
+            return $out;
+        });
+
+        $matches = array_values(array_filter(
+            $index,
+            static fn($h): bool => str_contains(mb_strtolower($h['name']), $q)
+        ));
+        return array_slice($matches, 0, 8);
+    }
+
     // ── Availability (search results) ─────────────────────────────────────
 
     /**

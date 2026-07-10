@@ -91,7 +91,15 @@ class HotelController extends AbstractController
     public function suggest(Request $request): JsonResponse
     {
         $query = trim((string) $request->query->get('q', ''));
-        return $this->json($this->hotels->searchDestinations($query));
+        $out   = [];
+        // Destinations first (broad), then specific hotels matched by name.
+        foreach ($this->hotels->searchDestinations($query) as $d) {
+            $out[] = ['type' => 'destination', 'code' => $d['code'], 'name' => $d['name']];
+        }
+        foreach ($this->hotels->searchHotelsByName($query) as $h) {
+            $out[] = ['type' => 'hotel', 'code' => $h['code'], 'name' => $h['name']];
+        }
+        return $this->json($out);
     }
 
     #[Route('/hotel/{code}', name: 'hotel_detail', methods: ['GET'], requirements: ['code' => '\d+'])]

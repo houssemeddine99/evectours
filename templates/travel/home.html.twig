@@ -325,8 +325,13 @@
           box.innerHTML='';
           list.slice(0,8).forEach(function(it){
             var m=mapItem(it); var b=document.createElement('button'); b.type='button';
-            b.innerHTML='<span>📍</span><span>'+m.name+'</span>'+(m.code?'<span class="s-code">'+m.code+'</span>':'');
-            b.addEventListener('click', function(){ code.value=m.id; if(label) label.value=m.name; input.value=m.name; hide(); });
+            var isHotel = m.type === 'hotel';
+            b.innerHTML='<span>'+(isHotel?'🏨':'📍')+'</span><span>'+m.name+'</span>'
+              +((isHotel||m.code)?'<span class="s-code">'+(isHotel?'Hôtel':m.code)+'</span>':'');
+            b.addEventListener('click', function(){
+              if (isHotel && window.__ptGotoHotel){ window.__ptGotoHotel(m.code); return; }
+              code.value=m.id; if(label) label.value=m.name; input.value=m.name; hide();
+            });
             box.appendChild(b);
           });
           box.hidden=false;
@@ -335,8 +340,15 @@
     });
     document.addEventListener('click', function(e){ if(!e.target.closest('#'+inputId) && !e.target.closest('#'+boxId)) hide(); });
   }
+  window.__ptGotoHotel = function(hcode){
+    var g=function(id,d){ var el=document.getElementById(id); return el?el.value:d; };
+    var qs='checkIn='+encodeURIComponent(document.getElementById('ptHIn').value)
+      +'&checkOut='+encodeURIComponent(document.getElementById('ptHOut').value)
+      +'&adults='+g('ptG_adults',2)+'&children='+g('ptG_children',0)+'&rooms='+g('ptG_rooms',1);
+    window.location.href='/hotel/'+encodeURIComponent(hcode)+'?'+qs;
+  };
   autocomplete('ptHDest','ptHSug','ptHCode','ptHName','{{ path('hotel_suggest') }}',
-    function(d){ return {id:d.code, name:d.name, code:d.code}; });
+    function(d){ return {id:d.code, name:d.name, code:d.code, type:d.type}; });
   autocomplete('ptFFrom','ptFFromSug','ptFFromId','ptFFromL','{{ path('travel_search_flight_dest') }}',
     function(d){ return {id:d.id||'', name:d.name||d.id||'', code:(d.code||'')}; });
   autocomplete('ptFTo','ptFToSug','ptFToId','ptFToL','{{ path('travel_search_flight_dest') }}',
