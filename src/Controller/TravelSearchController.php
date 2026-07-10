@@ -52,15 +52,6 @@ class TravelSearchController extends AbstractController
         ]);
     }
 
-    #[Route('/hotels', name: 'travel_hotels', methods: ['GET'])]
-    public function hotelsPage(): Response
-    {
-        return $this->render('travel/travel_search.html.twig', [
-            'active_nav' => 'hotels',
-            'mode'       => 'hotels',
-        ]);
-    }
-
     #[Route('/travel-search/flights', name: 'travel_search_flights', methods: ['POST'])]
     public function flights(Request $request): JsonResponse
     {

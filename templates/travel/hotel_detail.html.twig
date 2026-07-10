@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ hotel.name }}{{ hotel.stars ? ' ' ~ hotel.stars ~ '★' : '' }} — {{ hotel.zone }} | Evec Tours{% endblock %}
+{% block meta_description %}{{ hotel.name }} à {{ hotel.zone }}. {{ hotel.description|striptags|slice(0, 150) }}{% endblock %}
+
+{% block body %}
+<div class="hd-page">
+  <div class="hd-wrap">
+
+    <a class="hd-back" href="{{ path('travel_hotels', {dest: '', dest_name: hotel.zone, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">← Retour aux résultats</a>
+
+    {# ── Gallery ── #}
+    {% if hotel.photos is not empty %}
+      <div class="hd-gallery">
+        <div class="hd-gallery-main"><img src="{{ hotel.photos[0] }}" alt="{{ hotel.name }}" id="hdMain"></div>
+        {% if hotel.photos|length > 1 %}
+          <div class="hd-gallery-thumbs">
+            {% for p in hotel.photos|slice(1, 4) %}
+              <img src="{{ p }}" alt="{{ hotel.name }}" loading="lazy" onclick="var m=document.getElementById('hdMain');var s=m.src;m.src=this.src;this.src=s;">
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="hd-gallery hd-gallery--empty">🏨</div>
+    {% endif %}
+
+    <div class="hd-cols">
+      <div class="hd-main">
+        <header class="hd-head">
+          {% if hotel.stars %}<div class="hd-stars">{% for i in 1..hotel.stars %}★{% endfor %}</div>{% endif %}
+          <h1>{{ hotel.name }}</h1>
+          <p class="hd-zone">📍 {{ hotel.address ?: hotel.zone }}</p>
+        </header>
+
+        {% if hotel.description %}
+          <section class="hd-block">
+            <h2>À propos de l'hôtel</h2>
+            <p class="hd-desc">{{ hotel.description|striptags }}</p>
+          </section>
+        {% endif %}
+
+        {# ── Rooms ── #}
+        <section class="hd-block" id="rooms">
+          <h2>Chambres disponibles{{ nights ? ' · ' ~ nights ~ ' nuit' ~ (nights > 1 ? 's' : '') : '' }}</h2>
+          {% if hotel.rooms is empty %}
+            <div class="hd-norooms">Aucune disponibilité pour ces dates. Essayez d'autres dates depuis la recherche.</div>
+          {% else %}
+            <div class="hd-rooms">
+              {% for r in hotel.rooms %}
+                {% set wamsg = 'Bonjour, je souhaite réserver ' ~ hotel.name ~ ' — ' ~ r.name ~ ' (' ~ r.board ~ ') du ' ~ (q.checkIn ? q.checkIn|date('d/m/Y') : '') ~ ' au ' ~ (q.checkOut ? q.checkOut|date('d/m/Y') : '') ~ ' pour ' ~ q.adults ~ ' adulte(s).' %}
+                <div class="hd-room">
+                  <div class="hd-room-info">
+                    <h3>{{ r.name }}</h3>
+                    <div class="hd-room-tags">
+                      {% if r.board %}<span class="hd-tag hd-tag--board">🍽 {{ r.board|capitalize }}</span>{% endif %}
+                      {% if r.cancellable %}<span class="hd-tag hd-tag--free">✓ Annulation possible</span>{% else %}<span class="hd-tag hd-tag--nrf">Non remboursable</span>{% endif %}
+                    </div>
+                  </div>
+                  <div class="hd-room-cta">
+                    <div class="hd-room-price">
+                      <strong>{{ r.price_display ?: (r.price ~ ' ' ~ r.currency) }}</strong>
+                      <span>total{{ nights ? ' · ' ~ nights ~ ' nuit' ~ (nights > 1 ? 's' : '') : '' }}</span>
+                    </div>
+                    <a class="hd-book" target="_blank" rel="noopener"
+                       href="https://wa.me/21698365730?text={{ wamsg|url_encode }}">Réserver</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </section>
+      </div>
+
+      {# ── Sidebar ── #}
+      <aside class="hd-side">
+        <div class="hd-side-card">
+          <h3>Votre séjour</h3>
+          <div class="hd-side-row"><span>Arrivée</span><strong>{{ q.checkIn ? q.checkIn|date('d/m/Y') : '—' }}</strong></div>
+          <div class="hd-side-row"><span>Départ</span><strong>{{ q.checkOut ? q.checkOut|date('d/m/Y') : '—' }}</strong></div>
+          <div class="hd-side-row"><span>Voyageurs</span><strong>{{ q.adults }} ad.{{ q.children > 0 ? ', ' ~ q.children ~ ' enf.' : '' }} · {{ q.rooms }} ch.</strong></div>
+          {% if hotel.latitude and hotel.longitude %}
+            <a class="hd-map" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{ hotel.latitude }},{{ hotel.longitude }}">🗺 Voir sur la carte</a>
+          {% endif %}
+          <a class="hd-help" target="_blank" rel="noopener" href="https://wa.me/21698365730">💬 Besoin d'aide ? WhatsApp</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<style>
+:root{ --hb-blue:#0078D8; --hb-blue-d:#005CB8; --hb-orange:#f0792b; --hb-ink:#0f172a; --hb-mut:#64748b; --hb-line:#e4eaf1; --hb-bg:#f4f7fb; }
+.hd-page{ background:var(--hb-bg); padding:24px 20px 70px; }
+.hd-wrap{ max-width:1080px; margin:0 auto; }
+.hd-back{ display:inline-block; color:var(--hb-blue-d); text-decoration:none; font-weight:600; font-size:.9rem; margin-bottom:16px; }
+.hd-back:hover{ text-decoration:underline; }
+
+.hd-gallery{ display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:22px; }
+.hd-gallery-main{ height:360px; border-radius:16px; overflow:hidden; }
+.hd-gallery-main img{ width:100%; height:100%; object-fit:cover; }
+.hd-gallery-thumbs{ display:grid; grid-template-rows:repeat(3,1fr); gap:10px; }
+.hd-gallery-thumbs img{ width:100%; height:100%; object-fit:cover; border-radius:12px; cursor:pointer; }
+.hd-gallery--empty{ height:220px; display:flex; align-items:center; justify-content:center; font-size:3rem; background:#e8eef5; border-radius:16px; }
+
+.hd-cols{ display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start; }
+.hd-head h1{ font-size:1.9rem; font-weight:800; color:var(--hb-ink); margin:4px 0 6px; }
+.hd-stars{ color:#f5a623; letter-spacing:2px; }
+.hd-zone{ color:var(--hb-mut); margin:0; }
+.hd-block{ background:#fff; border:1px solid var(--hb-line); border-radius:16px; padding:22px; margin-top:18px; }
+.hd-block h2{ font-size:1.15rem; font-weight:800; color:var(--hb-ink); margin:0 0 12px; }
+.hd-desc{ color:#334155; line-height:1.75; margin:0; }
+
+.hd-rooms{ display:flex; flex-direction:column; gap:12px; }
+.hd-room{ display:flex; justify-content:space-between; align-items:center; gap:16px; border:1px solid var(--hb-line); border-radius:13px; padding:16px; flex-wrap:wrap; }
+.hd-room-info h3{ font-size:1.02rem; font-weight:700; color:var(--hb-ink); margin:0 0 8px; }
+.hd-room-tags{ display:flex; gap:8px; flex-wrap:wrap; }
+.hd-tag{ font-size:.76rem; font-weight:600; padding:4px 9px; border-radius:7px; }
+.hd-tag--board{ background:#f1f6fc; color:var(--hb-blue-d); }
+.hd-tag--free{ background:#ecfdf3; color:#16a34a; }
+.hd-tag--nrf{ background:#fef2f2; color:#b91c1c; }
+.hd-room-cta{ display:flex; align-items:center; gap:16px; }
+.hd-room-price{ text-align:right; }
+.hd-room-price strong{ display:block; font-size:1.3rem; font-weight:800; color:var(--hb-ink); }
+.hd-room-price span{ font-size:.72rem; color:var(--hb-mut); }
+.hd-book{ background:var(--hb-orange); color:#fff; text-decoration:none; font-weight:800; padding:12px 22px; border-radius:11px; white-space:nowrap; }
+.hd-book:hover{ filter:brightness(1.05); }
+.hd-norooms{ color:var(--hb-mut); background:#f8fafc; border-radius:10px; padding:16px; }
+
+.hd-side-card{ background:#fff; border:1px solid var(--hb-line); border-radius:16px; padding:20px; position:sticky; top:90px; }
+.hd-side-card h3{ margin:0 0 14px; font-size:1.05rem; color:var(--hb-ink); }
+.hd-side-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--hb-line); font-size:.9rem; }
+.hd-side-row span{ color:var(--hb-mut); }
+.hd-side-row strong{ color:var(--hb-ink); }
+.hd-map, .hd-help{ display:block; text-align:center; margin-top:12px; text-decoration:none; font-weight:700; font-size:.9rem; padding:11px; border-radius:10px; }
+.hd-map{ background:#eaf4fd; color:var(--hb-blue-d); }
+.hd-help{ background:#25D366; color:#fff; }
+
+[data-theme="dark"] .hd-page{ background:#0b1220; }
+[data-theme="dark"] .hd-block, [data-theme="dark"] .hd-side-card{ background:#111a2b; border-color:#1e293b; }
+[data-theme="dark"] .hd-head h1, [data-theme="dark"] .hd-block h2, [data-theme="dark"] .hd-room-info h3, [data-theme="dark"] .hd-room-price strong, [data-theme="dark"] .hd-side-row strong{ color:#e6edf6; }
+[data-theme="dark"] .hd-desc{ color:#a9b6c8; }
+
+@media (max-width:880px){
+  .hd-cols{ grid-template-columns:1fr; }
+  .hd-gallery{ grid-template-columns:1fr; }
+  .hd-gallery-thumbs{ grid-template-rows:none; grid-template-columns:repeat(3,1fr); }
+  .hd-gallery-main{ height:240px; }
+  .hd-side-card{ position:static; }
+}
+</style>
+{% endblock %}

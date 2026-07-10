@@ -1,0 +1,333 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hôtels en Tunisie — réservez au meilleur prix | Evec Tours{% endblock %}
+{% block meta_description %}Réservez votre hôtel en Tunisie : Hammamet, Djerba, Sousse, Monastir… Disponibilités et prix en direct, paiement sécurisé avec Evec Tours.{% endblock %}
+
+{% set today = "now"|date("Y-m-d") %}
+{% set defIn  = q.checkIn  ?: "now"|date_modify("+14 days")|date("Y-m-d") %}
+{% set defOut = q.checkOut ?: "now"|date_modify("+17 days")|date("Y-m-d") %}
+
+{% block body %}
+<div class="hb-page">
+
+  {# ── SEARCH HERO ── #}
+  <section class="hb-hero">
+    <div class="hb-hero-inner">
+      <h1 class="hb-hero-title">Trouvez votre hôtel en Tunisie</h1>
+      <p class="hb-hero-sub">Prix &amp; disponibilités en direct — des centaines d'hôtels, du 3★ au 5★.</p>
+
+      <form class="hb-search" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
+        <div class="hb-field hb-field--dest">
+          <label>Destination</label>
+          <span class="hb-ic">📍</span>
+          <input type="text" id="hbDestInput" placeholder="Ville, région…"
+                 value="{{ q.destName }}" required>
+          <input type="hidden" name="dest" id="hbDestCode" value="{{ q.dest }}">
+          <input type="hidden" name="dest_name" id="hbDestName" value="{{ q.destName }}">
+          <div class="hb-suggest" id="hbSuggest" hidden></div>
+        </div>
+
+        <div class="hb-field">
+          <label>Arrivée</label>
+          <span class="hb-ic">📅</span>
+          <input type="date" name="checkIn" id="hbIn" value="{{ defIn }}" min="{{ today }}" required>
+        </div>
+
+        <div class="hb-field">
+          <label>Départ</label>
+          <span class="hb-ic">📅</span>
+          <input type="date" name="checkOut" id="hbOut" value="{{ defOut }}" min="{{ today }}" required>
+        </div>
+
+        <div class="hb-field hb-field--guests">
+          <label>Voyageurs</label>
+          <span class="hb-ic">👤</span>
+          <button type="button" class="hb-guests-btn" id="hbGuestsBtn">
+            <span id="hbGuestsLabel">{{ q.adults }} adulte{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' enfant' ~ (q.children > 1 ? 's' : '') : '' }} · {{ q.rooms }} chambre{{ q.rooms > 1 ? 's' : '' }}</span>
+        </button>
+          <div class="hb-guests-pop" id="hbGuestsPop" hidden>
+            {% for row in [{k:'adults', l:'Adultes', min:1, v:q.adults}, {k:'children', l:'Enfants', min:0, v:q.children}, {k:'rooms', l:'Chambres', min:1, v:q.rooms}] %}
+            <div class="hb-stepper">
+              <span>{{ row.l }}</span>
+              <div class="hb-step-ctrl">
+                <button type="button" data-step="{{ row.k }}" data-dir="-1">−</button>
+                <input type="number" name="{{ row.k }}" id="hb_{{ row.k }}" value="{{ row.v }}" min="{{ row.min }}" max="9" readonly>
+                <button type="button" data-step="{{ row.k }}" data-dir="1">+</button>
+              </div>
+            </div>
+            {% endfor %}
+            <button type="button" class="hb-guests-done" id="hbGuestsDone">OK</button>
+          </div>
+        </div>
+
+        <button type="submit" class="hb-submit">Rechercher</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="hb-body">
+
+    {% if not searched %}
+      {# ── POPULAR DESTINATIONS ── #}
+      <section class="hb-section">
+        <h2 class="hb-h2">Destinations populaires</h2>
+        <div class="hb-dest-grid">
+          {% for d in popular %}
+            <a class="hb-dest-card"
+               href="{{ path('travel_hotels', {dest: d.code, dest_name: d.name, checkIn: defIn, checkOut: defOut, adults: 2, rooms: 1}) }}">
+              <img src="{{ d.img }}" alt="{{ d.name }}" loading="lazy">
+              <div class="hb-dest-ov"></div>
+              <span class="hb-dest-name">{{ d.name }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="hb-trust">
+        <div><strong>🏨 Inventaire en direct</strong><span>Prix et disponibilités en temps réel</span></div>
+        <div><strong>🔒 Paiement sécurisé</strong><span>Réservation confirmée instantanément</span></div>
+        <div><strong>💬 Support 24/7</strong><span>Une équipe locale à votre écoute</span></div>
+      </section>
+
+    {% else %}
+      {# ── RESULTS ── #}
+      <section class="hb-section">
+        <div class="hb-results-head">
+          <div>
+            <h2 class="hb-h2">{{ q.destName ?: 'Résultats' }}</h2>
+            <p class="hb-results-meta">
+              {{ defIn|date('d/m/Y') }} → {{ defOut|date('d/m/Y') }} · {{ nights }} nuit{{ nights > 1 ? 's' : '' }} ·
+              {{ q.adults }} adulte{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' enfant' ~ (q.children > 1 ? 's' : '') : '' }}
+            </p>
+          </div>
+          {% if results is not null %}<span class="hb-count">{{ results|length }} hôtel{{ results|length > 1 ? 's' : '' }}</span>{% endif %}
+        </div>
+
+        {% if error %}
+          <div class="hb-alert">{{ error }}</div>
+        {% elseif results is empty %}
+          <div class="hb-empty">
+            <div class="hb-empty-ic">🔍</div>
+            <h3>Aucun hôtel trouvé</h3>
+            <p>Essayez d'autres dates ou une autre destination.</p>
+          </div>
+        {% else %}
+          <div class="hb-list">
+            {% for h in results %}
+              <article class="hb-card">
+                <div class="hb-card-img">
+                  {% if h.photo %}
+                    <img src="{{ h.photo }}" alt="{{ h.name }}" loading="lazy">
+                  {% else %}
+                    <div class="hb-card-noimg">🏨</div>
+                  {% endif %}
+                </div>
+                <div class="hb-card-body">
+                  <div class="hb-card-main">
+                    {% if h.stars %}<div class="hb-stars">{% for i in 1..h.stars %}★{% endfor %}</div>{% endif %}
+                    <h3 class="hb-card-name">{{ h.name }}</h3>
+                    <p class="hb-card-zone">📍 {{ h.zone ?: h.destination }}</p>
+                    {% if h.category %}<span class="hb-chip">{{ h.category }}</span>{% endif %}
+                  </div>
+                  <div class="hb-card-price">
+                    <span class="hb-price-label">à partir de</span>
+                    <strong>{{ h.price_display ?: (h.price ~ ' ' ~ h.currency) }}</strong>
+                    <span class="hb-price-sub">total · {{ nights }} nuit{{ nights > 1 ? 's' : '' }}</span>
+                    <a class="hb-card-btn"
+                       href="{{ path('hotel_detail', {code: h.code, checkIn: defIn, checkOut: defOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">
+                      Voir l'hôtel →
+                    </a>
+                  </div>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+:root{ --hb-blue:#0078D8; --hb-blue-d:#005CB8; --hb-orange:#f0792b; --hb-ink:#0f172a; --hb-mut:#64748b; --hb-line:#e4eaf1; --hb-bg:#f4f7fb; }
+.hb-page{ background:var(--hb-bg); }
+[data-theme="dark"] .hb-page{ background:#0b1220; }
+
+/* Hero */
+.hb-hero{ background:linear-gradient(135deg,var(--hb-blue),var(--hb-blue-d)); padding:54px 20px 78px; position:relative; }
+.hb-hero-inner{ max-width:1120px; margin:0 auto; }
+.hb-hero-title{ color:#fff; font-size:clamp(1.7rem,4vw,2.5rem); font-weight:800; margin:0 0 8px; letter-spacing:-.5px; }
+.hb-hero-sub{ color:rgba(255,255,255,.9); font-size:1.02rem; margin:0 0 26px; }
+
+/* Search bar */
+.hb-search{ display:grid; grid-template-columns:2fr 1.2fr 1.2fr 1.6fr auto; gap:10px; background:#fff; padding:12px; border-radius:16px; box-shadow:0 24px 50px -20px rgba(0,0,0,.4); align-items:end; }
+.hb-field{ position:relative; display:flex; flex-direction:column; gap:5px; }
+.hb-field > label{ font-size:.72rem; font-weight:700; color:var(--hb-mut); text-transform:uppercase; letter-spacing:.4px; padding-left:2px; }
+.hb-field .hb-ic{ position:absolute; left:12px; bottom:12px; font-size:.95rem; pointer-events:none; opacity:.8; }
+.hb-field input, .hb-guests-btn{ height:46px; border:1px solid var(--hb-line); border-radius:11px; padding:0 12px 0 34px; font-size:.92rem; color:var(--hb-ink); background:#fff; width:100%; font-family:inherit; }
+.hb-field input:focus, .hb-guests-btn:focus{ outline:none; border-color:var(--hb-blue); box-shadow:0 0 0 3px rgba(0,120,216,.14); }
+.hb-guests-btn{ text-align:left; cursor:pointer; display:flex; align-items:center; }
+.hb-submit{ height:46px; padding:0 26px; border:none; border-radius:11px; background:var(--hb-orange); color:#fff; font-weight:800; font-size:.95rem; cursor:pointer; transition:.15s; white-space:nowrap; }
+.hb-submit:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+
+/* Autocomplete */
+.hb-suggest{ position:absolute; top:100%; left:0; right:0; margin-top:6px; background:#fff; border:1px solid var(--hb-line); border-radius:12px; box-shadow:0 20px 40px -16px rgba(0,0,0,.3); z-index:40; max-height:280px; overflow:auto; }
+.hb-suggest button{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:11px 14px; border:none; background:none; cursor:pointer; font-size:.9rem; color:var(--hb-ink); }
+.hb-suggest button:hover{ background:#f1f6fc; }
+.hb-suggest .s-code{ margin-left:auto; font-size:.7rem; color:var(--hb-mut); background:#eef3f9; padding:2px 7px; border-radius:6px; }
+
+/* Guests popover */
+.hb-guests-pop{ position:absolute; top:100%; right:0; margin-top:6px; width:250px; background:#fff; border:1px solid var(--hb-line); border-radius:12px; box-shadow:0 20px 40px -16px rgba(0,0,0,.3); z-index:40; padding:14px; }
+.hb-stepper{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:.9rem; color:var(--hb-ink); }
+.hb-step-ctrl{ display:flex; align-items:center; gap:8px; }
+.hb-step-ctrl button{ width:30px; height:30px; border:1px solid var(--hb-line); background:#fff; border-radius:8px; font-size:1.1rem; cursor:pointer; color:var(--hb-blue); }
+.hb-step-ctrl input{ width:34px; text-align:center; border:none; font-size:.95rem; font-weight:700; }
+.hb-guests-done{ margin-top:8px; width:100%; height:38px; border:none; border-radius:9px; background:var(--hb-blue); color:#fff; font-weight:700; cursor:pointer; }
+
+/* Body */
+.hb-body{ max-width:1120px; margin:0 auto; padding:34px 20px 70px; }
+.hb-section{ margin-bottom:34px; }
+.hb-h2{ font-size:1.4rem; font-weight:800; color:var(--hb-ink); margin:0 0 16px; }
+[data-theme="dark"] .hb-h2, [data-theme="dark"] .hb-card-name{ color:#e6edf6; }
+
+/* Popular grid */
+.hb-dest-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.hb-dest-card{ position:relative; height:150px; border-radius:14px; overflow:hidden; display:block; text-decoration:none; }
+.hb-dest-card img{ width:100%; height:100%; object-fit:cover; transition:.4s; }
+.hb-dest-card:hover img{ transform:scale(1.07); }
+.hb-dest-ov{ position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.6)); }
+.hb-dest-name{ position:absolute; left:14px; bottom:12px; color:#fff; font-weight:800; font-size:1.05rem; z-index:1; }
+
+/* Trust */
+.hb-trust{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.hb-trust > div{ background:#fff; border:1px solid var(--hb-line); border-radius:14px; padding:18px; display:flex; flex-direction:column; gap:4px; }
+.hb-trust strong{ color:var(--hb-ink); font-size:.98rem; }
+.hb-trust span{ color:var(--hb-mut); font-size:.85rem; }
+[data-theme="dark"] .hb-trust > div, [data-theme="dark"] .hb-card, [data-theme="dark"] .hb-empty{ background:#111a2b; border-color:#1e293b; }
+
+/* Results */
+.hb-results-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+.hb-results-meta{ color:var(--hb-mut); font-size:.9rem; margin:4px 0 0; }
+.hb-count{ background:#eaf4fd; color:var(--hb-blue-d); font-weight:700; font-size:.82rem; padding:7px 14px; border-radius:20px; }
+.hb-list{ display:flex; flex-direction:column; gap:14px; }
+.hb-card{ display:grid; grid-template-columns:260px 1fr; background:#fff; border:1px solid var(--hb-line); border-radius:16px; overflow:hidden; transition:.2s; }
+.hb-card:hover{ box-shadow:0 18px 40px -22px rgba(15,23,42,.4); transform:translateY(-2px); }
+.hb-card-img{ position:relative; min-height:190px; background:#e8eef5; }
+.hb-card-img img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.hb-card-noimg{ display:flex; align-items:center; justify-content:center; height:100%; font-size:2.6rem; opacity:.35; }
+.hb-card-body{ display:grid; grid-template-columns:1fr 210px; }
+.hb-card-main{ padding:18px 20px; }
+.hb-stars{ color:#f5a623; font-size:.9rem; letter-spacing:1px; margin-bottom:5px; }
+.hb-card-name{ font-size:1.22rem; font-weight:800; color:var(--hb-ink); margin:0 0 5px; }
+.hb-card-zone{ color:var(--hb-mut); font-size:.9rem; margin:0 0 10px; }
+.hb-chip{ display:inline-block; background:#f1f6fc; color:var(--hb-blue-d); font-size:.75rem; font-weight:700; padding:4px 10px; border-radius:7px; }
+.hb-card-price{ border-left:1px solid var(--hb-line); padding:18px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; text-align:right; }
+.hb-price-label{ font-size:.74rem; color:var(--hb-mut); }
+.hb-card-price strong{ font-size:1.5rem; color:var(--hb-ink); font-weight:800; line-height:1.1; }
+.hb-price-sub{ font-size:.72rem; color:var(--hb-mut); margin-bottom:12px; }
+.hb-card-btn{ background:var(--hb-blue); color:#fff; text-decoration:none; font-weight:700; font-size:.86rem; padding:10px 18px; border-radius:10px; white-space:nowrap; transition:.15s; }
+.hb-card-btn:hover{ background:var(--hb-blue-d); }
+
+/* States */
+.hb-alert{ background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:16px 18px; border-radius:12px; }
+.hb-empty{ text-align:center; background:#fff; border:1px solid var(--hb-line); border-radius:16px; padding:50px 20px; }
+.hb-empty-ic{ font-size:2.6rem; margin-bottom:8px; }
+.hb-empty h3{ margin:0 0 6px; color:var(--hb-ink); }
+.hb-empty p{ color:var(--hb-mut); margin:0; }
+
+@media (max-width:920px){
+  .hb-search{ grid-template-columns:1fr 1fr; }
+  .hb-field--dest{ grid-column:1 / -1; }
+  .hb-submit{ grid-column:1 / -1; }
+  .hb-dest-grid{ grid-template-columns:repeat(2,1fr); }
+  .hb-trust{ grid-template-columns:1fr; }
+  .hb-card{ grid-template-columns:1fr; }
+  .hb-card-body{ grid-template-columns:1fr; }
+  .hb-card-price{ border-left:none; border-top:1px solid var(--hb-line); align-items:stretch; text-align:left; flex-direction:row; justify-content:space-between; }
+  .hb-card-btn{ align-self:center; }
+}
+</style>
+
+<script>
+(function(){
+  var input = document.getElementById('hbDestInput');
+  var code  = document.getElementById('hbDestCode');
+  var name  = document.getElementById('hbDestName');
+  var box   = document.getElementById('hbSuggest');
+  var SUG_URL = '{{ path('hotel_suggest') }}';
+  var timer, lastQ = '';
+
+  function hide(){ box.hidden = true; box.innerHTML = ''; }
+  function pick(c, n){ code.value = c; name.value = n; input.value = n; hide(); }
+
+  input.addEventListener('input', function(){
+    code.value = ''; // typing invalidates previous selection
+    var q = input.value.trim();
+    if (q === lastQ) return; lastQ = q;
+    clearTimeout(timer);
+    if (q.length < 2){ hide(); return; }
+    timer = setTimeout(function(){
+      fetch(SUG_URL + '?q=' + encodeURIComponent(q))
+        .then(function(r){ return r.json(); })
+        .then(function(list){
+          if (!Array.isArray(list) || !list.length){ hide(); return; }
+          box.innerHTML = '';
+          list.forEach(function(d){
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.innerHTML = '<span>📍</span><span>' + d.name + '</span><span class="s-code">' + d.code + '</span>';
+            b.addEventListener('click', function(){ pick(d.code, d.name); });
+            box.appendChild(b);
+          });
+          box.hidden = false;
+        }).catch(hide);
+    }, 220);
+  });
+
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.hb-field--dest')) hide();
+  });
+
+  // Keep checkout after checkin
+  var inEl = document.getElementById('hbIn'), outEl = document.getElementById('hbOut');
+  inEl.addEventListener('change', function(){
+    outEl.min = inEl.value;
+    if (outEl.value <= inEl.value){
+      var d = new Date(inEl.value); d.setDate(d.getDate()+3);
+      outEl.value = d.toISOString().slice(0,10);
+    }
+  });
+
+  // Guests popover
+  var gBtn = document.getElementById('hbGuestsBtn'), gPop = document.getElementById('hbGuestsPop'),
+      gLabel = document.getElementById('hbGuestsLabel'), gDone = document.getElementById('hbGuestsDone');
+  function relabel(){
+    var a = +document.getElementById('hb_adults').value,
+        c = +document.getElementById('hb_children').value,
+        r = +document.getElementById('hb_rooms').value;
+    var s = a + ' adulte' + (a>1?'s':'');
+    if (c>0) s += ', ' + c + ' enfant' + (c>1?'s':'');
+    s += ' · ' + r + ' chambre' + (r>1?'s':'');
+    gLabel.textContent = s;
+  }
+  gBtn.addEventListener('click', function(e){ e.stopPropagation(); gPop.hidden = !gPop.hidden; });
+  gDone.addEventListener('click', function(){ gPop.hidden = true; });
+  document.querySelectorAll('.hb-step-ctrl button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var f = document.getElementById('hb_' + btn.dataset.step);
+      var min = +f.min, v = Math.max(min, Math.min(9, +f.value + (+btn.dataset.dir)));
+      f.value = v; relabel();
+    });
+  });
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.hb-field--guests')) gPop.hidden = true;
+  });
+
+  // Block submit if no destination code chosen
+  document.querySelector('.hb-search').addEventListener('submit', function(e){
+    if (!code.value){ e.preventDefault(); input.focus(); input.classList.add('hb-shake'); }
+  });
+})();
+</script>
+{% endblock %}

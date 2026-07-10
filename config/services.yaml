@@ -19,6 +19,10 @@ parameters:
     env(OPENWEATHERMAP_API_KEY): ''
     env(RAPIDAPI_KEY): ''
     env(RAPIDAPI_BOOKING_HOST): 'booking-com15.p.rapidapi.com'
+    # Hotelbeds APItude — live hotel inventory. Empty = feature degrades to empty states.
+    env(HOTELBEDS_API_KEY): ''
+    env(HOTELBEDS_SECRET): ''
+    env(HOTELBEDS_ENV): 'test'
     env(NVIDIA_API_KEY): ''
     env(RESEND_API_KEY): ''
     env(TWILIO_ACCOUNT_SID): ''
@@ -52,6 +56,11 @@ services:
         arguments:
             $apiKey:  '%env(string:RAPIDAPI_KEY)%'
             $apiHost: '%env(string:RAPIDAPI_BOOKING_HOST)%'
+    App\Service\HotelbedsService:
+        arguments:
+            $apiKey:      '%env(string:HOTELBEDS_API_KEY)%'
+            $secret:      '%env(string:HOTELBEDS_SECRET)%'
+            $environment: '%env(string:HOTELBEDS_ENV)%'
     App\Service\Analytics\NvidiaAIClient:
         arguments:
             $apiKeyNvidia: '%env(NVIDIA_API_KEY)%'
