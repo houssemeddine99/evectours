@@ -71,7 +71,7 @@ class HotelController extends AbstractController
                     'children'    => $q['children'],
                     'rooms'       => $q['rooms'],
                 ]);
-                $results = $this->withPrices($hotels);
+                $results = $this->withPrices($hotels, $nights);
             }
         }
 
@@ -110,16 +110,24 @@ class HotelController extends AbstractController
             throw $this->createNotFoundException('Hotel not found.');
         }
 
-        // Convert room prices to the user's currency.
-        foreach ($hotel['rooms'] as $i => $room) {
-            $hotel['rooms'][$i]['price_display'] = ($room['price'] !== null)
-                ? $this->currency->formatFrom((float) $room['price'], (string) $room['currency'], $this->currency->getUserCurrency())
-                : null;
-        }
-
         $nights = ($params['checkIn'] && $params['checkOut'])
             ? (int) max(1, (strtotime($params['checkOut']) - strtotime($params['checkIn'])) / 86400)
             : 0;
+
+        // Convert room prices to the user's currency (total for the stay + per night).
+        $userCurrency = $this->currency->getUserCurrency();
+        foreach ($hotel['rooms'] as $i => $room) {
+            if ($room['price'] !== null) {
+                $cur = (string) $room['currency'];
+                $hotel['rooms'][$i]['price_display'] = $this->currency->formatFrom((float) $room['price'], $cur, $userCurrency);
+                $hotel['rooms'][$i]['price_night_display'] = $nights > 0
+                    ? $this->currency->formatFrom((float) $room['price'] / $nights, $cur, $userCurrency)
+                    : null;
+            } else {
+                $hotel['rooms'][$i]['price_display'] = null;
+                $hotel['rooms'][$i]['price_night_display'] = null;
+            }
+        }
 
         return $this->render('travel/hotel_detail.html.twig', [
             'active_nav' => 'hotels',
@@ -130,18 +138,26 @@ class HotelController extends AbstractController
     }
 
     /**
-     * Add a `price_display` field (converted to the user's currency) to each hotel.
+     * Add `price_display` (total for the stay) and `price_night_display` (per night),
+     * both converted to the user's currency.
      * @param array<int, array<string, mixed>> $items
      * @return array<int, array<string, mixed>>
      */
-    private function withPrices(array $items): array
+    private function withPrices(array $items, int $nights = 0): array
     {
         $userCurrency = $this->currency->getUserCurrency();
         foreach ($items as $i => $item) {
             $price = $item['price'] ?? null;
-            $items[$i]['price_display'] = ($price !== null && $price !== '')
-                ? $this->currency->formatFrom((float) $price, (string) ($item['currency'] ?? 'EUR'), $userCurrency)
-                : null;
+            if ($price !== null && $price !== '') {
+                $cur = (string) ($item['currency'] ?? 'EUR');
+                $items[$i]['price_display'] = $this->currency->formatFrom((float) $price, $cur, $userCurrency);
+                $items[$i]['price_night_display'] = $nights > 0
+                    ? $this->currency->formatFrom((float) $price / $nights, $cur, $userCurrency)
+                    : null;
+            } else {
+                $items[$i]['price_display'] = null;
+                $items[$i]['price_night_display'] = null;
+            }
         }
         return $items;
     }

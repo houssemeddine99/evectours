@@ -131,8 +131,8 @@
                   </div>
                   <div class="hb-card-price">
                     <span class="hb-price-label">à partir de</span>
-                    <strong>{{ h.price_display ?: (h.price ~ ' ' ~ h.currency) }}</strong>
-                    <span class="hb-price-sub">total · {{ nights }} nuit{{ nights > 1 ? 's' : '' }}</span>
+                    <strong>{{ h.price_night_display ?: h.price_display ?: (h.price ~ ' ' ~ h.currency) }}<span class="hb-per">/nuit</span></strong>
+                    {% if h.price_display %}<span class="hb-price-sub">{{ h.price_display }} au total · {{ nights }} nuit{{ nights > 1 ? 's' : '' }}</span>{% endif %}
                     <a class="hb-card-btn"
                        href="{{ path('hotel_detail', {code: h.code, checkIn: defIn, checkOut: defOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">
                       Voir l'hôtel →
@@ -225,7 +225,8 @@
 .hb-card-price{ border-left:1px solid var(--hb-line); padding:18px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; text-align:right; }
 .hb-price-label{ font-size:.74rem; color:var(--hb-mut); }
 .hb-card-price strong{ font-size:1.5rem; color:var(--hb-ink); font-weight:800; line-height:1.1; }
-.hb-price-sub{ font-size:.72rem; color:var(--hb-mut); margin-bottom:12px; }
+.hb-per{ font-size:.72rem; font-weight:600; color:var(--hb-mut); }
+.hb-price-sub{ font-size:.72rem; color:var(--hb-mut); margin:2px 0 12px; }
 .hb-card-btn{ background:var(--hb-blue); color:#fff; text-decoration:none; font-weight:700; font-size:.86rem; padding:10px 18px; border-radius:10px; white-space:nowrap; transition:.15s; }
 .hb-card-btn:hover{ background:var(--hb-blue-d); }
 
