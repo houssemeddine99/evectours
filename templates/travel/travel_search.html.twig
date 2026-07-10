@@ -644,6 +644,25 @@ async function viewRooms(hotelId, btn) {
         panel.innerHTML = '<div class="hotel-rooms-msg">Could not load room types. Please try again.</div>';
     }
 }
+
+// ── Prefill + auto-search from URL params (e.g. from the homepage "Vols" tab) ──
+(function(){
+    var p = new URLSearchParams(location.search);
+    var fromId = p.get('fromId'), toId = p.get('toId'), dep = p.get('departDate');
+    if (!fromId || !toId || !dep) return;
+    var set = function(id, v){ var el = document.getElementById(id); if (el && v != null) el.value = v; };
+    set('f-from-id', fromId); set('f-to-id', toId);
+    set('f-from-input', p.get('from') || fromId); set('f-to-input', p.get('to') || toId);
+    set('f-depart', dep);
+    var ret = p.get('returnDate');
+    if (ret) {
+        set('f-return', ret);
+        var rw = document.getElementById('f-return-wrap'); if (rw) rw.style.display = '';
+        document.querySelectorAll('.trip-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.type === 'round-trip'); });
+    }
+    set('f-adults', p.get('adults'));
+    if (typeof searchFlights === 'function') searchFlights();
+})();
 </script>
 
 {# ── Booking Modal ── #}

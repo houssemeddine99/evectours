@@ -1,266 +1,352 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Home | Evec Tours — Your Trusted Travel Partner{% endblock %}
+{% block title %}Evec Tours — Hôtels, Vols & Séjours en Tunisie au meilleur prix{% endblock %}
+{% block meta_description %}Réservez vos hôtels, vols et séjours en Tunisie et dans le monde avec Evec Tours. Prix et disponibilités en direct, paiement sécurisé, support 24/7.{% endblock %}
 
-{% block meta_description %}Evec Tours offers curated voyages, group adventures, and AI-powered trip planning. Discover Tunisia and the world with us.{% endblock %}
+{% set today  = "now"|date("Y-m-d") %}
+{% set defIn  = "now"|date_modify("+14 days")|date("Y-m-d") %}
+{% set defOut = "now"|date_modify("+17 days")|date("Y-m-d") %}
+{% set defDep = "now"|date_modify("+30 days")|date("Y-m-d") %}
+{% set popular = [
+  {code:'HMM', name:'Hammamet',        img:'https://images.unsplash.com/photo-1590523278191-995cbcda646b?auto=format&fit=crop&w=800&q=80'},
+  {code:'DJE', name:'Djerba',          img:'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80'},
+  {code:'TN1', name:'Sousse / Kantaoui',img:'https://images.unsplash.com/photo-1512958789358-4ba50a4d2f6b?auto=format&fit=crop&w=800&q=80'},
+  {code:'MIR', name:'Monastir – Skanès',img:'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80'},
+  {code:'TOE', name:'Tunis – Carthage', img:'https://images.unsplash.com/photo-1605540436563-5bca919ae766?auto=format&fit=crop&w=800&q=80'},
+  {code:'MH1', name:'Mahdia',          img:'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80'},
+] %}
 
 {% block body %}
+<div class="pt-page">
 
-    {# ── HERO ── #}
-    <section class="hero hero--pro">
-        <div class="hero-bg-overlay"></div>
-        <svg class="hero-plane" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
-        <div class="hero-content hero-content--pro">
-            <p class="eyebrow-pro">✈️ Your Trusted Travel Partner</p>
-            <h1 class="hero-title-pro">Discover <span class="hero-highlight">Unforgettable</span><br>Journeys Around the World</h1>
-            <p class="hero-sub-pro">Curated voyages, exclusive offers, and AI-powered trip planning — all in one place.</p>
-            <div class="hero-actions hero-actions--pro">
-                <a class="btn btn-primary btn-hero" href="{{ path('travel_voyages') }}">🗺️ Explore Voyages</a>
-                <a class="btn btn-ghost-pro" href="{{ path('travel_offers') }}">🏷️ Active Offers</a>
-            </div>
+  {# ── SEARCH HERO ── #}
+  <section class="pt-hero">
+    <div class="pt-hero-bg"></div>
+    <div class="pt-hero-inner">
+      <h1 class="pt-hero-title">Votre prochain voyage commence ici</h1>
+      <p class="pt-hero-sub">Hôtels, vols et séjours — en Tunisie et dans le monde, au meilleur prix.</p>
+
+      <div class="pt-box">
+        <div class="pt-tabs">
+          <button type="button" class="pt-tab active" data-tab="hotels">🏨 Hôtels</button>
+          <button type="button" class="pt-tab" data-tab="flights">✈️ Vols</button>
+          <button type="button" class="pt-tab" data-tab="stays">🧳 Séjours</button>
         </div>
+
+        {# ---- Hôtels ---- #}
+        <form class="pt-form" id="ptHotels" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
+          <div class="pt-field pt-grow">
+            <label>Destination</label><span class="pt-ic">📍</span>
+            <input type="text" id="ptHDest" placeholder="Ville, région…" required>
+            <input type="hidden" name="dest" id="ptHCode">
+            <input type="hidden" name="dest_name" id="ptHName">
+            <div class="pt-suggest" id="ptHSug" hidden></div>
+          </div>
+          <div class="pt-field"><label>Arrivée</label><span class="pt-ic">📅</span>
+            <input type="date" name="checkIn" id="ptHIn" value="{{ defIn }}" min="{{ today }}" required></div>
+          <div class="pt-field"><label>Départ</label><span class="pt-ic">📅</span>
+            <input type="date" name="checkOut" id="ptHOut" value="{{ defOut }}" min="{{ today }}" required></div>
+          <div class="pt-field pt-guests">
+            <label>Voyageurs</label><span class="pt-ic">👤</span>
+            <button type="button" class="pt-gbtn" id="ptGBtn"><span id="ptGLabel">2 adultes · 1 chambre</span></button>
+            <div class="pt-gpop" id="ptGPop" hidden>
+              {% for r in [{k:'adults',l:'Adultes',min:1,v:2},{k:'children',l:'Enfants',min:0,v:0},{k:'rooms',l:'Chambres',min:1,v:1}] %}
+              <div class="pt-step"><span>{{ r.l }}</span><div class="pt-sc">
+                <button type="button" data-step="{{ r.k }}" data-dir="-1">−</button>
+                <input type="number" name="{{ r.k }}" id="ptG_{{ r.k }}" value="{{ r.v }}" min="{{ r.min }}" max="9" readonly>
+                <button type="button" data-step="{{ r.k }}" data-dir="1">+</button>
+              </div></div>
+              {% endfor %}
+              <button type="button" class="pt-gdone" id="ptGDone">OK</button>
+            </div>
+          </div>
+          <button type="submit" class="pt-submit">Rechercher</button>
+        </form>
+
+        {# ---- Vols ---- #}
+        <form class="pt-form" id="ptFlights" method="get" action="{{ path('travel_flights') }}" autocomplete="off" hidden>
+          <div class="pt-field pt-grow">
+            <label>De</label><span class="pt-ic">🛫</span>
+            <input type="text" id="ptFFrom" placeholder="Ville ou aéroport" required>
+            <input type="hidden" name="fromId" id="ptFFromId"><input type="hidden" name="from" id="ptFFromL">
+            <div class="pt-suggest" id="ptFFromSug" hidden></div>
+          </div>
+          <div class="pt-field pt-grow">
+            <label>Vers</label><span class="pt-ic">🛬</span>
+            <input type="text" id="ptFTo" placeholder="Ville ou aéroport" required>
+            <input type="hidden" name="toId" id="ptFToId"><input type="hidden" name="to" id="ptFToL">
+            <div class="pt-suggest" id="ptFToSug" hidden></div>
+          </div>
+          <div class="pt-field"><label>Départ</label><span class="pt-ic">📅</span>
+            <input type="date" name="departDate" id="ptFDep" value="{{ defDep }}" min="{{ today }}" required></div>
+          <div class="pt-field pt-narrow"><label>Voyageurs</label><span class="pt-ic">👤</span>
+            <select name="adults">{% for i in 1..9 %}<option value="{{ i }}">{{ i }} adulte{{ i>1?'s':'' }}</option>{% endfor %}</select></div>
+          <button type="submit" class="pt-submit">Rechercher</button>
+        </form>
+
+        {# ---- Séjours ---- #}
+        <form class="pt-form" id="ptStays" method="get" action="{{ path('travel_voyages') }}" hidden>
+          <div class="pt-field pt-grow">
+            <label>Envie de…</label><span class="pt-ic">🧭</span>
+            <input type="text" name="q" placeholder="Omra, circuit, plage, week-end…">
+          </div>
+          <button type="submit" class="pt-submit">Découvrir nos séjours</button>
+        </form>
+      </div>
+
+      <div class="pt-hero-badges">
+        <span>🔒 Paiement sécurisé</span><span>🏨 Inventaire en direct</span><span>💬 Support 24/7</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="pt-body">
+
+    {# ── SERVICES ── #}
+    <section class="pt-services">
+      <a href="{{ path('travel_hotels') }}" class="pt-serv"><span>🏨</span><strong>Hôtels</strong><small>Tunisie & monde</small></a>
+      <a href="{{ path('travel_flights') }}" class="pt-serv"><span>✈️</span><strong>Vols</strong><small>Meilleurs tarifs</small></a>
+      <a href="{{ path('travel_voyages') }}" class="pt-serv"><span>🧳</span><strong>Séjours</strong><small>Tout compris</small></a>
+      <a href="{{ path('travel_offers') }}" class="pt-serv"><span>🏷️</span><strong>Offres</strong><small>Promos du moment</small></a>
     </section>
 
-    {# ── STATS COUNTER STRIP ── #}
-    <section class="stats-strip">
-        <div class="stats-strip-inner">
-            <div class="stat-item">
-                <span class="stat-num" data-target="{{ featured_voyages|length > 0 ? '50' : '10' }}">0</span><span class="stat-suffix">+</span>
-                <span class="stat-label">Destinations</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-num" data-target="500">0</span><span class="stat-suffix">+</span>
-                <span class="stat-label">Happy Travellers</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-num" data-target="98">0</span><span class="stat-suffix">%</span>
-                <span class="stat-label">Satisfaction Rate</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-num" data-target="5">0</span><span class="stat-suffix">★</span>
-                <span class="stat-label">Average Rating</span>
-            </div>
-        </div>
+    {# ── POPULAR DESTINATIONS ── #}
+    <section class="pt-section">
+      <div class="pt-shead"><h2>Destinations populaires</h2><a href="{{ path('travel_hotels') }}">Tout voir →</a></div>
+      <div class="pt-dest-grid">
+        {% for d in popular %}
+          <a class="pt-dest" href="{{ path('travel_hotels', {dest:d.code, dest_name:d.name, checkIn:defIn, checkOut:defOut, adults:2, rooms:1}) }}">
+            <img src="{{ d.img }}" alt="{{ d.name }}" loading="lazy"><div class="pt-dest-ov"></div>
+            <span class="pt-dest-name">{{ d.name }}</span><span class="pt-dest-cta">Voir les hôtels →</span>
+          </a>
+        {% endfor %}
+      </div>
     </section>
 
-    {# ── FEATURED VOYAGES ── #}
-    <section class="voyages-section">
-        <div class="section-title-row">
-            <div>
-                <p class="section-eyebrow">Handpicked for you</p>
-                <h2>Featured Voyages</h2>
+    {# ── DEALS / FEATURED SÉJOURS ── #}
+    {% if featured_voyages is not empty %}
+    <section class="pt-section">
+      <div class="pt-shead"><h2>Séjours &amp; offres du moment</h2><a href="{{ path('travel_voyages') }}">Tout voir →</a></div>
+      <div class="pt-deal-grid">
+        {% for v in featured_voyages %}
+          {% set thumb = v.image_url is iterable and v.image_url|length > 0 ? v.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80' %}
+          <a class="pt-deal" href="{{ path('travel_voyage_detail', {slug: v.slug}) }}">
+            <div class="pt-deal-img"><img src="{{ thumb }}" alt="{{ v.title }}" loading="lazy">
+              <span class="pt-deal-badge">📍 {{ v.destination|split(', ')|first }}</span></div>
+            <div class="pt-deal-body">
+              <h3>{{ v.title }}</h3>
+              <p>{{ v.description|default('')|striptags|slice(0, 72) }}…</p>
+              <div class="pt-deal-foot">
+                <div class="pt-deal-price"><small>à partir de</small><strong>{{ v.price is not empty ? v.price|number_format(0) ~ ' TND' : 'Sur devis' }}</strong></div>
+                <span class="pt-deal-btn">Voir →</span>
+              </div>
             </div>
-            <a href="{{ path('travel_voyages') }}" class="view-all-link">View all →</a>
-        </div>
-        <div class="grid responsive-grid">
-            {% for voyage in featured_voyages %}
-                {% set thumb = voyage.image_url is iterable and voyage.image_url|length > 0 ? voyage.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80' %}
-                <article class="card card--pro">
-                    <div class="card-img-wrap">
-                        <img src="{{ thumb }}" alt="{{ voyage.title|default('Travel destination') }}" class="card-image" loading="lazy" decoding="async">
-                        <div class="card-img-overlay"></div>
-                        <span class="card-dest-badge">📍 {{ voyage.destination|split(', ')|first }}</span>
-                    </div>
-                    <div class="card-body">
-                        <h3>{{ voyage.title|default('Untitled trip') }}</h3>
-                        <p class="card-desc">{{ voyage.description|default('')|striptags|slice(0, 90) ~ '…' }}</p>
-                        <div class="card-footer card-footer--pro">
-                            <div class="card-price-pro">
-                                <span class="price-label">From</span>
-                                <strong>{{ voyage.price is not empty ? voyage.price|number_format(0) ~ ' TND' : 'On request' }}</strong>
-                            </div>
-                            <a href="{{ path('travel_voyage_detail', {slug: voyage.slug}) }}" class="btn btn-primary btn-sm">View →</a>
-                        </div>
-                    </div>
-                </article>
-            {% endfor %}
-        </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {# ── WHY US ── #}
+    <section class="pt-why">
+      <div class="pt-why-item"><span>💳</span><div><strong>Meilleur prix garanti</strong><p>Des tarifs négociés en direct auprès des hôteliers.</p></div></div>
+      <div class="pt-why-item"><span>🔒</span><div><strong>Réservation sécurisée</strong><p>Paiement protégé et confirmation immédiate.</p></div></div>
+      <div class="pt-why-item"><span>💬</span><div><strong>Une équipe locale</strong><p>Des experts tunisiens joignables 7j/7 sur WhatsApp.</p></div></div>
+      <div class="pt-why-item"><span>🌍</span><div><strong>Tunisie &amp; monde</strong><p>Des milliers d'hôtels et destinations à portée de clic.</p></div></div>
     </section>
 
-    {# ── WHY CHOOSE US ── #}
-    <section class="why-us">
-        <div class="why-us-inner">
-            <div class="why-us-text">
-                <p class="section-eyebrow">Why Evec Tours</p>
-                <h2>Travel Smarter, Not Harder</h2>
-                <p class="why-us-desc">We combine AI-powered planning, local expertise, and exclusive deals to give you the best travel experience possible.</p>
-                <a href="{{ path('travel_voyages') }}" class="btn btn-primary">Get Started →</a>
-            </div>
-            <div class="why-us-features">
-                <div class="why-feature">
-                    <div class="why-icon">🤖</div>
-                    <div>
-                        <h4>AI Itinerary Builder</h4>
-                        <p>Generate a personalised day-by-day plan instantly with our AI assistant.</p>
-                    </div>
-                </div>
-                <div class="why-feature">
-                    <div class="why-icon">🔒</div>
-                    <div>
-                        <h4>Secure Booking</h4>
-                        <p>SSL-encrypted payments and transparent pricing — no hidden fees.</p>
-                    </div>
-                </div>
-                <div class="why-feature">
-                    <div class="why-icon">🎯</div>
-                    <div>
-                        <h4>Curated Experiences</h4>
-                        <p>Every voyage is hand-selected and quality-checked by our travel experts.</p>
-                    </div>
-                </div>
-                <div class="why-feature">
-                    <div class="why-icon">💬</div>
-                    <div>
-                        <h4>24/7 Support</h4>
-                        <p>Chat with us anytime on WhatsApp — our travel experts reply fast.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    {# ── CTA ── #}
+    <section class="pt-cta">
+      <div><h2>Un projet de voyage sur-mesure ?</h2><p>Dites-nous votre envie, on s'occupe du reste.</p></div>
+      <div class="pt-cta-btns">
+        <a class="pt-cta-primary" href="{{ path('trip_planner') }}">✨ Planifier avec l'IA</a>
+        <a class="pt-cta-ghost" href="https://wa.me/21698365730" target="_blank" rel="noopener">💬 WhatsApp</a>
+      </div>
     </section>
 
-    {# ── TRUST BADGES ── #}
-    <section class="trust-strip">
-        <div class="trust-inner">
-            <div class="trust-badge"><span>🔒</span><span>Secure Payments</span></div>
-            <div class="trust-badge"><span>✈️</span><span>Best Price Guarantee</span></div>
-            <div class="trust-badge"><span>📞</span><span>24/7 WhatsApp Support</span></div>
-            <div class="trust-badge"><span>🌟</span><span>Verified Reviews</span></div>
-            <div class="trust-badge"><span>🗺️</span><span>Expert Local Guides</span></div>
-        </div>
-    </section>
-
-    {# ── CTA BANNER ── #}
-    <section class="cta-banner">
-        <div class="cta-banner-inner">
-            <div class="cta-text">
-                <h2>Ready for your next adventure?</h2>
-                <p>Tell our AI your dream trip and we'll find the perfect match in seconds.</p>
-            </div>
-            <div class="cta-actions">
-                <a href="{{ path('trip_planner') }}" class="btn btn-primary btn-lg">✨ Plan with AI</a>
-                <a href="{{ path('travel_contact') }}" class="btn btn-ghost-pro">Contact Us</a>
-            </div>
-        </div>
-    </section>
+  </div>
+</div>
 
 <style>
-/* ── Hero (light luxury) — text on solid cream (left), clean image (right) ── */
-.hero--pro { min-height: 82vh; display:flex; align-items:center; position:relative; overflow:hidden;
-  background:
-    linear-gradient(90deg, #fdfbf7 0%, #fdfbf7 48%, rgba(253,251,247,.92) 56%, rgba(253,251,247,0) 80%),
-    url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80') center right/cover no-repeat;
+:root{ --pt-blue:#0078D8; --pt-blue-d:#005CB8; --pt-orange:#f0792b; --pt-ink:#0f172a; --pt-mut:#64748b; --pt-line:#e4eaf1; --pt-bg:#f4f7fb; }
+.pt-page{ background:var(--pt-bg); }
+[data-theme="dark"] .pt-page{ background:#0b1220; }
+
+/* Hero */
+.pt-hero{ position:relative; padding:60px 20px 96px; overflow:hidden; }
+.pt-hero-bg{ position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,92,184,.92),rgba(0,120,216,.82)),url('https://images.unsplash.com/photo-1512958789358-4ba50a4d2f6b?auto=format&fit=crop&w=1600&q=80') center/cover; }
+.pt-hero-inner{ position:relative; max-width:1080px; margin:0 auto; text-align:center; }
+.pt-hero-title{ color:#fff; font-size:clamp(1.9rem,4.4vw,3rem); font-weight:800; margin:0 0 10px; letter-spacing:-.6px; text-shadow:0 2px 20px rgba(0,0,0,.2); }
+.pt-hero-sub{ color:rgba(255,255,255,.94); font-size:1.1rem; margin:0 0 30px; }
+
+/* Search box */
+.pt-box{ background:#fff; border-radius:18px; box-shadow:0 30px 60px -24px rgba(0,0,0,.5); padding:8px; text-align:left; }
+[data-theme="dark"] .pt-box{ background:#111a2b; }
+.pt-tabs{ display:flex; gap:4px; padding:6px 6px 0; }
+.pt-tab{ border:none; background:none; padding:11px 20px; font-size:.95rem; font-weight:700; color:var(--pt-mut); cursor:pointer; border-radius:11px 11px 0 0; }
+.pt-tab.active{ background:var(--pt-bg); color:var(--pt-blue-d); }
+[data-theme="dark"] .pt-tab.active{ background:#0b1220; color:#7cc0f5; }
+.pt-form{ display:grid; grid-template-columns:2fr 1.1fr 1.1fr 1.5fr auto; gap:8px; padding:12px; align-items:end; }
+.pt-form#ptStays{ grid-template-columns:1fr auto; }
+.pt-field{ position:relative; display:flex; flex-direction:column; gap:5px; }
+.pt-field > label{ font-size:.7rem; font-weight:700; color:var(--pt-mut); text-transform:uppercase; letter-spacing:.4px; padding-left:2px; }
+.pt-ic{ position:absolute; left:11px; bottom:12px; font-size:.9rem; pointer-events:none; opacity:.85; }
+.pt-field input, .pt-gbtn, .pt-field select{ height:46px; border:1px solid var(--pt-line); border-radius:11px; padding:0 12px 0 32px; font-size:.92rem; color:var(--pt-ink); background:#fff; width:100%; font-family:inherit; box-sizing:border-box; }
+[data-theme="dark"] .pt-field input, [data-theme="dark"] .pt-gbtn, [data-theme="dark"] .pt-field select{ background:#0b1220; color:#e6edf6; border-color:#1e293b; }
+.pt-field select{ padding-left:32px; cursor:pointer; }
+.pt-field input:focus, .pt-gbtn:focus, .pt-field select:focus{ outline:none; border-color:var(--pt-blue); box-shadow:0 0 0 3px rgba(0,120,216,.14); }
+.pt-gbtn{ text-align:left; cursor:pointer; display:flex; align-items:center; }
+.pt-submit{ height:46px; padding:0 28px; border:none; border-radius:11px; background:var(--pt-orange); color:#fff; font-weight:800; font-size:.95rem; cursor:pointer; white-space:nowrap; transition:.15s; }
+.pt-submit:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+
+.pt-suggest{ position:absolute; top:100%; left:0; right:0; margin-top:6px; background:#fff; border:1px solid var(--pt-line); border-radius:12px; box-shadow:0 20px 40px -16px rgba(0,0,0,.3); z-index:40; max-height:260px; overflow:auto; }
+[data-theme="dark"] .pt-suggest{ background:#111a2b; border-color:#1e293b; }
+.pt-suggest button{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:11px 14px; border:none; background:none; cursor:pointer; font-size:.9rem; color:var(--pt-ink); }
+[data-theme="dark"] .pt-suggest button{ color:#e6edf6; }
+.pt-suggest button:hover{ background:#f1f6fc; } [data-theme="dark"] .pt-suggest button:hover{ background:#0b1220; }
+.pt-suggest .s-code{ margin-left:auto; font-size:.68rem; color:var(--pt-mut); background:#eef3f9; padding:2px 7px; border-radius:6px; }
+
+.pt-gpop{ position:absolute; top:100%; right:0; margin-top:6px; width:250px; background:#fff; border:1px solid var(--pt-line); border-radius:12px; box-shadow:0 20px 40px -16px rgba(0,0,0,.3); z-index:40; padding:14px; }
+[data-theme="dark"] .pt-gpop{ background:#111a2b; border-color:#1e293b; }
+.pt-step{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:.9rem; color:var(--pt-ink); } [data-theme="dark"] .pt-step{ color:#e6edf6; }
+.pt-sc{ display:flex; align-items:center; gap:8px; }
+.pt-sc button{ width:30px; height:30px; border:1px solid var(--pt-line); background:#fff; border-radius:8px; font-size:1.1rem; cursor:pointer; color:var(--pt-blue); }
+.pt-sc input{ width:32px; text-align:center; border:none; font-size:.95rem; font-weight:700; background:none; color:inherit; padding:0; height:auto; }
+.pt-gdone{ margin-top:8px; width:100%; height:36px; border:none; border-radius:9px; background:var(--pt-blue); color:#fff; font-weight:700; cursor:pointer; }
+
+.pt-hero-badges{ display:flex; justify-content:center; gap:22px; margin-top:22px; flex-wrap:wrap; }
+.pt-hero-badges span{ color:#fff; font-size:.88rem; font-weight:600; opacity:.95; }
+
+/* Body */
+.pt-body{ max-width:1120px; margin:0 auto; padding:30px 20px 70px; }
+.pt-section{ margin-bottom:44px; }
+.pt-shead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; }
+.pt-shead h2{ font-size:1.5rem; font-weight:800; color:var(--pt-ink); margin:0; }
+.pt-shead a{ color:var(--pt-blue-d); font-weight:700; text-decoration:none; font-size:.9rem; }
+[data-theme="dark"] .pt-shead h2{ color:#e6edf6; }
+
+/* Services */
+.pt-services{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:-52px auto 40px; position:relative; z-index:5; }
+.pt-serv{ background:#fff; border:1px solid var(--pt-line); border-radius:16px; padding:18px; text-decoration:none; display:flex; flex-direction:column; gap:2px; box-shadow:0 14px 30px -18px rgba(15,23,42,.3); transition:.18s; }
+.pt-serv:hover{ transform:translateY(-3px); border-color:var(--pt-blue); }
+.pt-serv span{ font-size:1.7rem; }
+.pt-serv strong{ color:var(--pt-ink); font-size:1rem; margin-top:4px; }
+.pt-serv small{ color:var(--pt-mut); font-size:.8rem; }
+[data-theme="dark"] .pt-serv{ background:#111a2b; border-color:#1e293b; } [data-theme="dark"] .pt-serv strong{ color:#e6edf6; }
+
+/* Destinations */
+.pt-dest-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.pt-dest{ position:relative; height:180px; border-radius:16px; overflow:hidden; text-decoration:none; display:block; }
+.pt-dest img{ width:100%; height:100%; object-fit:cover; transition:.4s; }
+.pt-dest:hover img{ transform:scale(1.07); }
+.pt-dest-ov{ position:absolute; inset:0; background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.68)); }
+.pt-dest-name{ position:absolute; left:16px; bottom:30px; color:#fff; font-weight:800; font-size:1.2rem; z-index:1; }
+.pt-dest-cta{ position:absolute; left:16px; bottom:12px; color:#fff; font-size:.8rem; opacity:.9; z-index:1; }
+
+/* Deals */
+.pt-deal-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.pt-deal{ background:#fff; border:1px solid var(--pt-line); border-radius:16px; overflow:hidden; text-decoration:none; transition:.2s; }
+.pt-deal:hover{ transform:translateY(-4px); box-shadow:0 20px 40px -22px rgba(15,23,42,.4); }
+.pt-deal-img{ position:relative; height:170px; }
+.pt-deal-img img{ width:100%; height:100%; object-fit:cover; }
+.pt-deal-badge{ position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,.6); color:#fff; font-size:.72rem; font-weight:600; padding:4px 10px; border-radius:6px; }
+.pt-deal-body{ padding:16px; }
+.pt-deal-body h3{ font-size:1.1rem; font-weight:800; color:var(--pt-ink); margin:0 0 5px; }
+.pt-deal-body p{ color:var(--pt-mut); font-size:.86rem; margin:0 0 14px; line-height:1.5; }
+.pt-deal-foot{ display:flex; justify-content:space-between; align-items:center; }
+.pt-deal-price small{ display:block; font-size:.68rem; color:var(--pt-mut); text-transform:uppercase; }
+.pt-deal-price strong{ font-size:1.25rem; color:var(--pt-orange); font-weight:800; }
+.pt-deal-btn{ background:var(--pt-blue); color:#fff; font-weight:700; font-size:.82rem; padding:9px 16px; border-radius:10px; }
+[data-theme="dark"] .pt-deal{ background:#111a2b; border-color:#1e293b; } [data-theme="dark"] .pt-deal-body h3{ color:#e6edf6; }
+
+/* Why */
+.pt-why{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:44px; }
+.pt-why-item{ background:#fff; border:1px solid var(--pt-line); border-radius:16px; padding:20px; }
+.pt-why-item span{ font-size:1.8rem; }
+.pt-why-item strong{ display:block; color:var(--pt-ink); margin:10px 0 4px; }
+.pt-why-item p{ color:var(--pt-mut); font-size:.85rem; margin:0; line-height:1.5; }
+[data-theme="dark"] .pt-why-item{ background:#111a2b; border-color:#1e293b; } [data-theme="dark"] .pt-why-item strong{ color:#e6edf6; }
+
+/* CTA */
+.pt-cta{ background:linear-gradient(135deg,var(--pt-blue),var(--pt-blue-d)); border-radius:22px; padding:36px; display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
+.pt-cta h2{ color:#fff; margin:0 0 6px; font-size:1.5rem; }
+.pt-cta p{ color:rgba(255,255,255,.9); margin:0; }
+.pt-cta-btns{ display:flex; gap:12px; flex-wrap:wrap; }
+.pt-cta-primary{ background:var(--pt-orange); color:#fff; text-decoration:none; font-weight:800; padding:14px 26px; border-radius:12px; }
+.pt-cta-ghost{ background:rgba(255,255,255,.15); color:#fff; text-decoration:none; font-weight:700; padding:14px 24px; border-radius:12px; border:1px solid rgba(255,255,255,.4); }
+
+@media (max-width:900px){
+  .pt-form, .pt-form#ptStays{ grid-template-columns:1fr 1fr; }
+  .pt-grow{ grid-column:1 / -1; } .pt-submit{ grid-column:1 / -1; }
+  .pt-services{ grid-template-columns:repeat(2,1fr); margin-top:-40px; }
+  .pt-dest-grid, .pt-deal-grid, .pt-why{ grid-template-columns:1fr 1fr; }
+  .pt-cta{ flex-direction:column; text-align:center; }
 }
-.hero--pro::before { background:none; animation:none; }
-.hero-bg-overlay { display:none; }
-.hero-plane { position:absolute; top:15%; right:15%; width:58px; height:58px; color:#ffffff; opacity:.92; transform:rotate(42deg); filter:drop-shadow(0 3px 8px rgba(0,0,0,.28)); z-index:1; animation:heroPlaneFloat 6.5s ease-in-out infinite; pointer-events:none; }
-@keyframes heroPlaneFloat { 0%,100%{ transform:translate(0,0) rotate(42deg); } 50%{ transform:translate(10px,-16px) rotate(42deg); } }
-@media (max-width:900px){ .hero-plane{ top:8%; right:10%; width:42px; height:42px; color:var(--amazon-orange); opacity:.55; filter:none; } }
-@media (prefers-reduced-motion:reduce){ .hero-plane{ animation:none; } }
-.hero-content--pro { position:relative; z-index:1; width:min(1180px,92%); margin:0 auto; padding:96px 0; text-align:left; }
-.hero--pro .eyebrow-pro { color:var(--amazon-orange-dark); font-size:.8rem; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:18px; }
-.hero--pro .hero-title-pro { font-family:var(--font-serif); font-size:clamp(2.3rem,5vw,3.9rem); font-weight:700; line-height:1.1; margin:0 0 22px; color:#1b1f24; -webkit-text-fill-color:#1b1f24; background:none; text-shadow:none; max-width:640px; letter-spacing:-0.5px; }
-.hero--pro .hero-title-pro .hero-highlight { color:var(--amazon-orange); -webkit-text-fill-color:var(--amazon-orange); font-style:normal; }
-.hero--pro .hero-sub-pro { font-size:1.15rem; color:var(--text-secondary); line-height:1.7; margin:0 0 38px; max-width:470px; }
-.hero-actions--pro { display:flex; gap:16px; flex-wrap:wrap; }
-.hero--pro .hero-actions .btn::before { display:none; }
-.btn-hero { padding:15px 34px; }
-.btn-ghost-pro { padding:14px 30px; background:transparent; border:1px solid var(--border-dark); color:var(--text-primary); border-radius:2px; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:1.5px; text-decoration:none; transition:var(--transition-smooth); display:inline-flex; align-items:center; }
-.btn-ghost-pro:hover { border-color:var(--amazon-orange); color:var(--amazon-orange); transform:translateY(-2px); }
-
-/* ── Stats strip ── */
-.stats-strip { background:#fff; border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); padding:34px 24px; }
-.stats-strip-inner { display:flex; justify-content:center; align-items:center; gap:0; max-width:980px; margin:0 auto; flex-wrap:wrap; }
-.stat-item { text-align:center; padding:0 46px; display:flex; flex-direction:column; gap:6px; position:relative; }
-.stat-num { font-family:var(--font-serif); font-size:2.8rem; font-weight:600; color:var(--amazon-orange); line-height:1; }
-.stat-suffix { font-family:var(--font-serif); font-size:1.8rem; font-weight:600; color:var(--amazon-orange); }
-.stat-label { font-size:.74rem; color:var(--text-muted); font-weight:600; letter-spacing:1px; text-transform:uppercase; }
-.stat-divider { width:1px; height:48px; background:var(--hairline); flex-shrink:0; margin:0 4px; }
-
-/* ── Section eyebrow / titles ── */
-.section-eyebrow { color:var(--amazon-orange-dark); font-size:.76rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px; }
-.voyages-section { padding:80px 24px; max-width:1160px; margin:0 auto; }
-.section-title-row { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:36px; }
-.section-title-row h2 { margin:0; }
-
-/* ── Card Pro ── */
-.card--pro { border:1px solid var(--hairline); background:#fff; transition:var(--transition-smooth); border-radius:8px; overflow:hidden; }
-.card--pro:hover { transform:translateY(-6px); box-shadow:0 22px 45px -22px rgba(31,35,40,.30); border-color:var(--hairline-gold); }
-.card-img-wrap { position:relative; overflow:hidden; border-radius:8px 8px 0 0; }
-.card-img-wrap .card-image { transition:transform .5s ease; width:100%; height:210px; object-fit:cover; display:block; }
-.card--pro:hover .card-image { transform:scale(1.05); }
-.card-img-overlay { position:absolute; inset:0; background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.45) 100%); }
-.card-dest-badge { position:absolute; bottom:10px; left:12px; background:rgba(27,31,36,.7); color:#fff; font-size:.72rem; font-weight:600; letter-spacing:.5px; padding:4px 11px; border-radius:3px; backdrop-filter:blur(4px); }
-.card-desc { color:var(--text-muted); font-size:.9rem; line-height:1.6; margin:6px 0 16px; }
-.card-footer--pro { display:flex; justify-content:space-between; align-items:center; }
-.card-price-pro { display:flex; flex-direction:column; }
-.price-label { font-size:.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; }
-.card-price-pro strong { font-family:var(--font-serif); font-size:1.4rem; color:var(--amazon-orange); font-weight:600; }
-.btn-sm { padding:9px 18px; font-size:.72rem; }
-.view-all-link { color:var(--amazon-orange-dark); font-weight:600; text-decoration:none; font-size:.8rem; text-transform:uppercase; letter-spacing:1.5px; }
-.view-all-link:hover { color:var(--amazon-orange); }
-
-/* ── Why Us ── */
-.why-us { padding:90px 24px; background:#fff; border-top:1px solid var(--hairline); }
-.why-us-inner { max-width:1160px; margin:0 auto; display:grid; grid-template-columns:1fr 1.4fr; gap:72px; align-items:center; }
-.why-us-text h2 { margin:8px 0 16px; }
-.why-us-desc { color:var(--text-muted); line-height:1.8; margin-bottom:30px; }
-.why-us-features { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-.why-feature { display:flex; gap:14px; align-items:flex-start; background:#fbf8f3; border:1px solid var(--hairline); border-radius:8px; padding:22px; transition:var(--transition-smooth); }
-.why-feature:hover { border-color:var(--hairline-gold); background:#fffdf9; transform:translateY(-3px); }
-.why-icon { font-size:1.7rem; flex-shrink:0; }
-.why-feature h4 { margin:0 0 5px; font-size:1.15rem; font-weight:600; color:var(--text-primary); }
-.why-feature p { margin:0; color:var(--text-muted); font-size:.86rem; line-height:1.6; }
-
-/* ── Trust strip ── */
-.trust-strip { padding:26px 24px; background:#faf6ee; border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
-.trust-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:center; flex-wrap:wrap; gap:14px; }
-.trust-badge { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--hairline); border-radius:3px; padding:10px 20px; font-size:.8rem; font-weight:500; color:var(--text-secondary); }
-
-/* ── CTA Banner ── */
-.cta-banner { padding:84px 24px; background:linear-gradient(135deg,#faf3e2,#f6efe3); }
-.cta-banner-inner { max-width:900px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:36px; flex-wrap:wrap; }
-.cta-text h2 { margin:0 0 8px; }
-.cta-text p { margin:0; color:var(--text-muted); font-size:1.05rem; }
-.cta-actions { display:flex; gap:14px; flex-shrink:0; flex-wrap:wrap; }
-.btn-lg { padding:16px 38px; font-size:.82rem; }
-
-@media (max-width:900px) {
-    .hero--pro { background: linear-gradient(160deg,#fdfbf7,#f6efe3); }
-    .hero-content--pro { padding:64px 24px; }
-    .why-us-inner { grid-template-columns:1fr; gap:40px; }
-    .why-us-features { grid-template-columns:1fr; }
-    .section-title-row { flex-direction:column; align-items:flex-start; gap:12px; }
-    .cta-banner-inner { flex-direction:column; text-align:center; }
-    .stat-item { padding:0 24px; }
-    .stat-divider { display:none; }
-}
+@media (max-width:560px){ .pt-dest-grid, .pt-deal-grid, .pt-why{ grid-template-columns:1fr; } }
 </style>
 
 <script>
-// Animated counter
-document.addEventListener('DOMContentLoaded', function() {
-    var nums = document.querySelectorAll('.stat-num[data-target]');
-    var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (!entry.isIntersecting) return;
-            var el = entry.target;
-            var target = parseInt(el.dataset.target, 10);
-            var current = 0;
-            var step = Math.ceil(target / 40);
-            var timer = setInterval(function() {
-                current = Math.min(current + step, target);
-                el.textContent = current;
-                if (current >= target) clearInterval(timer);
-            }, 30);
-            observer.unobserve(el);
-        });
-    }, { threshold: 0.4 });
-    nums.forEach(function(n) { observer.observe(n); });
-});
-</script>
+(function(){
+  // Tabs
+  var forms = { hotels:document.getElementById('ptHotels'), flights:document.getElementById('ptFlights'), stays:document.getElementById('ptStays') };
+  document.querySelectorAll('.pt-tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.pt-tab').forEach(function(b){ b.classList.remove('active'); });
+      t.classList.add('active');
+      Object.keys(forms).forEach(function(k){ forms[k].hidden = (k !== t.dataset.tab); });
+    });
+  });
 
+  // Generic autocomplete
+  function autocomplete(inputId, boxId, codeId, labelId, url, mapItem){
+    var input=document.getElementById(inputId), box=document.getElementById(boxId),
+        code=document.getElementById(codeId), label=document.getElementById(labelId), timer, last='';
+    function hide(){ box.hidden=true; box.innerHTML=''; }
+    input.addEventListener('input', function(){
+      code.value=''; var q=input.value.trim(); if(q===last) return; last=q;
+      clearTimeout(timer); if(q.length<2){ hide(); return; }
+      timer=setTimeout(function(){
+        fetch(url+'?q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(list){
+          if(!Array.isArray(list)||!list.length){ hide(); return; }
+          box.innerHTML='';
+          list.slice(0,8).forEach(function(it){
+            var m=mapItem(it); var b=document.createElement('button'); b.type='button';
+            b.innerHTML='<span>📍</span><span>'+m.name+'</span>'+(m.code?'<span class="s-code">'+m.code+'</span>':'');
+            b.addEventListener('click', function(){ code.value=m.id; if(label) label.value=m.name; input.value=m.name; hide(); });
+            box.appendChild(b);
+          });
+          box.hidden=false;
+        }).catch(hide);
+      },240);
+    });
+    document.addEventListener('click', function(e){ if(!e.target.closest('#'+inputId) && !e.target.closest('#'+boxId)) hide(); });
+  }
+  autocomplete('ptHDest','ptHSug','ptHCode','ptHName','{{ path('hotel_suggest') }}',
+    function(d){ return {id:d.code, name:d.name, code:d.code}; });
+  autocomplete('ptFFrom','ptFFromSug','ptFFromId','ptFFromL','{{ path('travel_search_flight_dest') }}',
+    function(d){ return {id:d.id||'', name:d.name||d.id||'', code:(d.code||'')}; });
+  autocomplete('ptFTo','ptFToSug','ptFToId','ptFToL','{{ path('travel_search_flight_dest') }}',
+    function(d){ return {id:d.id||'', name:d.name||d.id||'', code:(d.code||'')}; });
+
+  // Dates: checkout after checkin
+  var hIn=document.getElementById('ptHIn'), hOut=document.getElementById('ptHOut');
+  hIn.addEventListener('change', function(){ hOut.min=hIn.value; if(hOut.value<=hIn.value){ var d=new Date(hIn.value); d.setDate(d.getDate()+3); hOut.value=d.toISOString().slice(0,10);} });
+
+  // Guests popover
+  var gBtn=document.getElementById('ptGBtn'), gPop=document.getElementById('ptGPop'), gLabel=document.getElementById('ptGLabel'), gDone=document.getElementById('ptGDone');
+  function relabel(){ var a=+document.getElementById('ptG_adults').value,c=+document.getElementById('ptG_children').value,r=+document.getElementById('ptG_rooms').value;
+    var s=a+' adulte'+(a>1?'s':''); if(c>0) s+=', '+c+' enfant'+(c>1?'s':''); s+=' · '+r+' chambre'+(r>1?'s':''); gLabel.textContent=s; }
+  gBtn.addEventListener('click', function(e){ e.stopPropagation(); gPop.hidden=!gPop.hidden; });
+  gDone.addEventListener('click', function(){ gPop.hidden=true; });
+  document.querySelectorAll('.pt-sc button').forEach(function(btn){ btn.addEventListener('click', function(){
+    var f=document.getElementById('ptG_'+btn.dataset.step); f.value=Math.max(+f.min,Math.min(9,+f.value+(+btn.dataset.dir))); relabel(); }); });
+  document.addEventListener('click', function(e){ if(!e.target.closest('.pt-guests')) gPop.hidden=true; });
+
+  // Validate before submit
+  document.getElementById('ptHotels').addEventListener('submit', function(e){
+    if(!document.getElementById('ptHCode').value){ e.preventDefault(); document.getElementById('ptHDest').focus(); } });
+  document.getElementById('ptFlights').addEventListener('submit', function(e){
+    if(!document.getElementById('ptFFromId').value || !document.getElementById('ptFToId').value){ e.preventDefault(); document.getElementById('ptFFrom').focus(); } });
+})();
+</script>
 {% endblock %}
