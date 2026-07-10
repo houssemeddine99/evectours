@@ -36,8 +36,8 @@
         {# ---- Hôtels ---- #}
         <form class="pt-form" id="ptHotels" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
           <div class="pt-field pt-grow">
-            <label>Destination</label><span class="pt-ic">📍</span>
-            <input type="text" id="ptHDest" placeholder="Ville, région…" required>
+            <label>Destination ou hôtel</label><span class="pt-ic">📍</span>
+            <input type="text" id="ptHDest" placeholder="Ville, région ou nom d'hôtel…" required>
             <input type="hidden" name="dest" id="ptHCode">
             <input type="hidden" name="dest_name" id="ptHName">
             <div class="pt-suggest" id="ptHSug" hidden></div>

@@ -18,9 +18,9 @@
 
       <form class="hb-search" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
         <div class="hb-field hb-field--dest">
-          <label>Destination</label>
+          <label>Destination ou hôtel</label>
           <span class="hb-ic">📍</span>
-          <input type="text" id="hbDestInput" placeholder="Ville, région…"
+          <input type="text" id="hbDestInput" placeholder="Ville, région ou nom d'hôtel…"
                  value="{{ q.destName }}" required>
           <input type="hidden" name="dest" id="hbDestCode" value="{{ q.dest }}">
           <input type="hidden" name="dest_name" id="hbDestName" value="{{ q.destName }}">
