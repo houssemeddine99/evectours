@@ -20,13 +20,13 @@ class HotelController extends AbstractController
     /** Popular Tunisian destinations (Hotelbeds destination codes) for chips/tiles. */
     private const POPULAR = [
         ['code' => 'HMM', 'name' => 'Hammamet',            'img' => 'https://images.unsplash.com/photo-1590523278191-995cbcda646b?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'DJE', 'name' => 'Djerba',              'img' => 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'TN1', 'name' => 'Sousse / Kantaoui',   'img' => 'https://images.unsplash.com/photo-1512958789358-4ba50a4d2f6b?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'MIR', 'name' => 'Monastir – Skanès',   'img' => 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'TOE', 'name' => 'Tunis – Carthage',    'img' => 'https://images.unsplash.com/photo-1605540436563-5bca919ae766?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'MH1', 'name' => 'Mahdia',              'img' => 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'NAB', 'name' => 'Nabeul',              'img' => 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=800&q=80'],
-        ['code' => 'TAK', 'name' => 'Tabarka',             'img' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'DJE', 'name' => 'Djerba',              'img' => 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'TN1', 'name' => 'Sousse / Kantaoui',   'img' => 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'MIR', 'name' => 'Monastir – Skanès',   'img' => 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'TOE', 'name' => 'Tunis – Carthage',    'img' => 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'MH1', 'name' => 'Mahdia',              'img' => 'https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'NAB', 'name' => 'Nabeul',              'img' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'],
+        ['code' => 'TAK', 'name' => 'Tabarka',             'img' => 'https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?auto=format&fit=crop&w=800&q=80'],
     ];
 
     public function __construct(
