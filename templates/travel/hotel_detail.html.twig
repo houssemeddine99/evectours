@@ -62,8 +62,11 @@
                       <strong>{{ r.price_display ?: (r.price ~ ' ' ~ r.currency) }}</strong>
                       <span>{{ nights ? nights ~ ' nuit' ~ (nights > 1 ? 's' : '') ~ ' au total' : 'total' }}{{ r.price_night_display ? ' · ' ~ r.price_night_display ~ '/nuit' : '' }}</span>
                     </div>
-                    <a class="hd-book" target="_blank" rel="noopener"
-                       href="https://wa.me/21698365730?text={{ wamsg|url_encode }}">Réserver</a>
+                    {% if r.rate_key %}
+                      <a class="hd-book" href="{{ path('hotel_book_form', {code: hotel.code, rateKey: r.rate_key, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">Réserver</a>
+                    {% else %}
+                      <a class="hd-book" target="_blank" rel="noopener" href="https://wa.me/21698365730?text={{ wamsg|url_encode }}">Réserver</a>
+                    {% endif %}
                   </div>
                 </div>
               {% endfor %}

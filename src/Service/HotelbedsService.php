@@ -249,6 +249,94 @@ class HotelbedsService
         ];
     }
 
+    // ── Booking (checkrate + book) ────────────────────────────────────────
+
+    /**
+     * Re-price a rate right before payment (prices/availability can move).
+     * Returns the confirmed rate incl. a fresh BOOKABLE rateKey to book with.
+     * @return array<string, mixed>|null
+     */
+    public function checkRate(string $rateKey): ?array
+    {
+        if (!$this->isConfigured() || $rateKey === '') {
+            return null;
+        }
+        $data = $this->post('/hotel-api/1.0/checkrates', ['rooms' => [['rateKey' => $rateKey]]]);
+        $hotel = $data['hotel'] ?? null;
+        $rate  = $hotel['rooms'][0]['rates'][0] ?? null;
+        if (!$hotel || !$rate) {
+            return null;
+        }
+        return [
+            'hotel_code'  => (string) ($hotel['code'] ?? ''),
+            'hotel_name'  => (string) ($hotel['name'] ?? ''),
+            'room_name'   => (string) ($hotel['rooms'][0]['name'] ?? 'Room'),
+            'board'       => (string) ($rate['boardName'] ?? ''),
+            'net'         => isset($rate['net']) ? (float) $rate['net'] : null,
+            'currency'    => (string) ($hotel['currency'] ?? 'EUR'),
+            'rate_key'    => (string) ($rate['rateKey'] ?? ''),
+            'cancellable' => ($rate['rateClass'] ?? '') !== 'NRF',
+            'adults'      => (int) ($rate['adults'] ?? 2),
+            'children'    => (int) ($rate['children'] ?? 0),
+        ];
+    }
+
+    /**
+     * Confirm a booking with Hotelbeds after payment succeeds.
+     * @param array{rateKey:string,holderName:string,holderSurname:string,adults:int,children:int,childrenAges?:array<int>,clientReference?:string,remark?:string} $p
+     * @return array{reference?:string,status?:string,net?:mixed,currency?:string,error?:string}
+     */
+    public function book(array $p): array
+    {
+        if (!$this->isConfigured()) {
+            return ['error' => 'Hotel booking is not configured.'];
+        }
+
+        // Build paxes for the room: lead pax = holder, extra adults = generic guests.
+        $paxes  = [];
+        $adults = max(1, (int) ($p['adults'] ?? 1));
+        for ($i = 1; $i <= $adults; $i++) {
+            $paxes[] = [
+                'roomId'  => 1,
+                'type'    => 'AD',
+                'name'    => $i === 1 ? $p['holderName'] : 'Guest',
+                'surname' => $i === 1 ? $p['holderSurname'] : (string) $i,
+            ];
+        }
+        $ages = array_values($p['childrenAges'] ?? []);
+        for ($i = 0; $i < (int) ($p['children'] ?? 0); $i++) {
+            $paxes[] = [
+                'roomId'  => 1,
+                'type'    => 'CH',
+                'age'     => (int) ($ages[$i] ?? 8),
+                'name'    => 'Child',
+                'surname' => (string) ($i + 1),
+            ];
+        }
+
+        $body = [
+            'holder'          => ['name' => $p['holderName'], 'surname' => $p['holderSurname']],
+            'rooms'           => [['rateKey' => $p['rateKey'], 'paxes' => $paxes]],
+            'clientReference' => $p['clientReference'] ?? 'EVEC',
+            'remark'          => $p['remark'] ?? '',
+            'tolerance'       => 2.0, // accept up to 2% price movement vs checkrate
+        ];
+
+        $data    = $this->post('/hotel-api/1.0/bookings', $body);
+        $booking = $data['booking'] ?? null;
+        if (!$booking || empty($booking['reference'])) {
+            $msg = $data['error']['message'] ?? 'Hotelbeds booking failed.';
+            $this->logger->error('HotelbedsService booking failed: ' . $msg);
+            return ['error' => $msg];
+        }
+        return [
+            'reference' => (string) $booking['reference'],
+            'status'    => (string) ($booking['status'] ?? ''),
+            'net'       => $booking['totalNet'] ?? null,
+            'currency'  => (string) ($booking['currency'] ?? 'EUR'),
+        ];
+    }
+
     /**
      * Batch content lookup (photos/description/coords) keyed by hotel code. Cached 7d.
      * @param array<int|string> $codes

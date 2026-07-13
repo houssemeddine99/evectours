@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservation — {{ check.hotel_name }} | Evec Tours{% endblock %}
+{% block meta_description %}Finalisez votre réservation à {{ check.hotel_name }} — paiement sécurisé avec Evec Tours.{% endblock %}
+
+{% block body %}
+<div class="bk-page">
+  <div class="bk-wrap">
+    <a class="bk-back" href="{{ path('hotel_detail', {code: code, checkIn: stay.checkIn, checkOut: stay.checkOut, adults: stay.adults, children: stay.children, rooms: stay.rooms}) }}">← Retour à l'hôtel</a>
+    <h1 class="bk-title">Finaliser votre réservation</h1>
+
+    <div class="bk-cols">
+      {# ── Guest form ── #}
+      <div class="bk-main">
+        {% if error is defined and error %}<div class="bk-alert">{{ error }}</div>{% endif %}
+
+        <form method="post" action="{{ path('hotel_book_submit', {code: code}) }}" class="bk-form">
+          <input type="hidden" name="rateKey" value="{{ rateKey }}">
+          <input type="hidden" name="checkIn" value="{{ stay.checkIn }}">
+          <input type="hidden" name="checkOut" value="{{ stay.checkOut }}">
+          <input type="hidden" name="adults" value="{{ stay.adults }}">
+          <input type="hidden" name="children" value="{{ stay.children }}">
+          <input type="hidden" name="rooms" value="{{ stay.rooms }}">
+
+          <h2 class="bk-h2">Voyageur principal</h2>
+          <div class="bk-grid">
+            <label class="bk-field"><span>Prénom *</span>
+              <input type="text" name="holder_name" value="{{ prefill.name }}" required></label>
+            <label class="bk-field"><span>Nom *</span>
+              <input type="text" name="holder_surname" required></label>
+            <label class="bk-field"><span>E-mail *</span>
+              <input type="email" name="email" value="{{ prefill.email }}" required></label>
+            <label class="bk-field"><span>Téléphone</span>
+              <input type="tel" name="phone" placeholder="+216 …"></label>
+          </div>
+
+          <div class="bk-secure">🔒 Paiement 100 % sécurisé via Flouci (carte bancaire / e-Dinar).</div>
+
+          <button type="submit" class="bk-pay">Payer {{ amount_tnd_display }} →</button>
+          <p class="bk-note">En confirmant, vous acceptez de payer le montant total. La réservation est confirmée immédiatement après le paiement.</p>
+        </form>
+      </div>
+
+      {# ── Summary ── #}
+      <aside class="bk-side">
+        <div class="bk-card">
+          <h3>{{ check.hotel_name }}</h3>
+          <div class="bk-room">{{ check.room_name }}</div>
+          <div class="bk-tags">
+            {% if check.board %}<span class="bk-tag">🍽 {{ check.board|capitalize }}</span>{% endif %}
+            {% if check.cancellable %}<span class="bk-tag bk-tag--ok">✓ Annulation possible</span>{% else %}<span class="bk-tag bk-tag--nrf">Non remboursable</span>{% endif %}
+          </div>
+          <div class="bk-row"><span>Arrivée</span><strong>{{ stay.checkIn ? stay.checkIn|date('d/m/Y') : '—' }}</strong></div>
+          <div class="bk-row"><span>Départ</span><strong>{{ stay.checkOut ? stay.checkOut|date('d/m/Y') : '—' }}</strong></div>
+          <div class="bk-row"><span>Durée</span><strong>{{ stay.nights }} nuit{{ stay.nights > 1 ? 's' : '' }}</strong></div>
+          <div class="bk-row"><span>Voyageurs</span><strong>{{ stay.adults }} ad.{{ stay.children > 0 ? ', ' ~ stay.children ~ ' enf.' : '' }} · {{ stay.rooms }} ch.</strong></div>
+          <div class="bk-total">
+            <span>Total à payer</span>
+            <strong>{{ amount_tnd_display }}</strong>
+          </div>
+          <div class="bk-eur">≈ {{ check.net }} {{ check.currency }} · taxes incluses</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<style>
+:root{ --bk-blue:#0078D8; --bk-blue-d:#005CB8; --bk-orange:#f0792b; --bk-ink:#0f172a; --bk-mut:#64748b; --bk-line:#e4eaf1; --bk-bg:#f4f7fb; }
+.bk-page{ background:var(--bk-bg); padding:24px 20px 70px; }
+.bk-wrap{ max-width:1000px; margin:0 auto; }
+.bk-back{ color:var(--bk-blue-d); text-decoration:none; font-weight:600; font-size:.9rem; }
+.bk-title{ font-size:1.7rem; font-weight:800; color:var(--bk-ink); margin:12px 0 20px; }
+.bk-cols{ display:grid; grid-template-columns:1fr 340px; gap:22px; align-items:start; }
+.bk-main, .bk-card{ background:#fff; border:1px solid var(--bk-line); border-radius:16px; }
+.bk-form{ padding:24px; }
+.bk-h2{ font-size:1.1rem; font-weight:800; color:var(--bk-ink); margin:0 0 16px; }
+.bk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.bk-field{ display:flex; flex-direction:column; gap:6px; }
+.bk-field span{ font-size:.8rem; font-weight:600; color:var(--bk-mut); }
+.bk-field input{ height:46px; border:1px solid var(--bk-line); border-radius:10px; padding:0 12px; font-size:.95rem; font-family:inherit; }
+.bk-field input:focus{ outline:none; border-color:var(--bk-blue); box-shadow:0 0 0 3px rgba(0,120,216,.14); }
+.bk-secure{ margin:18px 0; background:#ecfdf3; color:#15803d; border-radius:10px; padding:12px 14px; font-size:.88rem; font-weight:600; }
+.bk-pay{ width:100%; height:52px; border:none; border-radius:12px; background:var(--bk-orange); color:#fff; font-weight:800; font-size:1.05rem; cursor:pointer; transition:.15s; }
+.bk-pay:hover{ filter:brightness(1.05); }
+.bk-note{ color:var(--bk-mut); font-size:.78rem; margin:12px 0 0; text-align:center; }
+.bk-alert{ background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:14px 16px; border-radius:12px; margin-bottom:16px; }
+
+.bk-card{ padding:20px; position:sticky; top:90px; }
+.bk-card h3{ margin:0 0 4px; font-size:1.1rem; color:var(--bk-ink); }
+.bk-room{ color:var(--bk-mut); font-size:.9rem; margin-bottom:10px; }
+.bk-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.bk-tag{ font-size:.74rem; font-weight:600; padding:4px 9px; border-radius:7px; background:#f1f6fc; color:var(--bk-blue-d); }
+.bk-tag--ok{ background:#ecfdf3; color:#16a34a; } .bk-tag--nrf{ background:#fef2f2; color:#b91c1c; }
+.bk-row{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--bk-line); font-size:.9rem; }
+.bk-row span{ color:var(--bk-mut); } .bk-row strong{ color:var(--bk-ink); }
+.bk-total{ display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+.bk-total span{ color:var(--bk-ink); font-weight:700; }
+.bk-total strong{ font-size:1.5rem; color:var(--bk-orange); font-weight:800; }
+.bk-eur{ text-align:right; color:var(--bk-mut); font-size:.75rem; margin-top:2px; }
+
+[data-theme="dark"] .bk-page{ background:#0b1220; }
+[data-theme="dark"] .bk-main, [data-theme="dark"] .bk-card, [data-theme="dark"] .bk-field input{ background:#111a2b; border-color:#1e293b; color:#e6edf6; }
+[data-theme="dark"] .bk-title, [data-theme="dark"] .bk-h2, [data-theme="dark"] .bk-card h3, [data-theme="dark"] .bk-row strong, [data-theme="dark"] .bk-total span{ color:#e6edf6; }
+
+@media (max-width:820px){
+  .bk-cols{ grid-template-columns:1fr; }
+  .bk-card{ position:static; order:-1; }
+  .bk-grid{ grid-template-columns:1fr; }
+}
+</style>
+{% endblock %}
