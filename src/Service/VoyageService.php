@@ -302,9 +302,15 @@ class VoyageService
         }
 
         $basePrice = (float) ($voyage->getPrice() ?? 0);
-        $pricing   = $bookedMap !== null
-            ? $this->dynamicPricingService->calculateWithBooked($basePrice, $vid, $voyage->getStartDate(), $bookedMap)
-            : $this->dynamicPricingService->calculate($basePrice, $vid, $voyage->getStartDate());
+        $durationDays = $voyage->getDurationDays();
+        if ($durationDays !== null && $durationDays <= 1) {
+            // Day trips / excursions have fixed, advertised prices — no dynamic surge.
+            $pricing = ['price' => $basePrice, 'base_price' => $basePrice, 'scarcity_label' => '', 'scarcity_level' => 'none', 'booked' => 0];
+        } elseif ($bookedMap !== null) {
+            $pricing = $this->dynamicPricingService->calculateWithBooked($basePrice, $vid, $voyage->getStartDate(), $bookedMap);
+        } else {
+            $pricing = $this->dynamicPricingService->calculate($basePrice, $vid, $voyage->getStartDate());
+        }
 
         return [
             'id'              => $vid,
