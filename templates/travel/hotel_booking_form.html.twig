@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Réservation — {{ check.hotel_name }} | Evec Tours{% endblock %}
-{% block meta_description %}Finalisez votre réservation à {{ check.hotel_name }} — paiement sécurisé avec Evec Tours.{% endblock %}
+{% block title %}Booking — {{ check.hotel_name }} | Evec Tours{% endblock %}
+{% block meta_description %}Complete your booking at {{ check.hotel_name }} — secure payment with Evec Tours.{% endblock %}
 
 {% block body %}
 <div class="bk-page">
   <div class="bk-wrap">
-    <a class="bk-back" href="{{ path('hotel_detail', {code: code, checkIn: stay.checkIn, checkOut: stay.checkOut, adults: stay.adults, children: stay.children, rooms: stay.rooms}) }}">← Retour à l'hôtel</a>
-    <h1 class="bk-title">Finaliser votre réservation</h1>
+    <a class="bk-back" href="{{ path('hotel_detail', {code: code, checkIn: stay.checkIn, checkOut: stay.checkOut, adults: stay.adults, children: stay.children, rooms: stay.rooms}) }}">← Back to hotel</a>
+    <h1 class="bk-title">Complete your booking</h1>
 
     <div class="bk-cols">
       {# ── Guest form ── #}
@@ -22,22 +22,22 @@
           <input type="hidden" name="children" value="{{ stay.children }}">
           <input type="hidden" name="rooms" value="{{ stay.rooms }}">
 
-          <h2 class="bk-h2">Voyageur principal</h2>
+          <h2 class="bk-h2">Lead guest</h2>
           <div class="bk-grid">
-            <label class="bk-field"><span>Prénom *</span>
+            <label class="bk-field"><span>First name *</span>
               <input type="text" name="holder_name" value="{{ prefill.name }}" required></label>
-            <label class="bk-field"><span>Nom *</span>
+            <label class="bk-field"><span>Last name *</span>
               <input type="text" name="holder_surname" required></label>
-            <label class="bk-field"><span>E-mail *</span>
+            <label class="bk-field"><span>Email *</span>
               <input type="email" name="email" value="{{ prefill.email }}" required></label>
-            <label class="bk-field"><span>Téléphone</span>
+            <label class="bk-field"><span>Phone</span>
               <input type="tel" name="phone" placeholder="+216 …"></label>
           </div>
 
-          <div class="bk-secure">🔒 Paiement 100 % sécurisé via Flouci (carte bancaire / e-Dinar).</div>
+          <div class="bk-secure">🔒 100% secure payment via Flouci (bank card / e-Dinar).</div>
 
-          <button type="submit" class="bk-pay">Payer {{ amount_tnd_display }} →</button>
-          <p class="bk-note">En confirmant, vous acceptez de payer le montant total. La réservation est confirmée immédiatement après le paiement.</p>
+          <button type="submit" class="bk-pay">Pay {{ amount_tnd_display }} →</button>
+          <p class="bk-note">By confirming, you agree to pay the full amount. Your booking is confirmed immediately after payment.</p>
         </form>
       </div>
 
@@ -48,17 +48,17 @@
           <div class="bk-room">{{ check.room_name }}</div>
           <div class="bk-tags">
             {% if check.board %}<span class="bk-tag">🍽 {{ check.board|capitalize }}</span>{% endif %}
-            {% if check.cancellable %}<span class="bk-tag bk-tag--ok">✓ Annulation possible</span>{% else %}<span class="bk-tag bk-tag--nrf">Non remboursable</span>{% endif %}
+            {% if check.cancellable %}<span class="bk-tag bk-tag--ok">✓ Free cancellation</span>{% else %}<span class="bk-tag bk-tag--nrf">Non-refundable</span>{% endif %}
           </div>
-          <div class="bk-row"><span>Arrivée</span><strong>{{ stay.checkIn ? stay.checkIn|date('d/m/Y') : '—' }}</strong></div>
-          <div class="bk-row"><span>Départ</span><strong>{{ stay.checkOut ? stay.checkOut|date('d/m/Y') : '—' }}</strong></div>
-          <div class="bk-row"><span>Durée</span><strong>{{ stay.nights }} nuit{{ stay.nights > 1 ? 's' : '' }}</strong></div>
-          <div class="bk-row"><span>Voyageurs</span><strong>{{ stay.adults }} ad.{{ stay.children > 0 ? ', ' ~ stay.children ~ ' enf.' : '' }} · {{ stay.rooms }} ch.</strong></div>
+          <div class="bk-row"><span>Check-in</span><strong>{{ stay.checkIn ? stay.checkIn|date('d/m/Y') : '—' }}</strong></div>
+          <div class="bk-row"><span>Check-out</span><strong>{{ stay.checkOut ? stay.checkOut|date('d/m/Y') : '—' }}</strong></div>
+          <div class="bk-row"><span>Duration</span><strong>{{ stay.nights }} night{{ stay.nights > 1 ? 's' : '' }}</strong></div>
+          <div class="bk-row"><span>Guests</span><strong>{{ stay.adults }} ad.{{ stay.children > 0 ? ', ' ~ stay.children ~ ' ch.' : '' }} · {{ stay.rooms }} rm.</strong></div>
           <div class="bk-total">
-            <span>Total à payer</span>
+            <span>Total to pay</span>
             <strong>{{ amount_tnd_display }}</strong>
           </div>
-          <div class="bk-eur">≈ {{ check.net }} {{ check.currency }} · taxes incluses</div>
+          <div class="bk-eur">≈ {{ check.net }} {{ check.currency }} · taxes included</div>
         </div>
       </aside>
     </div>

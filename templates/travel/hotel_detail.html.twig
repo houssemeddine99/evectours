@@ -7,7 +7,7 @@
 <div class="hd-page">
   <div class="hd-wrap">
 
-    <a class="hd-back" href="{{ path('travel_hotels', {dest: '', dest_name: hotel.zone, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">← Retour aux résultats</a>
+    <a class="hd-back" href="{{ path('travel_hotels', {dest: '', dest_name: hotel.zone, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">← Back to results</a>
 
     {# ── Gallery ── #}
     {% if hotel.photos is not empty %}
@@ -35,37 +35,37 @@
 
         {% if hotel.description %}
           <section class="hd-block">
-            <h2>À propos de l'hôtel</h2>
+            <h2>About the hotel</h2>
             <p class="hd-desc">{{ hotel.description|striptags }}</p>
           </section>
         {% endif %}
 
         {# ── Rooms ── #}
         <section class="hd-block" id="rooms">
-          <h2>Chambres disponibles{{ nights ? ' · ' ~ nights ~ ' nuit' ~ (nights > 1 ? 's' : '') : '' }}</h2>
+          <h2>Available rooms{{ nights ? ' · ' ~ nights ~ ' night' ~ (nights > 1 ? 's' : '') : '' }}</h2>
           {% if hotel.rooms is empty %}
-            <div class="hd-norooms">Aucune disponibilité pour ces dates. Essayez d'autres dates depuis la recherche.</div>
+            <div class="hd-norooms">No availability for these dates. Try different dates from the search.</div>
           {% else %}
             <div class="hd-rooms">
               {% for r in hotel.rooms %}
-                {% set wamsg = 'Bonjour, je souhaite réserver ' ~ hotel.name ~ ' — ' ~ r.name ~ ' (' ~ r.board ~ ') du ' ~ (q.checkIn ? q.checkIn|date('d/m/Y') : '') ~ ' au ' ~ (q.checkOut ? q.checkOut|date('d/m/Y') : '') ~ ' pour ' ~ q.adults ~ ' adulte(s).' %}
+                {% set wamsg = 'Hello, I would like to book ' ~ hotel.name ~ ' — ' ~ r.name ~ ' (' ~ r.board ~ ') from ' ~ (q.checkIn ? q.checkIn|date('d/m/Y') : '') ~ ' to ' ~ (q.checkOut ? q.checkOut|date('d/m/Y') : '') ~ ' for ' ~ q.adults ~ ' adult(s).' %}
                 <div class="hd-room">
                   <div class="hd-room-info">
                     <h3>{{ r.name }}</h3>
                     <div class="hd-room-tags">
                       {% if r.board %}<span class="hd-tag hd-tag--board">🍽 {{ r.board|capitalize }}</span>{% endif %}
-                      {% if r.cancellable %}<span class="hd-tag hd-tag--free">✓ Annulation possible</span>{% else %}<span class="hd-tag hd-tag--nrf">Non remboursable</span>{% endif %}
+                      {% if r.cancellable %}<span class="hd-tag hd-tag--free">✓ Free cancellation</span>{% else %}<span class="hd-tag hd-tag--nrf">Non-refundable</span>{% endif %}
                     </div>
                   </div>
                   <div class="hd-room-cta">
                     <div class="hd-room-price">
                       <strong>{{ r.price_display ?: (r.price ~ ' ' ~ r.currency) }}</strong>
-                      <span>{{ nights ? nights ~ ' nuit' ~ (nights > 1 ? 's' : '') ~ ' au total' : 'total' }}{{ r.price_night_display ? ' · ' ~ r.price_night_display ~ '/nuit' : '' }}</span>
+                      <span>{{ nights ? nights ~ ' night' ~ (nights > 1 ? 's' : '') ~ ' total' : 'total' }}{{ r.price_night_display ? ' · ' ~ r.price_night_display ~ '/night' : '' }}</span>
                     </div>
                     {% if r.rate_key %}
-                      <a class="hd-book" href="{{ path('hotel_book_form', {code: hotel.code, rateKey: r.rate_key, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">Réserver</a>
+                      <a class="hd-book" href="{{ path('hotel_book_form', {code: hotel.code, rateKey: r.rate_key, checkIn: q.checkIn, checkOut: q.checkOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">Book now</a>
                     {% else %}
-                      <a class="hd-book" target="_blank" rel="noopener" href="https://wa.me/21698365730?text={{ wamsg|url_encode }}">Réserver</a>
+                      <a class="hd-book" target="_blank" rel="noopener" href="https://wa.me/21698365730?text={{ wamsg|url_encode }}">Book now</a>
                     {% endif %}
                   </div>
                 </div>
@@ -78,14 +78,14 @@
       {# ── Sidebar ── #}
       <aside class="hd-side">
         <div class="hd-side-card">
-          <h3>Votre séjour</h3>
-          <div class="hd-side-row"><span>Arrivée</span><strong>{{ q.checkIn ? q.checkIn|date('d/m/Y') : '—' }}</strong></div>
-          <div class="hd-side-row"><span>Départ</span><strong>{{ q.checkOut ? q.checkOut|date('d/m/Y') : '—' }}</strong></div>
-          <div class="hd-side-row"><span>Voyageurs</span><strong>{{ q.adults }} ad.{{ q.children > 0 ? ', ' ~ q.children ~ ' enf.' : '' }} · {{ q.rooms }} ch.</strong></div>
+          <h3>Your stay</h3>
+          <div class="hd-side-row"><span>Check-in</span><strong>{{ q.checkIn ? q.checkIn|date('d/m/Y') : '—' }}</strong></div>
+          <div class="hd-side-row"><span>Check-out</span><strong>{{ q.checkOut ? q.checkOut|date('d/m/Y') : '—' }}</strong></div>
+          <div class="hd-side-row"><span>Guests</span><strong>{{ q.adults }} ad.{{ q.children > 0 ? ', ' ~ q.children ~ ' ch.' : '' }} · {{ q.rooms }} rm.</strong></div>
           {% if hotel.latitude and hotel.longitude %}
-            <a class="hd-map" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{ hotel.latitude }},{{ hotel.longitude }}">🗺 Voir sur la carte</a>
+            <a class="hd-map" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{ hotel.latitude }},{{ hotel.longitude }}">🗺 View on map</a>
           {% endif %}
-          <a class="hd-help" target="_blank" rel="noopener" href="https://wa.me/21698365730">💬 Besoin d'aide ? WhatsApp</a>
+          <a class="hd-help" target="_blank" rel="noopener" href="https://wa.me/21698365730">💬 Need help? WhatsApp</a>
         </div>
       </aside>
     </div>

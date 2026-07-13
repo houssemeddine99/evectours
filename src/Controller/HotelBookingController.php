@@ -57,7 +57,7 @@ class HotelBookingController extends AbstractController
 
         if ($check === null || $check['net'] === null) {
             // Rate no longer available — send the user back to pick a fresh one.
-            $this->addFlash('hotel_error', "Ce tarif n'est plus disponible. Merci de re-sélectionner une chambre.");
+            $this->addFlash('hotel_error', "This rate is no longer available. Please select a room again.");
             return $this->redirectToRoute('hotel_detail', array_merge(['code' => $code], [
                 'checkIn' => $stay['checkIn'], 'checkOut' => $stay['checkOut'],
                 'adults' => $stay['adults'], 'children' => $stay['children'], 'rooms' => $stay['rooms'],
@@ -92,7 +92,7 @@ class HotelBookingController extends AbstractController
         // Re-price right before charging (also yields a fresh BOOKABLE rateKey).
         $check = $rateKey !== '' ? $this->hotels->checkRate($rateKey) : null;
         if ($check === null || $check['net'] === null) {
-            $this->addFlash('hotel_error', "Ce tarif n'est plus disponible. Merci de re-sélectionner une chambre.");
+            $this->addFlash('hotel_error', "This rate is no longer available. Please select a room again.");
             return $this->redirectToRoute('hotel_detail', ['code' => $code, 'checkIn' => $stay['checkIn'], 'checkOut' => $stay['checkOut']]);
         }
 
@@ -102,7 +102,7 @@ class HotelBookingController extends AbstractController
                 'active_nav' => 'hotels', 'code' => $code, 'rateKey' => $rateKey, 'check' => $check,
                 'stay' => $stay, 'amount_tnd' => round($amountTnd, 3), 'amount_tnd_display' => $this->currency->format($amountTnd, 'TND'),
                 'prefill' => ['email' => $email, 'name' => $name],
-                'error'   => 'Merci de renseigner votre nom, prénom et un e-mail valide.',
+                'error'   => 'Please enter your first name, last name and a valid email.',
             ], new Response('', 422));
         }
 

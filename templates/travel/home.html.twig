@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Evec Tours — Hôtels, Vols & Séjours en Tunisie au meilleur prix{% endblock %}
-{% block meta_description %}Réservez vos hôtels, vols et séjours en Tunisie et dans le monde avec Evec Tours. Prix et disponibilités en direct, paiement sécurisé, support 24/7.{% endblock %}
+{% block title %}Evec Tours — Hotels, Flights & Getaways in Tunisia at the best price{% endblock %}
+{% block meta_description %}Book your hotels, flights and getaways in Tunisia and around the world with Evec Tours. Live prices and availability, secure payment, 24/7 support.{% endblock %}
 
 {% set today  = "now"|date("Y-m-d") %}
 {% set defIn  = "now"|date_modify("+14 days")|date("Y-m-d") %}
@@ -23,79 +23,79 @@
   <section class="pt-hero">
     <div class="pt-hero-bg"></div>
     <div class="pt-hero-inner">
-      <h1 class="pt-hero-title">Votre prochain voyage commence ici</h1>
-      <p class="pt-hero-sub">Hôtels, vols et séjours — en Tunisie et dans le monde, au meilleur prix.</p>
+      <h1 class="pt-hero-title">Your next journey starts here</h1>
+      <p class="pt-hero-sub">Hotels, flights and getaways — in Tunisia and around the world, at the best price.</p>
 
       <div class="pt-box">
         <div class="pt-tabs">
-          <button type="button" class="pt-tab active" data-tab="hotels">🏨 Hôtels</button>
-          <button type="button" class="pt-tab" data-tab="flights">✈️ Vols</button>
-          <button type="button" class="pt-tab" data-tab="stays">🧳 Séjours</button>
+          <button type="button" class="pt-tab active" data-tab="hotels">🏨 Hotels</button>
+          <button type="button" class="pt-tab" data-tab="flights">✈️ Flights</button>
+          <button type="button" class="pt-tab" data-tab="stays">🧳 Getaways</button>
         </div>
 
-        {# ---- Hôtels ---- #}
+        {# ---- Hotels ---- #}
         <form class="pt-form" id="ptHotels" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
           <div class="pt-field pt-grow">
-            <label>Destination ou hôtel</label><span class="pt-ic">📍</span>
-            <input type="text" id="ptHDest" placeholder="Ville, région ou nom d'hôtel…" required>
+            <label>Destination or hotel</label><span class="pt-ic">📍</span>
+            <input type="text" id="ptHDest" placeholder="City, region or hotel name…" required>
             <input type="hidden" name="dest" id="ptHCode">
             <input type="hidden" name="dest_name" id="ptHName">
             <div class="pt-suggest" id="ptHSug" hidden></div>
           </div>
-          <div class="pt-field"><label>Arrivée</label><span class="pt-ic">📅</span>
+          <div class="pt-field"><label>Check-in</label><span class="pt-ic">📅</span>
             <input type="date" name="checkIn" id="ptHIn" value="{{ defIn }}" min="{{ today }}" required></div>
-          <div class="pt-field"><label>Départ</label><span class="pt-ic">📅</span>
+          <div class="pt-field"><label>Check-out</label><span class="pt-ic">📅</span>
             <input type="date" name="checkOut" id="ptHOut" value="{{ defOut }}" min="{{ today }}" required></div>
           <div class="pt-field pt-guests">
-            <label>Voyageurs</label><span class="pt-ic">👤</span>
-            <button type="button" class="pt-gbtn" id="ptGBtn"><span id="ptGLabel">2 adultes · 1 chambre</span></button>
+            <label>Guests</label><span class="pt-ic">👤</span>
+            <button type="button" class="pt-gbtn" id="ptGBtn"><span id="ptGLabel">2 adults · 1 room</span></button>
             <div class="pt-gpop" id="ptGPop" hidden>
-              {% for r in [{k:'adults',l:'Adultes',min:1,v:2},{k:'children',l:'Enfants',min:0,v:0},{k:'rooms',l:'Chambres',min:1,v:1}] %}
+              {% for r in [{k:'adults',l:'Adults',min:1,v:2},{k:'children',l:'Children',min:0,v:0},{k:'rooms',l:'Rooms',min:1,v:1}] %}
               <div class="pt-step"><span>{{ r.l }}</span><div class="pt-sc">
                 <button type="button" data-step="{{ r.k }}" data-dir="-1">−</button>
                 <input type="number" name="{{ r.k }}" id="ptG_{{ r.k }}" value="{{ r.v }}" min="{{ r.min }}" max="9" readonly>
                 <button type="button" data-step="{{ r.k }}" data-dir="1">+</button>
               </div></div>
               {% endfor %}
-              <button type="button" class="pt-gdone" id="ptGDone">OK</button>
+              <button type="button" class="pt-gdone" id="ptGDone">Done</button>
             </div>
           </div>
-          <button type="submit" class="pt-submit">Rechercher</button>
+          <button type="submit" class="pt-submit">Search</button>
         </form>
 
-        {# ---- Vols ---- #}
+        {# ---- Flights ---- #}
         <form class="pt-form" id="ptFlights" method="get" action="{{ path('travel_flights') }}" autocomplete="off" hidden>
           <div class="pt-field pt-grow">
-            <label>De</label><span class="pt-ic">🛫</span>
-            <input type="text" id="ptFFrom" placeholder="Ville ou aéroport" required>
+            <label>From</label><span class="pt-ic">🛫</span>
+            <input type="text" id="ptFFrom" placeholder="City or airport" required>
             <input type="hidden" name="fromId" id="ptFFromId"><input type="hidden" name="from" id="ptFFromL">
             <div class="pt-suggest" id="ptFFromSug" hidden></div>
           </div>
           <div class="pt-field pt-grow">
-            <label>Vers</label><span class="pt-ic">🛬</span>
-            <input type="text" id="ptFTo" placeholder="Ville ou aéroport" required>
+            <label>To</label><span class="pt-ic">🛬</span>
+            <input type="text" id="ptFTo" placeholder="City or airport" required>
             <input type="hidden" name="toId" id="ptFToId"><input type="hidden" name="to" id="ptFToL">
             <div class="pt-suggest" id="ptFToSug" hidden></div>
           </div>
-          <div class="pt-field"><label>Départ</label><span class="pt-ic">📅</span>
+          <div class="pt-field"><label>Depart</label><span class="pt-ic">📅</span>
             <input type="date" name="departDate" id="ptFDep" value="{{ defDep }}" min="{{ today }}" required></div>
-          <div class="pt-field pt-narrow"><label>Voyageurs</label><span class="pt-ic">👤</span>
-            <select name="adults">{% for i in 1..9 %}<option value="{{ i }}">{{ i }} adulte{{ i>1?'s':'' }}</option>{% endfor %}</select></div>
-          <button type="submit" class="pt-submit">Rechercher</button>
+          <div class="pt-field pt-narrow"><label>Travellers</label><span class="pt-ic">👤</span>
+            <select name="adults">{% for i in 1..9 %}<option value="{{ i }}">{{ i }} adult{{ i>1?'s':'' }}</option>{% endfor %}</select></div>
+          <button type="submit" class="pt-submit">Search</button>
         </form>
 
-        {# ---- Séjours ---- #}
+        {# ---- Getaways ---- #}
         <form class="pt-form" id="ptStays" method="get" action="{{ path('travel_voyages') }}" hidden>
           <div class="pt-field pt-grow">
-            <label>Envie de…</label><span class="pt-ic">🧭</span>
-            <input type="text" name="q" placeholder="Omra, circuit, plage, week-end…">
+            <label>Looking for…</label><span class="pt-ic">🧭</span>
+            <input type="text" name="q" placeholder="Umrah, tour, beach, weekend…">
           </div>
-          <button type="submit" class="pt-submit">Découvrir nos séjours</button>
+          <button type="submit" class="pt-submit">Explore getaways</button>
         </form>
       </div>
 
       <div class="pt-hero-badges">
-        <span>🔒 Paiement sécurisé</span><span>🏨 Inventaire en direct</span><span>💬 Support 24/7</span>
+        <span>🔒 Secure payment</span><span>🏨 Live inventory</span><span>💬 24/7 support</span>
       </div>
     </div>
   </section>
@@ -104,29 +104,29 @@
 
     {# ── SERVICES ── #}
     <section class="pt-services">
-      <a href="{{ path('travel_hotels') }}" class="pt-serv"><span>🏨</span><strong>Hôtels</strong><small>Tunisie & monde</small></a>
-      <a href="{{ path('travel_flights') }}" class="pt-serv"><span>✈️</span><strong>Vols</strong><small>Meilleurs tarifs</small></a>
-      <a href="{{ path('travel_voyages') }}" class="pt-serv"><span>🧳</span><strong>Séjours</strong><small>Tout compris</small></a>
-      <a href="{{ path('travel_offers') }}" class="pt-serv"><span>🏷️</span><strong>Offres</strong><small>Promos du moment</small></a>
+      <a href="{{ path('travel_hotels') }}" class="pt-serv"><span>🏨</span><strong>Hotels</strong><small>Tunisia & worldwide</small></a>
+      <a href="{{ path('travel_flights') }}" class="pt-serv"><span>✈️</span><strong>Flights</strong><small>Best fares</small></a>
+      <a href="{{ path('travel_voyages') }}" class="pt-serv"><span>🧳</span><strong>Getaways</strong><small>All-inclusive</small></a>
+      <a href="{{ path('travel_offers') }}" class="pt-serv"><span>🏷️</span><strong>Deals</strong><small>Current offers</small></a>
     </section>
 
     {# ── POPULAR DESTINATIONS ── #}
     <section class="pt-section">
-      <div class="pt-shead"><h2>Destinations populaires</h2><a href="{{ path('travel_hotels') }}">Tout voir →</a></div>
+      <div class="pt-shead"><h2>Popular destinations</h2><a href="{{ path('travel_hotels') }}">See all →</a></div>
       <div class="pt-dest-grid">
         {% for d in popular %}
           <a class="pt-dest" href="{{ path('travel_hotels', {dest:d.code, dest_name:d.name, checkIn:defIn, checkOut:defOut, adults:2, rooms:1}) }}">
             <img src="{{ d.img }}" alt="{{ d.name }}" loading="lazy"><div class="pt-dest-ov"></div>
-            <span class="pt-dest-name">{{ d.name }}</span><span class="pt-dest-cta">Voir les hôtels →</span>
+            <span class="pt-dest-name">{{ d.name }}</span><span class="pt-dest-cta">See hotels →</span>
           </a>
         {% endfor %}
       </div>
     </section>
 
-    {# ── DEALS / FEATURED SÉJOURS ── #}
+    {# ── DEALS / FEATURED GETAWAYS ── #}
     {% if featured_voyages is not empty %}
     <section class="pt-section">
-      <div class="pt-shead"><h2>Séjours &amp; offres du moment</h2><a href="{{ path('travel_voyages') }}">Tout voir →</a></div>
+      <div class="pt-shead"><h2>Getaways &amp; current deals</h2><a href="{{ path('travel_voyages') }}">See all →</a></div>
       <div class="pt-deal-grid">
         {% for v in featured_voyages %}
           {% set thumb = v.image_url is iterable and v.image_url|length > 0 ? v.image_url[0] : 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1000&q=80' %}
@@ -137,8 +137,8 @@
               <h3>{{ v.title }}</h3>
               <p>{{ v.description|default('')|striptags|slice(0, 72) }}…</p>
               <div class="pt-deal-foot">
-                <div class="pt-deal-price"><small>à partir de</small><strong>{{ v.price is not empty ? v.price|number_format(0) ~ ' TND' : 'Sur devis' }}</strong></div>
-                <span class="pt-deal-btn">Voir →</span>
+                <div class="pt-deal-price"><small>from</small><strong>{{ v.price is not empty ? v.price|number_format(0) ~ ' TND' : 'On request' }}</strong></div>
+                <span class="pt-deal-btn">View →</span>
               </div>
             </div>
           </a>
@@ -149,17 +149,17 @@
 
     {# ── WHY US ── #}
     <section class="pt-why">
-      <div class="pt-why-item"><span>💳</span><div><strong>Meilleur prix garanti</strong><p>Des tarifs négociés en direct auprès des hôteliers.</p></div></div>
-      <div class="pt-why-item"><span>🔒</span><div><strong>Réservation sécurisée</strong><p>Paiement protégé et confirmation immédiate.</p></div></div>
-      <div class="pt-why-item"><span>💬</span><div><strong>Une équipe locale</strong><p>Des experts tunisiens joignables 7j/7 sur WhatsApp.</p></div></div>
-      <div class="pt-why-item"><span>🌍</span><div><strong>Tunisie &amp; monde</strong><p>Des milliers d'hôtels et destinations à portée de clic.</p></div></div>
+      <div class="pt-why-item"><span>💳</span><div><strong>Best price guaranteed</strong><p>Rates negotiated directly with the hotels.</p></div></div>
+      <div class="pt-why-item"><span>🔒</span><div><strong>Secure booking</strong><p>Protected payment and instant confirmation.</p></div></div>
+      <div class="pt-why-item"><span>💬</span><div><strong>A local team</strong><p>Tunisian experts reachable 7 days a week on WhatsApp.</p></div></div>
+      <div class="pt-why-item"><span>🌍</span><div><strong>Tunisia &amp; worldwide</strong><p>Thousands of hotels and destinations a click away.</p></div></div>
     </section>
 
     {# ── CTA ── #}
     <section class="pt-cta">
-      <div><h2>Un projet de voyage sur-mesure ?</h2><p>Dites-nous votre envie, on s'occupe du reste.</p></div>
+      <div><h2>Planning a custom trip?</h2><p>Tell us what you have in mind — we handle the rest.</p></div>
       <div class="pt-cta-btns">
-        <a class="pt-cta-primary" href="{{ path('trip_planner') }}">✨ Planifier avec l'IA</a>
+        <a class="pt-cta-primary" href="{{ path('trip_planner') }}">✨ Plan with AI</a>
         <a class="pt-cta-ghost" href="https://wa.me/21698365730" target="_blank" rel="noopener">💬 WhatsApp</a>
       </div>
     </section>
@@ -327,7 +327,7 @@
             var m=mapItem(it); var b=document.createElement('button'); b.type='button';
             var isHotel = m.type === 'hotel';
             b.innerHTML='<span>'+(isHotel?'🏨':'📍')+'</span><span>'+m.name+'</span>'
-              +((isHotel||m.code)?'<span class="s-code">'+(isHotel?'Hôtel':m.code)+'</span>':'');
+              +((isHotel||m.code)?'<span class="s-code">'+(isHotel?'Hotel':m.code)+'</span>':'');
             b.addEventListener('click', function(){
               if (isHotel && window.__ptGotoHotel){ window.__ptGotoHotel(m.code); return; }
               code.value=m.id; if(label) label.value=m.name; input.value=m.name; hide();
@@ -361,7 +361,7 @@
   // Guests popover
   var gBtn=document.getElementById('ptGBtn'), gPop=document.getElementById('ptGPop'), gLabel=document.getElementById('ptGLabel'), gDone=document.getElementById('ptGDone');
   function relabel(){ var a=+document.getElementById('ptG_adults').value,c=+document.getElementById('ptG_children').value,r=+document.getElementById('ptG_rooms').value;
-    var s=a+' adulte'+(a>1?'s':''); if(c>0) s+=', '+c+' enfant'+(c>1?'s':''); s+=' · '+r+' chambre'+(r>1?'s':''); gLabel.textContent=s; }
+    var s=a+' adult'+(a>1?'s':''); if(c>0) s+=', '+c+' child'+(c>1?'ren':''); s+=' · '+r+' room'+(r>1?'s':''); gLabel.textContent=s; }
   gBtn.addEventListener('click', function(e){ e.stopPropagation(); gPop.hidden=!gPop.hidden; });
   gDone.addEventListener('click', function(){ gPop.hidden=true; });
   document.querySelectorAll('.pt-sc button').forEach(function(btn){ btn.addEventListener('click', function(){

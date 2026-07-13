@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hôtels en Tunisie — réservez au meilleur prix | Evec Tours{% endblock %}
-{% block meta_description %}Réservez votre hôtel en Tunisie : Hammamet, Djerba, Sousse, Monastir… Disponibilités et prix en direct, paiement sécurisé avec Evec Tours.{% endblock %}
+{% block title %}Hotels in Tunisia — book at the best price | Evec Tours{% endblock %}
+{% block meta_description %}Book your hotel in Tunisia: Hammamet, Djerba, Sousse, Monastir… Live availability and prices, secure payment with Evec Tours.{% endblock %}
 
 {% set today = "now"|date("Y-m-d") %}
 {% set defIn  = q.checkIn  ?: "now"|date_modify("+14 days")|date("Y-m-d") %}
@@ -13,14 +13,14 @@
   {# ── SEARCH HERO ── #}
   <section class="hb-hero">
     <div class="hb-hero-inner">
-      <h1 class="hb-hero-title">Trouvez votre hôtel en Tunisie</h1>
-      <p class="hb-hero-sub">Prix &amp; disponibilités en direct — des centaines d'hôtels, du 3★ au 5★.</p>
+      <h1 class="hb-hero-title">Find your hotel in Tunisia</h1>
+      <p class="hb-hero-sub">Live prices &amp; availability — hundreds of hotels, from 3★ to 5★.</p>
 
       <form class="hb-search" method="get" action="{{ path('travel_hotels') }}" autocomplete="off">
         <div class="hb-field hb-field--dest">
-          <label>Destination ou hôtel</label>
+          <label>Destination or hotel</label>
           <span class="hb-ic">📍</span>
-          <input type="text" id="hbDestInput" placeholder="Ville, région ou nom d'hôtel…"
+          <input type="text" id="hbDestInput" placeholder="City, region or hotel name…"
                  value="{{ q.destName }}" required>
           <input type="hidden" name="dest" id="hbDestCode" value="{{ q.dest }}">
           <input type="hidden" name="dest_name" id="hbDestName" value="{{ q.destName }}">
@@ -28,25 +28,25 @@
         </div>
 
         <div class="hb-field">
-          <label>Arrivée</label>
+          <label>Check-in</label>
           <span class="hb-ic">📅</span>
           <input type="date" name="checkIn" id="hbIn" value="{{ defIn }}" min="{{ today }}" required>
         </div>
 
         <div class="hb-field">
-          <label>Départ</label>
+          <label>Check-out</label>
           <span class="hb-ic">📅</span>
           <input type="date" name="checkOut" id="hbOut" value="{{ defOut }}" min="{{ today }}" required>
         </div>
 
         <div class="hb-field hb-field--guests">
-          <label>Voyageurs</label>
+          <label>Guests</label>
           <span class="hb-ic">👤</span>
           <button type="button" class="hb-guests-btn" id="hbGuestsBtn">
-            <span id="hbGuestsLabel">{{ q.adults }} adulte{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' enfant' ~ (q.children > 1 ? 's' : '') : '' }} · {{ q.rooms }} chambre{{ q.rooms > 1 ? 's' : '' }}</span>
+            <span id="hbGuestsLabel">{{ q.adults }} adult{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' child' ~ (q.children > 1 ? 'ren' : '') : '' }} · {{ q.rooms }} room{{ q.rooms > 1 ? 's' : '' }}</span>
         </button>
           <div class="hb-guests-pop" id="hbGuestsPop" hidden>
-            {% for row in [{k:'adults', l:'Adultes', min:1, v:q.adults}, {k:'children', l:'Enfants', min:0, v:q.children}, {k:'rooms', l:'Chambres', min:1, v:q.rooms}] %}
+            {% for row in [{k:'adults', l:'Adults', min:1, v:q.adults}, {k:'children', l:'Children', min:0, v:q.children}, {k:'rooms', l:'Rooms', min:1, v:q.rooms}] %}
             <div class="hb-stepper">
               <span>{{ row.l }}</span>
               <div class="hb-step-ctrl">
@@ -56,11 +56,11 @@
               </div>
             </div>
             {% endfor %}
-            <button type="button" class="hb-guests-done" id="hbGuestsDone">OK</button>
+            <button type="button" class="hb-guests-done" id="hbGuestsDone">Done</button>
           </div>
         </div>
 
-        <button type="submit" class="hb-submit">Rechercher</button>
+        <button type="submit" class="hb-submit">Search</button>
       </form>
     </div>
   </section>
@@ -70,7 +70,7 @@
     {% if not searched %}
       {# ── POPULAR DESTINATIONS ── #}
       <section class="hb-section">
-        <h2 class="hb-h2">Destinations populaires</h2>
+        <h2 class="hb-h2">Popular destinations</h2>
         <div class="hb-dest-grid">
           {% for d in popular %}
             <a class="hb-dest-card"
@@ -84,9 +84,9 @@
       </section>
 
       <section class="hb-trust">
-        <div><strong>🏨 Inventaire en direct</strong><span>Prix et disponibilités en temps réel</span></div>
-        <div><strong>🔒 Paiement sécurisé</strong><span>Réservation confirmée instantanément</span></div>
-        <div><strong>💬 Support 24/7</strong><span>Une équipe locale à votre écoute</span></div>
+        <div><strong>🏨 Live inventory</strong><span>Real-time prices and availability</span></div>
+        <div><strong>🔒 Secure payment</strong><span>Booking confirmed instantly</span></div>
+        <div><strong>💬 24/7 support</strong><span>A local team at your service</span></div>
       </section>
 
     {% else %}
@@ -94,13 +94,13 @@
       <section class="hb-section">
         <div class="hb-results-head">
           <div>
-            <h2 class="hb-h2">{{ q.destName ?: 'Résultats' }}</h2>
+            <h2 class="hb-h2">{{ q.destName ?: 'Results' }}</h2>
             <p class="hb-results-meta">
-              {{ defIn|date('d/m/Y') }} → {{ defOut|date('d/m/Y') }} · {{ nights }} nuit{{ nights > 1 ? 's' : '' }} ·
-              {{ q.adults }} adulte{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' enfant' ~ (q.children > 1 ? 's' : '') : '' }}
+              {{ defIn|date('d/m/Y') }} → {{ defOut|date('d/m/Y') }} · {{ nights }} night{{ nights > 1 ? 's' : '' }} ·
+              {{ q.adults }} adult{{ q.adults > 1 ? 's' : '' }}{{ q.children > 0 ? ', ' ~ q.children ~ ' child' ~ (q.children > 1 ? 'ren' : '') : '' }}
             </p>
           </div>
-          {% if results is not null %}<span class="hb-count">{{ results|length }} hôtel{{ results|length > 1 ? 's' : '' }}</span>{% endif %}
+          {% if results is not null %}<span class="hb-count">{{ results|length }} hotel{{ results|length > 1 ? 's' : '' }}</span>{% endif %}
         </div>
 
         {% if error %}
@@ -108,8 +108,8 @@
         {% elseif results is empty %}
           <div class="hb-empty">
             <div class="hb-empty-ic">🔍</div>
-            <h3>Aucun hôtel trouvé</h3>
-            <p>Essayez d'autres dates ou une autre destination.</p>
+            <h3>No hotels found</h3>
+            <p>Try different dates or another destination.</p>
           </div>
         {% else %}
           <div class="hb-list">
@@ -130,12 +130,12 @@
                     {% if h.category %}<span class="hb-chip">{{ h.category }}</span>{% endif %}
                   </div>
                   <div class="hb-card-price">
-                    <span class="hb-price-label">à partir de</span>
-                    <strong>{{ h.price_night_display ?: h.price_display ?: (h.price ~ ' ' ~ h.currency) }}<span class="hb-per">/nuit</span></strong>
-                    {% if h.price_display %}<span class="hb-price-sub">{{ h.price_display }} au total · {{ nights }} nuit{{ nights > 1 ? 's' : '' }}</span>{% endif %}
+                    <span class="hb-price-label">from</span>
+                    <strong>{{ h.price_night_display ?: h.price_display ?: (h.price ~ ' ' ~ h.currency) }}<span class="hb-per">/night</span></strong>
+                    {% if h.price_display %}<span class="hb-price-sub">{{ h.price_display }} total · {{ nights }} night{{ nights > 1 ? 's' : '' }}</span>{% endif %}
                     <a class="hb-card-btn"
                        href="{{ path('hotel_detail', {code: h.code, checkIn: defIn, checkOut: defOut, adults: q.adults, children: q.children, rooms: q.rooms}) }}">
-                      Voir l'hôtel →
+                      View hotel →
                     </a>
                   </div>
                 </div>
@@ -292,7 +292,7 @@
             b.type = 'button';
             var isHotel = d.type === 'hotel';
             b.innerHTML = '<span>' + (isHotel ? '🏨' : '📍') + '</span><span>' + d.name + '</span>'
-              + '<span class="s-code">' + (isHotel ? 'Hôtel' : d.code) + '</span>';
+              + '<span class="s-code">' + (isHotel ? 'Hotel' : d.code) + '</span>';
             b.addEventListener('click', function(){ isHotel ? gotoHotel(d.code) : pick(d.code, d.name); });
             box.appendChild(b);
           });
@@ -322,9 +322,9 @@
     var a = +document.getElementById('hb_adults').value,
         c = +document.getElementById('hb_children').value,
         r = +document.getElementById('hb_rooms').value;
-    var s = a + ' adulte' + (a>1?'s':'');
-    if (c>0) s += ', ' + c + ' enfant' + (c>1?'s':'');
-    s += ' · ' + r + ' chambre' + (r>1?'s':'');
+    var s = a + ' adult' + (a>1?'s':'');
+    if (c>0) s += ', ' + c + ' child' + (c>1?'ren':'');
+    s += ' · ' + r + ' room' + (r>1?'s':'');
     gLabel.textContent = s;
   }
   gBtn.addEventListener('click', function(e){ e.stopPropagation(); gPop.hidden = !gPop.hidden; });

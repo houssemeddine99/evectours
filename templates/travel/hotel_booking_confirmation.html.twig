@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Réservation {{ b.reference }} | Evec Tours{% endblock %}
-{% block meta_description %}Confirmation de votre réservation {{ b.reference }} chez Evec Tours.{% endblock %}
+{% block title %}Booking {{ b.reference }} | Evec Tours{% endblock %}
+{% block meta_description %}Confirmation of your booking {{ b.reference }} with Evec Tours.{% endblock %}
 
 {% block body %}
 <div class="cf-page">
@@ -9,24 +9,24 @@
 
     {% set st = b.status %}
     {% if st == 'CONFIRMED' %}
-      {% set tone = 'ok' %}{% set icon = '✅' %}{% set head = 'Réservation confirmée !' %}
-      {% set sub = 'Votre paiement a été reçu et votre chambre est réservée.' %}
+      {% set tone = 'ok' %}{% set icon = '✅' %}{% set head = 'Booking confirmed!' %}
+      {% set sub = 'Your payment was received and your room is booked.' %}
     {% elseif st == 'PAY_FAIL' %}
-      {% set tone = 'err' %}{% set icon = '❌' %}{% set head = 'Paiement non abouti' %}
-      {% set sub = "Votre paiement n'a pas pu être confirmé. Aucune somme n'a été débitée." %}
+      {% set tone = 'err' %}{% set icon = '❌' %}{% set head = 'Payment not completed' %}
+      {% set sub = "Your payment could not be confirmed. No amount was charged." %}
     {% elseif st == 'PAID' or st == 'BOOKING_FAILED' %}
-      {% set tone = 'warn' %}{% set icon = '⏳' %}{% set head = 'Paiement reçu — finalisation en cours' %}
-      {% set sub = 'Nous avons bien reçu votre paiement. Notre équipe finalise votre réservation et vous confirme sous peu.' %}
+      {% set tone = 'warn' %}{% set icon = '⏳' %}{% set head = 'Payment received — finalising' %}
+      {% set sub = 'We have received your payment. Our team is finalising your booking and will confirm shortly.' %}
     {% else %}
-      {% set tone = 'warn' %}{% set icon = '⌛' %}{% set head = 'En attente de paiement' %}
-      {% set sub = "Votre réservation est enregistrée mais le paiement n'est pas finalisé. Contactez-nous pour la confirmer." %}
+      {% set tone = 'warn' %}{% set icon = '⌛' %}{% set head = 'Awaiting payment' %}
+      {% set sub = "Your booking is saved but payment is not finalised. Contact us to confirm it." %}
     {% endif %}
 
     <div class="cf-hero cf-{{ tone }}">
       <div class="cf-icon">{{ icon }}</div>
       <h1>{{ head }}</h1>
       <p>{{ sub }}</p>
-      <div class="cf-ref">Référence : <strong>{{ b.reference }}</strong>{% if b.hotelbedsReference %} · Hôtel : <strong>{{ b.hotelbedsReference }}</strong>{% endif %}</div>
+      <div class="cf-ref">Reference: <strong>{{ b.reference }}</strong>{% if b.hotelbedsReference %} · Hotel: <strong>{{ b.hotelbedsReference }}</strong>{% endif %}</div>
     </div>
 
     <div class="cf-card">
@@ -35,24 +35,24 @@
         <span>{{ b.roomName }}{% if b.board %} · {{ b.board|capitalize }}{% endif %}</span>
       </div>
       <div class="cf-rows">
-        <div class="cf-row"><span>Arrivée</span><strong>{{ b.checkIn ? b.checkIn|date('d/m/Y') : '—' }}</strong></div>
-        <div class="cf-row"><span>Départ</span><strong>{{ b.checkOut ? b.checkOut|date('d/m/Y') : '—' }}</strong></div>
-        <div class="cf-row"><span>Durée</span><strong>{{ b.nights }} nuit{{ b.nights > 1 ? 's' : '' }}</strong></div>
-        <div class="cf-row"><span>Voyageurs</span><strong>{{ b.adults }} ad.{{ b.children > 0 ? ', ' ~ b.children ~ ' enf.' : '' }} · {{ b.rooms }} ch.</strong></div>
-        <div class="cf-row"><span>Voyageur principal</span><strong>{{ b.holderName }} {{ b.holderSurname }}</strong></div>
-        <div class="cf-row cf-row--total"><span>Montant</span><strong>{{ b.amountTnd|number_format(2) }} TND</strong></div>
+        <div class="cf-row"><span>Check-in</span><strong>{{ b.checkIn ? b.checkIn|date('d/m/Y') : '—' }}</strong></div>
+        <div class="cf-row"><span>Check-out</span><strong>{{ b.checkOut ? b.checkOut|date('d/m/Y') : '—' }}</strong></div>
+        <div class="cf-row"><span>Duration</span><strong>{{ b.nights }} night{{ b.nights > 1 ? 's' : '' }}</strong></div>
+        <div class="cf-row"><span>Guests</span><strong>{{ b.adults }} ad.{{ b.children > 0 ? ', ' ~ b.children ~ ' ch.' : '' }} · {{ b.rooms }} rm.</strong></div>
+        <div class="cf-row"><span>Lead guest</span><strong>{{ b.holderName }} {{ b.holderSurname }}</strong></div>
+        <div class="cf-row cf-row--total"><span>Amount</span><strong>{{ b.amountTnd|number_format(2) }} TND</strong></div>
       </div>
     </div>
 
     <div class="cf-actions">
       {% if st == 'PAY_FAIL' %}
-        <a class="cf-btn cf-btn--primary" href="{{ path('hotel_detail', {code: b.hotelCode, checkIn: b.checkIn|date('Y-m-d'), checkOut: b.checkOut|date('Y-m-d'), adults: b.adults, children: b.children, rooms: b.rooms}) }}">Réessayer</a>
+        <a class="cf-btn cf-btn--primary" href="{{ path('hotel_detail', {code: b.hotelCode, checkIn: b.checkIn|date('Y-m-d'), checkOut: b.checkOut|date('Y-m-d'), adults: b.adults, children: b.children, rooms: b.rooms}) }}">Try again</a>
       {% endif %}
       {% if st == 'PAID' or st == 'BOOKING_FAILED' or st == 'PENDING_PAYMENT' %}
-        <a class="cf-btn cf-btn--wa" href="https://wa.me/21698365730?text={{ ('Bonjour, ma réservation ' ~ b.reference ~ ' — ' ~ b.hotelName)|url_encode }}" target="_blank" rel="noopener">💬 Nous contacter</a>
+        <a class="cf-btn cf-btn--wa" href="https://wa.me/21698365730?text={{ ('Hello, my booking ' ~ b.reference ~ ' — ' ~ b.hotelName)|url_encode }}" target="_blank" rel="noopener">💬 Contact us</a>
       {% endif %}
-      <a class="cf-btn" href="{{ path('travel_hotels') }}">Rechercher un autre hôtel</a>
-      <a class="cf-btn" href="{{ path('travel_home') }}">Accueil</a>
+      <a class="cf-btn" href="{{ path('travel_hotels') }}">Search another hotel</a>
+      <a class="cf-btn" href="{{ path('travel_home') }}">Home</a>
     </div>
 
   </div>
